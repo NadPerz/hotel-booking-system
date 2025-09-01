@@ -7,9 +7,9 @@ export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Post()
-  async create(@Body() createDto: CreatePostDto) {
+  async create(@Body() createPostDto: CreatePostDto) {
     console.log('Jimiji post created');
 
-    return await this.postService.create(createDto);
+    return await this.postService.create(createPostDto);
   }
 }
