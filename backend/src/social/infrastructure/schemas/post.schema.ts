@@ -8,8 +8,8 @@ export type PostDocument = Post & Document;
   collection: 'posts',
 })
 export class Post {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  authorId: Types.ObjectId;
+  //   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  //   authorId: Types.ObjectId;
 
   @Prop({ type: String })
   content?: string;
