@@ -9,8 +9,8 @@ export type PostDocument = Post &
   collection: 'posts',
 })
 export class Post {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  authorId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
+  user: Types.ObjectId;
 
   @Prop({ type: String })
   content?: string;
@@ -28,6 +28,6 @@ export class Post {
 export const PostSchema = SchemaFactory.createForClass(Post);
 
 // Add indexes
-PostSchema.index({ authorId: 1 });
+PostSchema.index({ user: 1 });
 PostSchema.index({ createdAt: -1 });
-PostSchema.index({ authorId: 1, createdAt: -1 });
+PostSchema.index({ user: 1, createdAt: -1 });
