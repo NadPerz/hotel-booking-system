@@ -15,6 +15,20 @@ export class PostRepositoryImpl extends PostRepository {
   }
 
   async create(post: Post): Promise<Post> {
-    throw new Error('Method not implemented.');
+    const doc = new this.postModel({
+      content: post.content,
+    });
+
+    const saved = await doc.save();
+    return this.toDomainEntity(saved);
+  }
+
+  private toDomainEntity(doc: PostDocument): Post {
+    return new Post(
+      doc._id.toString(),
+      doc.content ?? '', //If undefined, it will return empty string
+      doc.createdAt,
+      doc.updatedAt,
+    );
   }
 }
