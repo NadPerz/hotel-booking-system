@@ -1,0 +1,219 @@
+import React, { useEffect, useRef, useState } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { MapPin, Navigation, Layers } from 'lucide-react';
+import { Itinerary, Place } from './TravelChatbot';
+
+interface MapComponentProps {
+  itinerary: Itinerary | null;
+  selectedPlace: Place | null;
+  onPlaceSelect: (place: Place | null) => void;
+}
+
+const MapComponent: React.FC<MapComponentProps> = ({ 
+  itinerary, 
+  selectedPlace, 
+  onPlaceSelect 
+}) => {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const [mapboxToken, setMapboxToken] = useState('');
+  const [showTokenInput, setShowTokenInput] = useState(true);
+
+  useEffect(() => {
+    if (!mapboxToken || !mapContainer.current) return;
+
+    mapboxgl.accessToken = mapboxToken;
+    
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [2.3522, 48.8566], // Default to Paris
+      zoom: 12,
+      pitch: 45,
+    });
+
+    map.current.addControl(
+      new mapboxgl.NavigationControl({
+        visualizePitch: true,
+      }),
+      'top-right'
+    );
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+      }
+    };
+  }, [mapboxToken]);
+
+  useEffect(() => {
+    if (!map.current || !itinerary) return;
+
+    // Clear existing markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+
+    const allPlaces = itinerary.days.flatMap(day => day.places);
+    
+    // Add markers for all places
+    allPlaces.forEach((place, index) => {
+      const el = document.createElement('div');
+      el.className = 'marker-pin';
+      el.style.cssText = `
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+        border: 3px solid white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 12px;
+        transition: all 0.2s ease;
+      `;
+      el.textContent = (index + 1).toString();
+      
+      el.addEventListener('mouseenter', () => {
+        el.style.transform = 'scale(1.1)';
+        el.style.zIndex = '1000';
+      });
+      
+      el.addEventListener('mouseleave', () => {
+        el.style.transform = 'scale(1)';
+        el.style.zIndex = '1';
+      });
+
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat(place.coordinates)
+        .setPopup(
+          new mapboxgl.Popup({ offset: 25 })
+            .setHTML(`
+              <div style="padding: 8px;">
+                <h3 style="margin: 0 0 4px 0; font-weight: bold;">${place.name}</h3>
+                <p style="margin: 0; color: #666; font-size: 12px;">${place.type}</p>
+                ${place.description ? `<p style="margin: 4px 0 0 0; font-size: 12px;">${place.description}</p>` : ''}
+              </div>
+            `)
+        )
+        .addTo(map.current!);
+
+      el.addEventListener('click', () => {
+        onPlaceSelect(place);
+      });
+
+      markersRef.current.push(marker);
+    });
+
+    // Fit map to show all places
+    if (allPlaces.length > 0) {
+      const bounds = new mapboxgl.LngLatBounds();
+      allPlaces.forEach(place => bounds.extend(place.coordinates));
+      map.current.fitBounds(bounds, { padding: 50 });
+    }
+  }, [itinerary, onPlaceSelect]);
+
+  useEffect(() => {
+    if (!map.current || !selectedPlace) return;
+
+    map.current.flyTo({
+      center: selectedPlace.coordinates,
+      zoom: 15,
+      duration: 1000
+    });
+  }, [selectedPlace]);
+
+  const handleTokenSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const token = formData.get('token') as string;
+    if (token) {
+      setMapboxToken(token);
+      setShowTokenInput(false);
+    }
+  };
+
+  if (showTokenInput) {
+    return (
+      <div className="h-full flex items-center justify-center bg-muted/20">
+        <Card className="p-6 max-w-md mx-4">
+          <div className="text-center mb-4">
+            <MapPin className="w-12 h-12 text-primary mx-auto mb-2" />
+            <h3 className="text-lg font-semibold">Setup Mapbox</h3>
+            <p className="text-sm text-muted-foreground">
+              Enter your Mapbox public token to display the interactive map
+            </p>
+          </div>
+          <form onSubmit={handleTokenSubmit} className="space-y-4">
+            <Input
+              name="token"
+              placeholder="pk.eyJ1IjoiZXhhbXBsZS..."
+              required
+            />
+            <Button type="submit" className="w-full">
+              Load Map
+            </Button>
+          </form>
+          <p className="text-xs text-muted-foreground mt-3 text-center">
+            Get your free token at{' '}
+            <a href="https://mapbox.com/" target="_blank" rel="noopener" className="text-primary hover:underline">
+              mapbox.com
+            </a>
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full relative">
+      <div ref={mapContainer} className="absolute inset-0" />
+      
+      {itinerary && (
+        <Card className="absolute top-4 left-4 p-3 bg-background/95 backdrop-blur-sm">
+          <div className="flex items-center space-x-2">
+            <Navigation className="w-4 h-4 text-primary" />
+            <div>
+              <p className="font-medium text-sm">{itinerary.destination}</p>
+              <p className="text-xs text-muted-foreground">
+                {itinerary.totalPlaces} places • {itinerary.duration} days
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {selectedPlace && (
+        <Card className="absolute bottom-4 left-4 right-4 p-4 bg-background/95 backdrop-blur-sm">
+          <div className="flex items-start space-x-3">
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+              <MapPin className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold">{selectedPlace.name}</h3>
+              <p className="text-sm text-muted-foreground">{selectedPlace.type}</p>
+              {selectedPlace.description && (
+                <p className="text-sm mt-1">{selectedPlace.description}</p>
+              )}
+              {selectedPlace.rating && (
+                <div className="flex items-center mt-2">
+                  <span className="text-sm font-medium">⭐ {selectedPlace.rating}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default MapComponent;
