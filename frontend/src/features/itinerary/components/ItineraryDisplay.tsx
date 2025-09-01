@@ -42,7 +42,7 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({
         </p>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 h-10">
         <div className="p-4 space-y-6">
           {itinerary.days.map((day) => (
             <div key={day.day} className="space-y-3">

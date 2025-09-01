@@ -48,10 +48,11 @@ const TravelChatbot = () => {
             </div>
           </div>
           {currentItinerary && (
-            <Card className="px-4 py-2">
-              <p className="text-sm font-medium">{currentItinerary.destination}</p>
-              <p className="text-xs text-muted-foreground">{currentItinerary.duration} days • {currentItinerary.totalPlaces} places</p>
-            </Card>
+            <Card className="px-4 py-2 ">
+              <div className='flex gap-4 items-center justify-center '>
+                <span className="text-sm font-medium">{currentItinerary.destination}</span>
+                <span className="text-xs text-muted-foreground">{currentItinerary.duration} days • {currentItinerary.totalPlaces} places</span>
+              </div> </Card>
           )}
         </div>
       </header>
@@ -62,9 +63,9 @@ const TravelChatbot = () => {
             <div className="h-full flex flex-col">
               <ChatInterface onItineraryGenerated={setCurrentItinerary} />
               {currentItinerary && (
-                <div className="h-1/2 border-t">
-                  <ItineraryDisplay 
-                    itinerary={currentItinerary} 
+                <div className="flex-1 border-t" style={{ minHeight: '300px' }}>
+                  <ItineraryDisplay
+                    itinerary={currentItinerary}
                     onPlaceSelect={setSelectedPlace}
                     selectedPlace={selectedPlace}
                   />
@@ -72,11 +73,11 @@ const TravelChatbot = () => {
               )}
             </div>
           </ResizablePanel>
-          
+
           <ResizableHandle />
-          
+
           <ResizablePanel defaultSize={65} minSize={40}>
-            <MapComponent 
+            <MapComponent
               itinerary={currentItinerary}
               selectedPlace={selectedPlace}
               onPlaceSelect={setSelectedPlace}

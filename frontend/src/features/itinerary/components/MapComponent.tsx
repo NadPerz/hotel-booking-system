@@ -1,10 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { MapPin, Navigation, Layers } from 'lucide-react';
+import { MapPin, Navigation } from 'lucide-react';
 import { Itinerary, Place } from './TravelChatbot';
 
 interface MapComponentProps {
@@ -21,13 +19,11 @@ const MapComponent: React.FC<MapComponentProps> = ({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
-  const [mapboxToken, setMapboxToken] = useState('');
-  const [showTokenInput, setShowTokenInput] = useState(true);
 
   useEffect(() => {
-    if (!mapboxToken || !mapContainer.current) return;
-
-    mapboxgl.accessToken = mapboxToken;
+    if (!mapContainer.current) return;
+    
+    mapboxgl.accessToken = "pk.eyJ1IjoibGFraW5kdTYyIiwiYSI6ImNtZjExZ2IycTFpbDkya3M3Y3plM3J6M24ifQ.zyO0dcbxZbMArJvMwfPX6w";
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -49,7 +45,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
         map.current.remove();
       }
     };
-  }, [mapboxToken]);
+  }, []);
 
   useEffect(() => {
     if (!map.current || !itinerary) return;
@@ -131,51 +127,13 @@ const MapComponent: React.FC<MapComponentProps> = ({
     });
   }, [selectedPlace]);
 
-  const handleTokenSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
-    const token = formData.get('token') as string;
-    if (token) {
-      setMapboxToken(token);
-      setShowTokenInput(false);
-    }
-  };
-
-  if (showTokenInput) {
-    return (
-      <div className="h-full flex items-center justify-center bg-muted/20">
-        <Card className="p-6 max-w-md mx-4">
-          <div className="text-center mb-4">
-            <MapPin className="w-12 h-12 text-primary mx-auto mb-2" />
-            <h3 className="text-lg font-semibold">Setup Mapbox</h3>
-            <p className="text-sm text-muted-foreground">
-              Enter your Mapbox public token to display the interactive map
-            </p>
-          </div>
-          <form onSubmit={handleTokenSubmit} className="space-y-4">
-            <Input
-              name="token"
-              placeholder="pk.eyJ1IjoiZXhhbXBsZS..."
-              required
-            />
-            <Button type="submit" className="w-full">
-              Load Map
-            </Button>
-          </form>
-          <p className="text-xs text-muted-foreground mt-3 text-center">
-            Get your free token at{' '}
-            <a href="https://mapbox.com/" target="_blank" rel="noopener" className="text-primary hover:underline">
-              mapbox.com
-            </a>
-          </p>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="h-full relative">
-      <div ref={mapContainer} className="absolute inset-0" />
+    <div className="h-full relative" style={{ minHeight: '400px' }}>
+      <div 
+        ref={mapContainer} 
+        className="absolute inset-0" 
+        style={{ width: '100%', height: '100%' }}
+      />
       
       {itinerary && (
         <Card className="absolute top-4 left-4 p-3 bg-background/95 backdrop-blur-sm">
