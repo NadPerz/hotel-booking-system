@@ -8,3 +8,12 @@ export class Itinerary {
     public updatedAt?: string,
   ) {}
 }
+export class Itinerary {
+  constructor(
+    public readonly title: string,
+    public readonly summary: string,
+    public readonly days: Day[],
+    public readonly accommodation: string,
+    public readonly tips: string[],
+  ) {}
+}
