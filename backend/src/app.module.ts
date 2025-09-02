@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ItineraryModule } from './itinerary/itinerary.module';
+import { HotelBookingModule } from './hotel-booking/hotel-booking.module'; // Add this
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
@@ -18,6 +19,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       inject: [ConfigService],
     }),
     ItineraryModule,
+    HotelBookingModule, // Add this line
   ],
   controllers: [AppController],
   providers: [AppService],
