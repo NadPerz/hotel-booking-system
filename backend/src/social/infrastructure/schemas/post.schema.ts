@@ -27,7 +27,7 @@ export class Post {
 
 export const PostSchema = SchemaFactory.createForClass(Post);
 
-// Add indexes
+// // Add indexes
 PostSchema.index({ user: 1 });
 PostSchema.index({ createdAt: -1 });
 PostSchema.index({ user: 1, createdAt: -1 });
