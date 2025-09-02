@@ -1,3 +1,5 @@
+import { Itinerary } from '../../entities/itinerary.entity';
+
 export type ConversationStage =
   | 'initial'
   | 'clarifying'
@@ -12,7 +14,7 @@ export class ConversationContext {
     public readonly budget?: string,
     public readonly interests?: string[],
     public readonly travelers?: number,
-    public readonly currentItinerary?: any,
+    public readonly currentItinerary?: Itinerary,
   ) {
     this.validate();
   }
@@ -32,11 +34,16 @@ export class ConversationContext {
     }
   }
 
+  /**
+   * Does not update the conversation state , just returns a new  conversationContext
+   */
   update(
     updates: Partial<Omit<ConversationContext, 'stage'>> & {
       stage?: ConversationStage;
     },
   ): ConversationContext {
+    console.log('updating conversationContext - ', updates);
+
     return new ConversationContext(
       updates.stage ?? this.stage,
       updates.destination ?? this.destination,

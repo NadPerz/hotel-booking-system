@@ -7,8 +7,12 @@ export class Conversation {
   constructor(
     public readonly id: string,
     public messages: ConversationMessage[] = [],
-    public context: ConversationContext = new ConversationContext('initial'),
+    private context: ConversationContext = new ConversationContext('initial'),
   ) {}
+
+  getContext() {
+    return this.context;
+  }
 
   addMessage(role: 'user' | 'assistant', content: string): void {
     this.messages.push(new ConversationMessage(role, content));

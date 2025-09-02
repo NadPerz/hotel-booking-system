@@ -59,7 +59,7 @@ export class CreateItineraryUseCase {
         "summary": "Brief overview",
         "days": [
           {{
-            "day": 1,
+            "day": 1 (Day numbers must be consecutive starting from 1),
             "date": "YYYY-MM-DD",
             "destination": "city name",
             "activities": [
@@ -106,7 +106,7 @@ export class CreateItineraryUseCase {
 
       return { itinerary, response };
     } catch (error) {
-      throw new Error('Failed to create itinerary: ' + error.message);
+      throw new Error('Failed to create itinerary: ' + error);
     }
   }
 }
