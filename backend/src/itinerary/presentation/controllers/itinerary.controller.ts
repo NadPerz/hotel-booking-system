@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { ItineraryService } from 'src/itinerary/application/services/itinerary.service';
 import { CreateItineraryDto } from '../../application/dtos/create-itinerary.dto';
 import { ItineraryChatService } from 'src/itinerary/application/services/itinerary-chat.service';
@@ -20,10 +20,5 @@ export class ItineraryController {
     { message, conversationId }: { message: string; conversationId: string },
   ) {
     return this.itineraryChatService.chatItinerary(message, conversationId);
-  }
-
-  @Get(':id')
-  async findById(@Param('id') id: string) {
-    return await this.itineraryService.findById(id);
   }
 }

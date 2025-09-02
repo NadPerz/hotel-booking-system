@@ -6,6 +6,7 @@ import {
   CreateItineraryUseCase,
   ModifyItineraryUseCase,
 } from '../use-cases/itinerary-generation';
+import { ItineraryRepository } from 'src/itinerary/domain/repositories/itinerary.repository';
 
 @Injectable()
 export class ItineraryChatService {
@@ -16,6 +17,7 @@ export class ItineraryChatService {
     private readonly handleClarificationUseCase: HandleClarificationUseCase,
     private readonly createItineraryUseCase: CreateItineraryUseCase,
     private readonly modifyItineraryUseCase: ModifyItineraryUseCase,
+    private readonly itineraryRepository: ItineraryRepository,
   ) {}
 
   async chatItinerary(message: string, sessionId: string) {
@@ -87,9 +89,9 @@ export class ItineraryChatService {
     );
     console.log(
       '🚀 ~ ItineraryChatService ~ createItinerary ~ session:',
-      session,
+      session.getCurrentItinerary(),
     );
-
+    await this.itineraryRepository.create(session.getCurrentItinerary()!);
     return createResult.response;
   }
 
