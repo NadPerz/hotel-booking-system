@@ -1,5 +1,3 @@
-import { Itinerary } from '../../entities/itinerary.entity';
-
 export type ConversationStage =
   | 'initial'
   | 'clarifying'
@@ -14,7 +12,6 @@ export class ConversationContext {
     public readonly budget?: string,
     public readonly interests?: string[],
     public readonly travelers?: number,
-    public readonly currentItinerary?: Itinerary,
   ) {
     this.validate();
   }
@@ -51,38 +48,10 @@ export class ConversationContext {
       updates.budget ?? this.budget,
       updates.interests ?? this.interests,
       updates.travelers ?? this.travelers,
-      updates.currentItinerary ?? this.currentItinerary,
     );
   }
 
   hasEnoughInfo(): boolean {
     return !!this.destination && !!this.dates && !!this.travelers;
-  }
-
-  isModificationRequested(): boolean {
-    return this.stage === 'modifying' && !!this.currentItinerary;
-  }
-
-  equals(other: ConversationContext): boolean {
-    return (
-      this.stage === other.stage &&
-      this.destination === other.destination &&
-      this.dates === other.dates &&
-      this.budget === other.budget &&
-      JSON.stringify(this.interests) === JSON.stringify(other.interests) &&
-      this.travelers === other.travelers
-    );
-  }
-
-  toString(): string {
-    return JSON.stringify({
-      stage: this.stage,
-      destination: this.destination,
-      dates: this.dates,
-      budget: this.budget,
-      interests: this.interests,
-      travelers: this.travelers,
-      hasItinerary: !!this.currentItinerary,
-    });
   }
 }
