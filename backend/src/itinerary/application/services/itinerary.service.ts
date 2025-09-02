@@ -11,7 +11,7 @@ export class ItineraryService {
     // Business logic here
     const itinerary = new Itinerary(
       'null', // Will be set by database
-      createDto.title,
+      'null', // Will be set by database
       createDto.destination,
       true, // Default active
       new Date().toISOString(),

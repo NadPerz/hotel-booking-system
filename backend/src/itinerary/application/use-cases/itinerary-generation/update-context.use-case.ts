@@ -3,7 +3,7 @@ import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { z } from 'zod';
 import { ConversationContext } from 'src/itinerary/domain/value-objects/conversation';
-import { Conversation } from 'src/itinerary/domain/entities/conversation.entity';
+import { TravelPlanningSession } from 'src/itinerary/domain/aggregates/travel-planning-session.aggregate';
 
 @Injectable()
 export class UpdateContextUseCase {
@@ -16,7 +16,7 @@ export class UpdateContextUseCase {
 
   async execute(
     message: string,
-    conversation: Conversation,
+    session: TravelPlanningSession,
   ): Promise<ConversationContext> {
     this.logger.log('Updating itinerary context based on new user message...');
     const extractPrompt = PromptTemplate.fromTemplate(`
@@ -43,7 +43,7 @@ export class UpdateContextUseCase {
       const chain = extractPrompt.pipe(this.llm);
       const result = await chain.invoke({
         message,
-        context: JSON.stringify(conversation.getContext()),
+        context: JSON.stringify(session.getContext()),
       });
 
       const rawContent =
@@ -81,12 +81,12 @@ export class UpdateContextUseCase {
       const validatedExtracted = schema.parse(extracted);
 
       const mergedDestination =
-        validatedExtracted.destination ?? conversation.getContext().destination;
+        validatedExtracted.destination ?? session.getContext().destination;
 
       const stage = (() => {
         switch (true) {
           case validatedExtracted.isModification &&
-            !!conversation.getContext().currentItinerary:
+            !!session.getCurrentItinerary():
             return 'modifying';
           case validatedExtracted.hasEnoughInfo:
             return 'creating';
@@ -97,7 +97,7 @@ export class UpdateContextUseCase {
         }
       })();
 
-      conversation.updateContext({
+      session.updateContext({
         destination: validatedExtracted.destination,
         dates: validatedExtracted.dates,
         budget: validatedExtracted.budget,
@@ -107,11 +107,11 @@ export class UpdateContextUseCase {
         travelers: validatedExtracted.travelers,
         stage,
       });
-      return conversation.getContext();
+      return session.getContext();
     } catch (error) {
       this.logger.error('Error parsing context update:', error);
-      return conversation.getContext().update({
-        stage: conversation.getContext().destination ? 'clarifying' : 'initial',
+      return session.getContext().update({
+        stage: session.getContext().destination ? 'clarifying' : 'initial',
       });
     }
   }
