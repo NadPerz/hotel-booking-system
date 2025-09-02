@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ItineraryModule } from './itinerary/itinerary.module';
 import { SocialModule } from './social/social.module';
+import { EventModule } from './event/event.module'; 
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
@@ -20,6 +21,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
     ItineraryModule,
     SocialModule,
+    EventModule,
   ],
   controllers: [AppController],
   providers: [AppService],
