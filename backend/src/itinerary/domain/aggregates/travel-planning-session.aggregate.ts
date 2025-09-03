@@ -19,6 +19,10 @@ export class TravelPlanningSession {
     this.conversation.addMessage('user', message);
   }
 
+  getConversationMessages() {
+    return this.conversation.getMessages();
+  }
+
   addAssistantMessage(message: string): void {
     this.conversation.addMessage('assistant', message);
   }

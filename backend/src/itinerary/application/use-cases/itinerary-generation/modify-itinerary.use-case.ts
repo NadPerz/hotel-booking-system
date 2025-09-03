@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { Itinerary } from 'src/itinerary/domain/entities/itinerary.entity';
@@ -14,7 +14,7 @@ export class ModifyItineraryUseCase {
     model: 'gemini-2.0-flash',
     temperature: 0.7,
   });
-
+  private logger = new Logger(ModifyItineraryUseCase.name);
   constructor(
     private readonly hotelsRepository: HotelsRepository,
     private readonly attractionsRepository: AttractionsRepository,
@@ -40,6 +40,12 @@ export class ModifyItineraryUseCase {
       context.interests,
     );
 
+    this.logger.log(
+      'Attractions from repo:',
+      JSON.stringify(attractions, null, 2),
+    );
+    this.logger.log('Hotels from repo:', JSON.stringify(hotels, null, 2));
+
     const modifyPrompt = PromptTemplate.fromTemplate(`
       User wants to modify their itinerary: "{modification}"
       Current itinerary: {currentItinerary}
@@ -51,6 +57,19 @@ export class ModifyItineraryUseCase {
 
       Return the same JSON structure as the original itinerary.
     `);
+    this.logger.log('prompt to modify itinerary -- ', modifyPrompt);
+
+    const formattedPrompt = await modifyPrompt.format({
+      modification: 'add a museum visit',
+      currentItinerary: JSON.stringify(currentItinerary),
+      dbData: JSON.stringify({ hotels, attractions }),
+      placesData: JSON.stringify(placesData),
+    });
+
+    this.logger.log(
+      'formatted prompt to modify itinerary -- ',
+      formattedPrompt,
+    );
 
     try {
       const chain = modifyPrompt.pipe(this.llm);

@@ -10,7 +10,6 @@ export class ItineraryService {
   constructor(private readonly itineraryRepository: ItineraryRepository) {}
 
   async create(createDto: CreateItineraryDto): Promise<void> {
-    // Create Day instances from DTO data
     const days = createDto.days.map((dayDto) => {
       const activities = dayDto.activities.map(
         (activityDto) =>

@@ -15,6 +15,7 @@ import {
 import { HotelsRepository } from './infrastructure/repositories/mocks/hotels.repository.mock';
 import { AttractionsRepository } from './infrastructure/repositories/mocks/attraction.repository.mock';
 import { GoogleMapsService } from './infrastructure/external-api/google-maps-service';
+import { ItineraryChatServiceMock } from './application/services/mocks/itinerary-chat.service.mock';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { GoogleMapsService } from './infrastructure/external-api/google-maps-ser
     HotelsRepository,
     AttractionsRepository,
     GoogleMapsService,
+    ItineraryChatServiceMock,
     {
       provide: ItineraryRepository,
       useClass: ItineraryRepositoryImpl,
@@ -46,6 +48,7 @@ import { GoogleMapsService } from './infrastructure/external-api/google-maps-ser
     HotelsRepository,
     AttractionsRepository,
     GoogleMapsService,
+    ItineraryChatServiceMock,
   ],
 })
 export class ItineraryModule {}

@@ -18,6 +18,10 @@ export class Conversation {
     this.messages.push(new ConversationMessage(role, content));
   }
 
+  getMessages() {
+    return this.messages;
+  }
+
   updateContext(updates: Partial<ConversationContext>): void {
     this.context = this.context.update(updates);
   }
