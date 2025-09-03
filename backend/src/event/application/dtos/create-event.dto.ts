@@ -1,15 +1,17 @@
 export class CreateEventDto {
-  event_name: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  start_time: string;
-  end_time: string;
-  max_attendees: number;
-  ticket_price: number;
-  event_status: string;
-  images_url: string[];
-  venue_id: string;
-  organizer_id: string;
-  category_id: string;
+  name: string;
+  description?: string;
+  date: string;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
+  maxAttendees?: number;
+  ticketPrice?: number;
+  eventStatus?: string;
+  imagesUrl?: string[];
+  venueId: string;
+  organizerId: string;
+  categoryId: string;
+  hashtags?: string[];
+  location?: string;
 }

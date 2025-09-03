@@ -31,8 +31,8 @@ export class EventOrganizerRepositoryImpl extends EventOrganizerRepository {
       doc.contact_email,
       doc.contact_phone,
       doc.organization,
-      (doc as any).createdAt,
-      (doc as any).updatedAt,
+      // (doc as any).createdAt,
+      // (doc as any).updatedAt,
     );
   }
 }

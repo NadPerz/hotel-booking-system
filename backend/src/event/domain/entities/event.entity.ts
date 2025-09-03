@@ -18,7 +18,7 @@ export class Event {
     public venue: EventVenue,
     public organizer: EventOrganizer,
     public category: EventCategory,
-    public created_at?: string,
-    public updated_at?: string,
+    // public created_at?: string,
+    // public updated_at?: string,
   ) {}
 }

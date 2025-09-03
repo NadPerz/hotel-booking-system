@@ -5,7 +5,7 @@ export class EventOrganizer {
     public contact_email: string,
     public contact_phone: string,
     public organization: string,
-    public created_at?: string,
-    public updated_at?: string,
+    // public created_at?: string,
+    // public updated_at?: string,
   ) {}
 }

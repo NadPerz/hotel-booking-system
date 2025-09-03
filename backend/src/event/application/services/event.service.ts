@@ -34,12 +34,12 @@ export class EventService {
   ) {}
 
   async create(createDto: CreateEventDto): Promise<Event> {
-    const venue = await this.eventVenueRepository.findById(createDto.venue_id);
+    const venue = await this.eventVenueRepository.findById(createDto.venueId);
     const organizer = await this.eventOrganizerRepository.findById(
-      createDto.organizer_id,
+      createDto.organizerId,
     );
     const category = await this.eventCategoryRepository.findById(
-      createDto.category_id,
+      createDto.categoryId,
     );
 
     if (!venue || !organizer || !category) {
@@ -48,16 +48,16 @@ export class EventService {
 
     const event = new Event(
       null,
-      createDto.event_name,
-      createDto.description,
-      createDto.start_date,
-      createDto.end_date,
-      createDto.start_time,
-      createDto.end_time,
-      createDto.max_attendees,
-      createDto.ticket_price,
-      createDto.event_status,
-      createDto.images_url,
+      createDto.name,
+      createDto.description || '',
+      createDto.date,
+      createDto.endDate || createDto.date,
+      createDto.startTime || '',
+      createDto.endTime || '',
+      createDto.maxAttendees || 0,
+      createDto.ticketPrice || 0,
+      createDto.eventStatus || 'active',
+      createDto.imagesUrl || [],
       venue,
       organizer,
       category,
