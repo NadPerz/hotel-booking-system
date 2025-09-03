@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { TravelPlanningSession } from 'src/itinerary/domain/aggregates/travel-planning-session.aggregate';
 import {
   UpdateContextUseCase,
@@ -7,11 +7,12 @@ import {
   ModifyItineraryUseCase,
 } from '../use-cases/itinerary-generation';
 import { ItineraryRepository } from 'src/itinerary/domain/repositories/itinerary.repository';
+import { ChatItineraryResponseDto } from '@shared/types/itinerary/chat-itinerary.response.dto';
 
 @Injectable()
 export class ItineraryChatService {
   private sessions = new Map<string, TravelPlanningSession>();
-
+  private readonly logger = new Logger(ItineraryChatService.name);
   constructor(
     private readonly updateContextUseCase: UpdateContextUseCase,
     private readonly handleClarificationUseCase: HandleClarificationUseCase,
@@ -20,7 +21,11 @@ export class ItineraryChatService {
     private readonly itineraryRepository: ItineraryRepository,
   ) {}
 
-  async chatItinerary(message: string, sessionId: string) {
+  async chatItinerary(
+    message: string,
+    sessionId: string,
+  ): Promise<ChatItineraryResponseDto> {
+    this.logger.log(`Received message: ${message}, sessionId: ${sessionId}`);
     let session = this.sessions.get(sessionId);
     if (!session) {
       session = new TravelPlanningSession(sessionId);
@@ -52,6 +57,7 @@ export class ItineraryChatService {
 
     return {
       response,
+      conversation: session.getConversationMessages(),
       context: session.getContext(),
       currentItinerary: session.getCurrentItinerary(),
     };

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { Itinerary } from 'src/itinerary/domain/entities/itinerary.entity';
@@ -14,7 +14,7 @@ export class CreateItineraryUseCase {
     model: 'gemini-2.0-flash',
     temperature: 0.7,
   });
-
+  private logger = new Logger(CreateItineraryUseCase.name);
   constructor(
     private readonly hotelsRepository: HotelsRepository,
     private readonly attractionsRepository: AttractionsRepository,
@@ -55,7 +55,7 @@ export class CreateItineraryUseCase {
         attractions: JSON.stringify(attractions),
         places: JSON.stringify(placesData),
       });
-
+      this.logger.log('Raw Ai Reponse Received -- ', result);
       // Use mapper to validate and transform AI response
       const itinerary = AiItineraryResponseMapper.validateAndTransform(
         result.content as string,
