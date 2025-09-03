@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreatePostDto } from '../dtos/create-post.dto';
+import { CreatePostDto } from '@shared/types/social/create-post.dto';
 import { Post } from 'src/social/domain/entities/post.entity';
 import { PostRepository } from 'src/social/domain/repositories/post.repository';
 
