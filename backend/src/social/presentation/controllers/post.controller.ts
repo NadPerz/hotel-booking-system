@@ -1,5 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { CreatePostDto } from 'src/social/application/dtos/create-post.dto';
+import { CreatePostDto } from '@shared/types/social/create-post.dto';
 import { PostService } from 'src/social/application/services/post.service';
 
 @Controller('posts')
