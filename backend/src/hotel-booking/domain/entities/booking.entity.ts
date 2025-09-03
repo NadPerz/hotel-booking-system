@@ -15,7 +15,19 @@ export class Booking {
     public readonly bookedAt: Date = new Date()
   ) {}
 
-  static create(data: Omit<Booking, 'id' | 'bookedAt'>): Booking {
+  static create(data: {
+    userId: string;
+    roomId: string;
+    hotelId: string;
+    hotelOwnerId: string;
+    startDate: Date;
+    endDate: Date;
+    breakfastIncluded: boolean;
+    currency: string;
+    totalPrice: number;
+    paymentStatus?: boolean;
+    paymentIntentId?: string;
+  }): Booking {
     return new Booking(
       this.generateId(),
       data.userId,
@@ -27,7 +39,7 @@ export class Booking {
       data.breakfastIncluded,
       data.currency,
       data.totalPrice,
-      data.paymentStatus,
+      data.paymentStatus || false,
       data.paymentIntentId
     );
   }

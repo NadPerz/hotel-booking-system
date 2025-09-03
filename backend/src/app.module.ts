@@ -6,6 +6,7 @@ import { HotelBookingModule } from './hotel-booking/hotel-booking.module'; // Ad
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -19,7 +20,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       inject: [ConfigService],
     }),
     ItineraryModule,
-    HotelBookingModule, // Add this line
+    HotelBookingModule, 
   ],
   controllers: [AppController],
   providers: [AppService],
