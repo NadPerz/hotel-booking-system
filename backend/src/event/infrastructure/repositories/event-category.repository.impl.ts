@@ -29,7 +29,7 @@ export class EventCategoryRepositoryImpl extends EventCategoryRepository {
       doc._id.toString(),
       doc.category_name,
       doc.description,
-      (doc as any).createdAt,
+      // (doc as any).createdAt,
     );
   }
 }

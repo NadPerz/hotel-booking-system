@@ -3,6 +3,6 @@ export class EventCategory {
     public id: string,
     public category_name: string,
     public description: string,
-    public created_at?: string,
+    // public created_at?: string,
   ) {}
 }

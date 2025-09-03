@@ -34,7 +34,7 @@ export class EventHashtagRepositoryImpl extends EventHashtagRepository {
     return new EventHashtag(
       doc._id.toString(),
       doc.hashtag_name,
-      doc.createdAt,
+      // doc.createdAt,
     );
   }
 }
