@@ -8,7 +8,7 @@ export type TravelerDocument = Traveler & Document & { _id: Types.ObjectId };
   collection: 'travelers',
 })
 export class Traveler {
-  @Prop({ type: Types.ObjectId, required: true, unique: true })
+  @Prop({ type: Types.ObjectId, required: true }) //, unique: true
   user_id: Types.ObjectId;
 
   @Prop({ type: [String], default: [] })
