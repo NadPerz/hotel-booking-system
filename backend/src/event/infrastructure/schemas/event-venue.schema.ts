@@ -9,7 +9,7 @@ export type EventVenueDocument = EventVenue & Document & { _id: Types.ObjectId }
 })
 export class EventVenue {
   @Prop({ required: true })
-  venue_name: string;
+  venueName: string;
 
   @Prop({ required: true })
   address: string;
@@ -21,7 +21,7 @@ export class EventVenue {
   province: string;
 
   @Prop({ required: true })
-  postal_code: string;
+  postalCode: string;
 
   @Prop({ required: true })
   country: string;

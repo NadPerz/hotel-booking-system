@@ -14,27 +14,27 @@ export class EventHashtagRepositoryImpl extends EventHashtagRepository {
     super();
   }
 
-  async create(eventHashtag: EventHashtag): Promise<EventHashtag> {
+  async create(eventHashtag: EventHashtag): Promise<any> {
     const newEventHashtag = new this.eventHashtagModel(eventHashtag);
     const savedEventHashtag = await newEventHashtag.save();
     return this.toDomainEntity(savedEventHashtag);
   }
 
-  async findById(id: string): Promise<EventHashtag | null> {
+  async findById(id: string): Promise<any | null> {
     const doc = await this.eventHashtagModel.findById(id).exec();
     return doc ? this.toDomainEntity(doc) : null;
   }
 
-  async findByName(name: string): Promise<EventHashtag | null> {
-    const doc = await this.eventHashtagModel.findOne({ hashtag_name: name }).exec();
+  async findByName(name: string): Promise<any | null> {
+    const doc = await this.eventHashtagModel.findOne({ hashtagName: name }).exec();
     return doc ? this.toDomainEntity(doc) : null;
   }
 
-  private toDomainEntity(doc: EventHashtagDocument): EventHashtag {
-    return new EventHashtag(
-      doc._id.toString(),
-      doc.hashtag_name,
-      // doc.createdAt,
-    );
+  private toDomainEntity(doc: EventHashtagDocument): any {
+    return {
+      id: doc._id.toString(),
+      hashtagName: doc.hashtagName,
+      createdAt: (doc as any).createdAt,
+    };
   }
 }

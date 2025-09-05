@@ -1,6 +1,6 @@
 import { Event } from '../entities/event.entity';
 
 export abstract class EventRepository {
-  abstract create(event: Event): Promise<Event>;
-  abstract findById(id: string): Promise<Event | null>;
+  abstract create(event: Event): Promise<any>;
+  abstract findById(id: string): Promise<any | null>;
 }

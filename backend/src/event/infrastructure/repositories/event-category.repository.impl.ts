@@ -13,23 +13,23 @@ export class EventCategoryRepositoryImpl extends EventCategoryRepository {
     super();
   }
 
-  async create(eventCategory: EventCategory): Promise<EventCategory> {
+  async create(eventCategory: EventCategory): Promise<any> {
     const newEventCategory = new this.eventCategoryModel(eventCategory);
     const savedEventCategory = await newEventCategory.save();
     return this.toDomainEntity(savedEventCategory);
   }
 
-  async findById(id: string): Promise<EventCategory | null> {
+  async findById(id: string): Promise<any | null> {
     const doc = await this.eventCategoryModel.findById(id).exec();
     return doc ? this.toDomainEntity(doc) : null;
   }
 
-  private toDomainEntity(doc: EventCategoryDocument): EventCategory {
-    return new EventCategory(
-      doc._id.toString(),
-      doc.category_name,
-      doc.description,
-      // (doc as any).createdAt,
-    );
+  private toDomainEntity(doc: EventCategoryDocument): any {
+    return {
+      id: doc._id.toString(),
+      categoryName: doc.categoryName,
+      description: doc.description,
+      createdAt: (doc as any).createdAt,
+    };
   }
 }

@@ -13,25 +13,25 @@ export class EventRsvpRepositoryImpl extends EventRsvpRepository {
     super();
   }
 
-  async create(eventRsvp: EventRsvp): Promise<EventRsvp> {
+  async create(eventRsvp: EventRsvp): Promise<any> {
     const newEventRsvp = new this.eventRsvpModel(eventRsvp);
     const savedEventRsvp = await newEventRsvp.save();
     return this.toDomainEntity(savedEventRsvp);
   }
 
-  async findById(id: string): Promise<EventRsvp | null> {
+  async findById(id: string): Promise<any | null> {
     const doc = await this.eventRsvpModel.findById(id).exec();
     return doc ? this.toDomainEntity(doc) : null;
   }
 
-  private toDomainEntity(doc: EventRsvpDocument): EventRsvp {
-    return new EventRsvp(
-      doc._id.toString(),
-      doc.event as any,
-      doc.user_id,
-      doc.rsvp_status,
-      doc.createdAt,
-      doc.guest_count,
-    );
+  private toDomainEntity(doc: EventRsvpDocument): any {
+    return {
+      id: doc._id.toString(),
+      event: doc.event as any,
+      userId: doc.userId,
+      rsvpStatus: doc.rsvpStatus,
+      createdAt: (doc as any).createdAt,
+      guestCount: doc.guestCount,
+    };
   }
 }

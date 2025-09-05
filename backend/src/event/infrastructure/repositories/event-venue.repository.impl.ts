@@ -13,28 +13,28 @@ export class EventVenueRepositoryImpl extends EventVenueRepository {
     super();
   }
 
-  async create(eventVenue: EventVenue): Promise<EventVenue> {
+  async create(eventVenue: EventVenue): Promise<any> {
     const newEventVenue = new this.eventVenueModel(eventVenue);
     const savedEventVenue = await newEventVenue.save();
     return this.toDomainEntity(savedEventVenue);
   }
 
-  async findById(id: string): Promise<EventVenue | null> {
+  async findById(id: string): Promise<any | null> {
     const doc = await this.eventVenueModel.findById(id).exec();
     return doc ? this.toDomainEntity(doc) : null;
   }
 
-  private toDomainEntity(doc: EventVenueDocument): EventVenue {
-    return new EventVenue(
-      doc._id.toString(),
-      doc.venue_name,
-      doc.address,
-      doc.city,
-      doc.province,
-      doc.postal_code,
-      doc.country,
-      doc.capacity,
-      doc.facilities,
-    );
+  private toDomainEntity(doc: EventVenueDocument): any {
+    return {
+      id: doc._id.toString(),
+      venueName: doc.venueName,
+      address: doc.address,
+      city: doc.city,
+      province: doc.province,
+      postalCode: doc.postalCode,
+      country: doc.country,
+      capacity: doc.capacity,
+      facilities: doc.facilities,
+    };
   }
 }

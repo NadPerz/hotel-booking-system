@@ -9,7 +9,7 @@ export type EventCategoryDocument = EventCategory & Document & { _id: Types.Obje
 })
 export class EventCategory {
   @Prop({ required: true })
-  category_name: string;
+  categoryName: string;
 
   @Prop({ required: true })
   description: string;

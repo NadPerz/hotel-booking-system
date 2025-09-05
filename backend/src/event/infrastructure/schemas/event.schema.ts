@@ -12,34 +12,34 @@ export type EventDocument = Event & Document & { _id: Types.ObjectId; createdAt:
 })
 export class Event {
   @Prop({ required: true })
-  event_name: string;
+  eventName: string;
 
   @Prop({ required: true })
   description: string;
 
   @Prop({ required: true })
-  start_date: string;
+  startDate: string;
 
   @Prop({ required: true })
-  end_date: string;
+  endDate: string;
 
   @Prop({ required: true })
-  start_time: string;
+  startTime: string;
 
   @Prop({ required: true })
-  end_time: string;
+  endTime: string;
 
   @Prop({ required: true })
-  max_attendees: number;
+  maxAttendees: number;
 
   @Prop({ required: true })
-  ticket_price: number;
+  ticketPrice: number;
 
   @Prop({ required: true })
-  event_status: string;
+  eventStatus: string;
 
   @Prop({ type: [String], required: true })
-  images_url: string[];
+  imagesUrl: string[];
 
   @Prop({ type: Types.ObjectId, ref: 'EventVenue', required: true })
   venue: EventVenue;

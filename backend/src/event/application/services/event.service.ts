@@ -42,16 +42,16 @@ export class EventService {
       createDto.categoryId,
     );
 
-    if (!venue || !organizer || !category) {
-      throw new Error('Venue, Organizer or Category not found');
-    }
+    // if (!venue || !organizer || !category) {
+    //   throw new Error('Venue, Organizer or Category not found');
+    // }
 
     const event = new Event(
       null,
-      createDto.name,
+      createDto.eventName,
       createDto.description || '',
-      createDto.date,
-      createDto.endDate || createDto.date,
+      createDto.startDate,
+      createDto.endDate || createDto.startDate,
       createDto.startTime || '',
       createDto.endTime || '',
       createDto.maxAttendees || 0,
@@ -71,7 +71,7 @@ export class EventService {
   }
 
   async createRsvp(createRsvpDto: CreateEventRsvpDto): Promise<EventRsvp> {
-    const event = await this.eventRepository.findById(createRsvpDto.event_id);
+    const event = await this.eventRepository.findById(createRsvpDto.eventId);
 
     if (!event) {
       throw new Error('Event not found');
@@ -80,9 +80,9 @@ export class EventService {
     const eventRsvp = new EventRsvp(
       null,
       event,
-      createRsvpDto.user_id,
-      createRsvpDto.rsvp_status,
-      createRsvpDto.guest_count,
+      createRsvpDto.userId,
+      createRsvpDto.rsvpStatus,
+      createRsvpDto.guestCount,
     );
 
     return await this.eventRsvpRepository.create(eventRsvp);
@@ -93,7 +93,7 @@ export class EventService {
   ): Promise<EventHashtag> {
     const eventHashtag = new EventHashtag(
       null,
-      createHashtagDto.hashtag_name,
+      createHashtagDto.hashtagName,
     );
 
     return await this.eventHashtagRepository.create(eventHashtag);
@@ -103,10 +103,10 @@ export class EventService {
     createEventHashtagMappingDto: CreateEventHashtagMappingDto,
   ): Promise<EventHashtagMapping> {
     const event = await this.eventRepository.findById(
-      createEventHashtagMappingDto.event_id,
+      createEventHashtagMappingDto.eventId,
     );
     const hashtag = await this.eventHashtagRepository.findById(
-      createEventHashtagMappingDto.hashtag_id,
+      createEventHashtagMappingDto.hashtagId,
     );
 
     if (!event || !hashtag) {
@@ -126,7 +126,7 @@ export class EventService {
   ): Promise<EventCategory> {
     const category = new EventCategory(
       null,
-      createDto.category_name,
+      createDto.categoryName,
       createDto.description,
     );
     return await this.eventCategoryRepository.create(category);
@@ -137,9 +137,9 @@ export class EventService {
   ): Promise<EventOrganizer> {
     const organizer = new EventOrganizer(
       null,
-      createDto.organizer_name,
-      createDto.contact_email,
-      createDto.contact_phone,
+      createDto.organizerName,
+      createDto.contactEmail,
+      createDto.contactPhone,
       createDto.organization,
     );
     return await this.eventOrganizerRepository.create(organizer);
@@ -148,11 +148,11 @@ export class EventService {
   async createVenue(createDto: CreateEventVenueDto): Promise<EventVenue> {
     const venue = new EventVenue(
       null,
-      createDto.venue_name,
+      createDto.venueName,
       createDto.address,
       createDto.city,
       createDto.province,
-      createDto.postal_code,
+      createDto.postalCode,
       createDto.country,
       createDto.capacity,
       createDto.facilities,

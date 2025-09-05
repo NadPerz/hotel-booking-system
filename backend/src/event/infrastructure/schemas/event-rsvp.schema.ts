@@ -13,16 +13,13 @@ export class EventRsvp {
   event: Event;
 
   @Prop({ required: true })
-  user_id: string;
+  userId: string;
 
   @Prop({ required: true })
-  rsvp_status: string;
+  rsvpStatus: string;
 
   @Prop({ required: true })
-  rsvp_date: string;
-
-  @Prop({ required: true })
-  guest_count: number;
+  guestCount: number;
 }
 
 export const EventRsvpSchema = SchemaFactory.createForClass(EventRsvp);

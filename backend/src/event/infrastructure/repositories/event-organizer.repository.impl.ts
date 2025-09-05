@@ -13,26 +13,26 @@ export class EventOrganizerRepositoryImpl extends EventOrganizerRepository {
     super();
   }
 
-  async create(eventOrganizer: EventOrganizer): Promise<EventOrganizer> {
+  async create(eventOrganizer: EventOrganizer): Promise<any> {
     const newEventOrganizer = new this.eventOrganizerModel(eventOrganizer);
     const savedEventOrganizer = await newEventOrganizer.save();
     return this.toDomainEntity(savedEventOrganizer);
   }
 
-  async findById(id: string): Promise<EventOrganizer | null> {
+  async findById(id: string): Promise<any | null> {
     const doc = await this.eventOrganizerModel.findById(id).exec();
     return doc ? this.toDomainEntity(doc) : null;
   }
 
-  private toDomainEntity(doc: EventOrganizerDocument): EventOrganizer {
-    return new EventOrganizer(
-      doc._id.toString(),
-      doc.organizer_name,
-      doc.contact_email,
-      doc.contact_phone,
-      doc.organization,
-      // (doc as any).createdAt,
-      // (doc as any).updatedAt,
-    );
+  private toDomainEntity(doc: EventOrganizerDocument): any {
+    return {
+      id: doc._id.toString(),
+      organizerName: doc.organizerName,
+      contactEmail: doc.contactEmail,
+      contactPhone: doc.contactPhone,
+      organization: doc.organization,
+      createdAt: (doc as any).createdAt,
+      updatedAt: (doc as any).updatedAt,
+    };
   }
 }

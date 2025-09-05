@@ -9,13 +9,13 @@ export type EventOrganizerDocument = EventOrganizer & Document & { _id: Types.Ob
 })
 export class EventOrganizer {
   @Prop({ required: true })
-  organizer_name: string;
+  organizerName: string;
 
   @Prop({ required: true })
-  contact_email: string;
+  contactEmail: string;
 
   @Prop({ required: true })
-  contact_phone: string;
+  contactPhone: string;
 
   @Prop({ required: true })
   organization: string;

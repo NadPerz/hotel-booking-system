@@ -1,3 +1,3 @@
 export class CreateEventHashtagDto {
-  hashtag_name: string;
+  hashtagName: string;
 }

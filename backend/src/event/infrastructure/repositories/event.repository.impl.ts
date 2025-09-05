@@ -13,35 +13,35 @@ export class EventRepositoryImpl extends EventRepository {
     super();
   }
 
-  async create(event: Event): Promise<Event> {
+  async create(event: Event): Promise<any> {
     const newEvent = new this.eventModel(event);
     const savedEvent = await newEvent.save();
     return this.toDomainEntity(savedEvent);
   }
 
-  async findById(id: string): Promise<Event | null> {
+  async findById(id: string): Promise<any | null> {
     const doc = await this.eventModel.findById(id).exec();
     return doc ? this.toDomainEntity(doc) : null;
   }
 
-  private toDomainEntity(doc: EventDocument): Event {
-    return new Event(
-      doc._id.toString(),
-      doc.event_name,
-      doc.description,
-      doc.start_date,
-      doc.end_date,
-      doc.start_time,
-      doc.end_time,
-      doc.max_attendees,
-      doc.ticket_price,
-      doc.event_status,
-      doc.images_url,
-      // doc.createdAt,
-      // doc.updatedAt,
-      doc.venue as any,
-      doc.organizer as any,
-      doc.category as any,
-    );
+  private toDomainEntity(doc: EventDocument): any {
+    return {
+      id: doc._id.toString(),
+      eventName: doc.eventName,
+      description: doc.description,
+      startDate: doc.startDate,
+      endDate: doc.endDate,
+      startTime: doc.startTime,
+      endTime: doc.endTime,
+      maxAttendees: doc.maxAttendees,
+      ticketPrice: doc.ticketPrice,
+      eventStatus: doc.eventStatus,
+      imagesUrl: doc.imagesUrl,
+      createdAt: (doc as any).createdAt,
+      updatedAt: (doc as any).updatedAt,
+      venue: doc.venue as any,
+      organizer: doc.organizer as any,
+      category: doc.category as any,
+    };
   }
 }

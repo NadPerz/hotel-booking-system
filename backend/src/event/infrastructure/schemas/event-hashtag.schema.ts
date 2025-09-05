@@ -9,7 +9,7 @@ export type EventHashtagDocument = EventHashtag & Document & { _id: Types.Object
 })
 export class EventHashtag {
   @Prop({ required: true, unique: true })
-  hashtag_name: string;
+  hashtagName: string;
 }
 
 export const EventHashtagSchema = SchemaFactory.createForClass(EventHashtag);

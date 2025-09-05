@@ -1,4 +1,4 @@
 export class CreateEventCategoryDto {
-  category_name: string;
+  categoryName: string;
   description: string;
 }

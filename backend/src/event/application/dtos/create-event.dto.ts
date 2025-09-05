@@ -1,7 +1,7 @@
 export class CreateEventDto {
-  name: string;
+  eventName: string;
   description?: string;
-  date: string;
+  startDate: string;
   endDate?: string;
   startTime?: string;
   endTime?: string;
