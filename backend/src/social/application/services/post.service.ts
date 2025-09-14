@@ -7,6 +7,7 @@ import { PostRepository } from 'src/social/domain/repositories/post.repository';
 export class PostService {
   constructor(private readonly postRepository: PostRepository) {}
 
+  //Service method to create a post
   async create(createPostDto: CreatePostDto): Promise<Post> {
     const post = new Post(
       'null', //will be given by db
@@ -19,5 +20,11 @@ export class PostService {
     console.log('Create in postservice');
 
     return await this.postRepository.create(post);
+  }
+
+  //Service method to get all posts
+  async getAll() {
+    console.log('Getting posts in service');
+    return await this.postRepository.getAll();
   }
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { CreatePostDto } from '@shared/types/social/create-post.dto';
 import { PostService } from 'src/social/application/services/post.service';
 
@@ -11,5 +11,12 @@ export class PostController {
     console.log('Jimiji post created');
 
     return await this.postService.create(createPostDto);
+  }
+
+  @Get()
+  async getAllPosts() {
+    console.log('getting posts');
+
+    return await this.postService.getAll();
   }
 }
