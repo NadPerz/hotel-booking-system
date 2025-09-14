@@ -5,7 +5,6 @@ import { ItineraryChatService } from 'src/itinerary/application/services/itinera
 import { ChatItineraryRequestDto } from 'src/itinerary/application/dtos/requests/chatItinerary.dto';
 import { ItineraryChatServiceMock } from 'src/itinerary/application/services/mocks/itinerary-chat.service.mock';
 import { ChatItineraryResponseDto } from '@shared/types/itinerary/chat-itinerary.response.dto';
-
 @Controller('itineraries')
 export class ItineraryController {
   constructor(
