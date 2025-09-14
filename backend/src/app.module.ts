@@ -9,7 +9,7 @@ import { SocialModule } from './social/social.module';
 
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-
+import { UserManagementModule } from './user-management/user-management.module';
 
 @Module({
   imports: [
@@ -25,10 +25,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
     ItineraryModule,
 
-    HotelBookingModule, 
+    HotelBookingModule,
 
     SocialModule,
-
+    UserManagementModule,
   ],
   controllers: [AppController],
   providers: [AppService],
