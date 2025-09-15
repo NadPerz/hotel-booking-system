@@ -1,14 +1,27 @@
 // src/social/social.module.ts
+
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+
+//Posts
 import { PostSchema } from './infrastructure/schemas/post.schema';
 import { PostController } from './presentation/controllers/post.controller';
 import { PostService } from './application/services/post.service';
 import { PostRepository } from './domain/repositories/post.repository';
 import { PostRepositoryImpl } from './infrastructure/repositories/post.repository.impl';
-import { TravelerSchema } from './infrastructure/schemas/traveler.schema';
-import { PostCommentSchema } from './infrastructure/schemas/comment.schema';
+
+//Likes
 import { LikeSchema } from './infrastructure/schemas/like.schema';
+import { LikeController } from './presentation/controllers/like.controller';
+import { LikeService } from './application/services/like.service';
+import { LikeRepository } from './domain/repositories/like.repository';
+import { LikeRepositoryImpl } from './infrastructure/repositories/like.repository.impl';
+
+//
+import { TravelerSchema } from './infrastructure/schemas/traveler.schema';
+//
+import { PostCommentSchema } from './infrastructure/schemas/comment.schema';
+//
 import { HasFriendshipSchema } from './infrastructure/schemas/friendships.schema';
 
 @Module({
@@ -21,11 +34,13 @@ import { HasFriendshipSchema } from './infrastructure/schemas/friendships.schema
       { name: 'HasFriendship', schema: HasFriendshipSchema },
     ]),
   ],
-  controllers: [PostController],
+  controllers: [PostController, LikeController],
   providers: [
     PostService,
+    LikeService,
     { provide: PostRepository, useClass: PostRepositoryImpl },
+    { provide: LikeRepository, useClass: LikeRepositoryImpl },
   ],
-  exports: [PostService],
+  exports: [PostService, LikeService],
 })
 export class SocialModule {}

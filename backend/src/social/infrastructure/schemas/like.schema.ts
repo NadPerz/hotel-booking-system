@@ -8,7 +8,7 @@ export type LikeDocument = Like & Document & { _id: Types.ObjectId };
   collection: 'likes',
 })
 export class Like {
-  @Prop({ type: Types.ObjectId, ref: 'Traveler', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   user_id: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Post', required: true })
