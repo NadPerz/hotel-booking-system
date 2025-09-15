@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { ClientSession, Model } from 'mongoose';
 import { Post } from 'src/social/domain/entities/post.entity';
 import { PostRepository } from 'src/social/domain/repositories/post.repository';
 import { PostDocument } from '../schemas/post.schema';
@@ -39,12 +39,50 @@ export class PostRepositoryImpl extends PostRepository {
     return docs.map((doc) => this.toDomainEntity(doc));
   }
 
+  async addLike(
+    postId: string,
+    likeId: string,
+    session?: ClientSession,
+  ): Promise<void> {
+    const options = session ? { session, new: true } : { new: true };
+
+    await this.postModel
+      .findByIdAndUpdate(
+        postId,
+        {
+          $inc: { likeCount: 1 },
+          $addToSet: { likes: likeId }, // $addToSet prevents duplicates
+        },
+        options,
+      )
+      .exec();
+  }
+
+  async removeLike(
+    postId: string,
+    likeId: string,
+    session?: ClientSession,
+  ): Promise<void> {
+    const options = session ? { session, new: true } : { new: true };
+
+    await this.postModel
+      .findByIdAndUpdate(
+        postId,
+        {
+          $inc: { likeCount: -1 },
+          $pull: { likes: likeId },
+        },
+        options,
+      )
+      .exec();
+  }
   // Helper method to convert MongoDB document to domain entity
   private toDomainEntity(doc: PostDocument): Post {
     return new Post(
       doc._id.toString(),
       doc.user.toString(),
       doc.content ?? '', //If undefined, it will return empty string
+      doc.likeCount ?? 0,
       doc.createdAt,
       doc.updatedAt,
     );

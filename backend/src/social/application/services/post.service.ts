@@ -24,7 +24,7 @@ export class PostService {
   }
 
   //Service method to get all posts
-  async getAll() {
+  async getAll(): Promise<Post[]> {
     console.log('Getting posts in service');
     return await this.postRepository.getAll();
   }
