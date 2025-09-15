@@ -10,7 +10,8 @@ export class PostService {
   //Service method to create a post
   async create(createPostDto: CreatePostDto): Promise<Post> {
     const post = new Post(
-      'null', //will be given by db
+      'null', // post Id will be given by db
+      createPostDto.user,
       createPostDto?.content ?? '',
     );
 

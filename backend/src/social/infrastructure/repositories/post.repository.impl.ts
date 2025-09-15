@@ -17,6 +17,7 @@ export class PostRepositoryImpl extends PostRepository {
   async create(post: Post): Promise<Post> {
     // Create new MongoDB document with post content
     const doc = new this.postModel({
+      user: post.user,
       content: post.content,
     });
 
@@ -42,6 +43,7 @@ export class PostRepositoryImpl extends PostRepository {
   private toDomainEntity(doc: PostDocument): Post {
     return new Post(
       doc._id.toString(),
+      doc.user.toString(),
       doc.content ?? '', //If undefined, it will return empty string
       doc.createdAt,
       doc.updatedAt,
