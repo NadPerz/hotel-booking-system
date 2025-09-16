@@ -48,4 +48,30 @@ export abstract class PostRepository {
     likeId: string,
     session?: ClientSession,
   ): Promise<void>;
+
+  /**
+   * Increments the comment count for a post when a new comment is added.
+   *
+   * @param postId - The ID of the post to add the comment to
+   * @param commentId - The ID of the new comment
+   * @param session - Optional MongoDB session for transaction support
+   */
+  abstract addComment(
+    postId: string,
+    commentId: string,
+    session?: ClientSession,
+  ): Promise<void>;
+
+  /**
+   * Decrements the comment count for a post when a comment is removed.
+   *
+   * @param postId - The ID of the post to remove the comment from
+   * @param commentId - The ID of the comment being removed
+   * @param session - Optional MongoDB session for transaction support
+   */
+  abstract removeComment(
+    postId: string,
+    commentId: string,
+    session?: ClientSession,
+  ): Promise<void>;
 }

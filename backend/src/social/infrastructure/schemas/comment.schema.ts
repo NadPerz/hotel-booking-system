@@ -1,7 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-export type CommentDocument = Comment & Document & { _id: Types.ObjectId };
+export type CommentDocument = Comment &
+  Document & { _id: Types.ObjectId; createdAt: string; updatedAt: string };
 
 @Schema({
   timestamps: true,

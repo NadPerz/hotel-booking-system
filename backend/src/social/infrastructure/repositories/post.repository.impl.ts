@@ -231,6 +231,116 @@ export class PostRepositoryImpl extends PostRepository {
   }
 
   /**
+   * Increments the comment count for a post when a new comment is added.
+   *
+   * @param postId - The ID of the post to add the comment to
+   * @param commentId - The ID of the new comment
+   * @param session - Optional MongoDB session for transaction support
+   */
+  async addComment(
+    postId: string,
+    commentId: string,
+    session?: ClientSession,
+  ): Promise<void> {
+    this.logger.debug(`Adding comment to post`, {
+      postId,
+      commentId,
+      hasSession: !!session,
+    });
+
+    try {
+      const updateOptions = session ? { session, new: true } : { new: true };
+
+      const result = await this.postModel
+        .findByIdAndUpdate(
+          postId,
+          {
+            $inc: { commentCount: 1 },
+          },
+          updateOptions,
+        )
+        .exec();
+
+      if (result) {
+        this.logger.log(`Successfully added comment to post ${postId}`, {
+          postId,
+          commentId,
+          newCommentCount: result.commentCount,
+        });
+      } else {
+        this.logger.warn(`Post not found when adding comment`, {
+          postId,
+          commentId,
+        });
+        throw new Error(`Post with ID ${postId} not found`);
+      }
+    } catch (error) {
+      this.logger.error('Failed to add comment to post', {
+        postId,
+        commentId,
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Decrements the comment count for a post when a comment is removed.
+   *
+   * @param postId - The ID of the post to remove the comment from
+   * @param commentId - The ID of the comment being removed
+   * @param session - Optional MongoDB session for transaction support
+   */
+  async removeComment(
+    postId: string,
+    commentId: string,
+    session?: ClientSession,
+  ): Promise<void> {
+    this.logger.debug(`Removing comment from post`, {
+      postId,
+      commentId,
+      hasSession: !!session,
+    });
+
+    try {
+      const updateOptions = session ? { session, new: true } : { new: true };
+
+      const result = await this.postModel
+        .findByIdAndUpdate(
+          postId,
+          {
+            $inc: { commentCount: -1 },
+          },
+          updateOptions,
+        )
+        .exec();
+
+      if (result) {
+        this.logger.log(`Successfully removed comment from post ${postId}`, {
+          postId,
+          commentId,
+          newCommentCount: Math.max(0, result.commentCount - 1),
+        });
+      } else {
+        this.logger.warn(`Post not found when removing comment`, {
+          postId,
+          commentId,
+        });
+        throw new Error(`Post with ID ${postId} not found`);
+      }
+    } catch (error) {
+      this.logger.error('Failed to remove comment from post', {
+        postId,
+        commentId,
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
+  }
+
+  /**
    * Converts a MongoDB document to a domain entity.
    *
    * @private
