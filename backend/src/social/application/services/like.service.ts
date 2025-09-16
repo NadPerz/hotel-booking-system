@@ -16,7 +16,7 @@ export class LikeService {
 
   constructor(
     private readonly likeRepository: LikeRepository,
-    // 🆕 NEW: Inject PostRepository
+
     private readonly postRepository: PostRepository,
   ) {}
 

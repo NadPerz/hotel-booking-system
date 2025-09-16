@@ -90,7 +90,7 @@ export class PostRepositoryImpl extends PostRepository {
         .sort({ createdAt: -1 }) // Most recent first
         .exec();
 
-      // 🆕 NEW: Added result logging
+      // result logging
       this.logger.log(
         `Successfully retrieved ${docs.length} posts from database`,
       );
@@ -98,7 +98,7 @@ export class PostRepositoryImpl extends PostRepository {
       // Convert each MongoDB document to domain entity
       return docs.map((doc) => this.toDomainEntity(doc));
     } catch (error) {
-      // 🆕 NEW: Added error logging
+      // error logging
       this.logger.error('Failed to fetch posts from database', {
         error: error.message,
         stack: error.stack,
@@ -148,7 +148,7 @@ export class PostRepositoryImpl extends PostRepository {
         this.logger.log(`Successfully added like to post ${postId}`, {
           postId,
           likeId,
-          newLikeCount: result.likeCount + 1,
+          newLikeCount: result.likeCount,
         });
       } else {
         // warning for non-existent post
@@ -181,7 +181,7 @@ export class PostRepositoryImpl extends PostRepository {
     likeId: string,
     session?: ClientSession,
   ): Promise<void> {
-    // 🆕 NEW: Added method entry logging
+    //  method entry logging
     this.logger.debug(`Removing like from post`, {
       postId,
       likeId,
@@ -189,7 +189,7 @@ export class PostRepositoryImpl extends PostRepository {
     });
 
     try {
-      // IMPROVED: Cleaner session options handling
+      //session options handling
       const updateOptions = session ? { session, new: true } : { new: true };
 
       const result = await this.postModel
@@ -204,14 +204,14 @@ export class PostRepositoryImpl extends PostRepository {
         .exec();
 
       if (result) {
-        // 🆕 NEW: Added success logging
+        //success logging
         this.logger.log(`Successfully removed like from post ${postId}`, {
           postId,
           likeId,
           newLikeCount: Math.max(0, result.likeCount - 1),
         });
       } else {
-        // 🆕 NEW: Added warning for non-existent post
+        // warning for non-existent post
         this.logger.warn(`Post not found when removing like`, {
           postId,
           likeId,
@@ -219,7 +219,7 @@ export class PostRepositoryImpl extends PostRepository {
         throw new Error(`Post with ID ${postId} not found`);
       }
     } catch (error) {
-      // 🆕 NEW: Added error logging
+      // error logging
       this.logger.error('Failed to remove like from post', {
         postId,
         likeId,
@@ -242,6 +242,7 @@ export class PostRepositoryImpl extends PostRepository {
       doc.user.toString(),
       doc.content ?? '', //If undefined, it will return empty string
       doc.likeCount ?? 0,
+      doc.commentCount ?? 0,
       doc.createdAt,
       doc.updatedAt,
     );

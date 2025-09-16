@@ -46,12 +46,13 @@ export class LikeController {
     }
   }
 
-  @Delete(/*':userId/:postId'*/)
+  @Delete(':user/:post')
   async unlikePost(
-    @Body() likePostDto: LikePostDto,
-    // @Param('userId') userId: string,
-    // @Param('postId') postId: string,
+    @Param('user') userId: string,
+    @Param('post') postId: string,
   ) {
+    const likePostDto: LikePostDto = { user: userId, post: postId };
+
     this.logger.log(`DELETE /likes - Unlike post request received`, {
       userId: likePostDto.user,
       postId: likePostDto.post,
@@ -59,7 +60,7 @@ export class LikeController {
     try {
       await this.likeService.unlikePost(likePostDto);
 
-      // 🆕 NEW: Added success logging
+      // success logging
       this.logger.log(`DELETE /likes - Unlike post successful`, {
         userId: likePostDto.user,
         postId: likePostDto.post,
@@ -67,7 +68,7 @@ export class LikeController {
 
       return { success: true, message: 'Post unliked successfully' };
     } catch (error) {
-      // 🆕 NEW: Added error logging
+      // error logging
       this.logger.error(`DELETE /likes - Unlike post failed`, {
         userId: likePostDto.user,
         postId: likePostDto.post,

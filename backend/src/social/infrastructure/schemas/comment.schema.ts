@@ -1,26 +1,48 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-export type PostCommentDocument = PostComment &
-  Document & { _id: Types.ObjectId };
+export type CommentDocument = Comment & Document & { _id: Types.ObjectId };
 
 @Schema({
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
-  collection: 'post_comments',
+  collection: 'comments',
 })
-export class PostComment {
+export class Comment {
   @Prop({ type: String, required: true })
   content: string;
 
   @Prop({ type: Types.ObjectId, ref: 'Post', required: true })
-  post_id: Types.ObjectId;
+  post: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Traveler', required: true })
-  user_id: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  user: Types.ObjectId;
 }
 
-export const PostCommentSchema = SchemaFactory.createForClass(PostComment);
+export const CommentSchema = SchemaFactory.createForClass(Comment);
 
 // Indexes
-PostCommentSchema.index({ post_id: 1 });
-PostCommentSchema.index({ user_id: 1 });
+// PostCommentSchema.index({ post: 1 });
+// PostCommentSchema.index({ user: 1 });
+
+// import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+// import { Document, Types } from 'mongoose';
+
+// export type PostCommentDocument = PostComment &
+//   Document & { _id: Types.ObjectId };
+
+// @Schema({
+//   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
+//   collection: 'post_comments',
+// })
+// export class PostComment {
+//   @Prop({ type: String, required: true })
+//   content: string;
+
+//   @Prop({ type: Types.ObjectId, ref: 'Post', required: true })
+//   post: Types.ObjectId;
+
+//   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+//   user: Types.ObjectId;
+// }
+
+// export const PostCommentSchema = SchemaFactory.createForClass(PostComment);

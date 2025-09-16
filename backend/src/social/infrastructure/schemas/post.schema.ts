@@ -21,6 +21,9 @@ export class Post {
   @Prop({ type: Number, default: 0 })
   likeCount: number;
 
+  @Prop({ type: Number, default: 0 })
+  commentCount: number;
+
   // @Prop({ type: [Types.ObjectId], ref: 'Like', default: [] })
   // likes?: Types.ObjectId[];
 

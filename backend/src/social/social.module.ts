@@ -20,7 +20,7 @@ import { LikeRepositoryImpl } from './infrastructure/repositories/like.repositor
 //
 import { TravelerSchema } from './infrastructure/schemas/traveler.schema';
 //
-import { PostCommentSchema } from './infrastructure/schemas/comment.schema';
+import { CommentSchema } from './infrastructure/schemas/comment.schema';
 //
 import { HasFriendshipSchema } from './infrastructure/schemas/friendships.schema';
 
@@ -29,7 +29,7 @@ import { HasFriendshipSchema } from './infrastructure/schemas/friendships.schema
     MongooseModule.forFeature([
       { name: 'Post', schema: PostSchema },
       { name: 'Traveler', schema: TravelerSchema },
-      { name: 'PostComment', schema: PostCommentSchema },
+      { name: 'PostComment', schema: CommentSchema },
       { name: 'Like', schema: LikeSchema },
       { name: 'HasFriendship', schema: HasFriendshipSchema },
     ]),
