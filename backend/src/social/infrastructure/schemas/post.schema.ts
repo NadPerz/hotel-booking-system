@@ -21,8 +21,8 @@ export class Post {
   @Prop({ type: Number, default: 0 })
   likeCount: number;
 
-  @Prop({ type: [Types.ObjectId], ref: 'Like', default: [] })
-  likes?: Types.ObjectId[];
+  // @Prop({ type: [Types.ObjectId], ref: 'Like', default: [] })
+  // likes?: Types.ObjectId[];
 
   // Virtual fields for relations
   author?: Types.ObjectId;

@@ -41,43 +41,85 @@ export class PostRepositoryImpl extends PostRepository {
     return docs.map((doc) => this.toDomainEntity(doc));
   }
 
+  // 🔄 IMPROVED: Better session handling
   async addLike(
     postId: string,
     likeId: string,
     session?: ClientSession,
   ): Promise<void> {
-    const options = session ? { session, new: true } : { new: true };
+    // 🔄 IMPROVED: Cleaner session options handling
+    const updateOptions = session ? { session, new: true } : { new: true };
 
     await this.postModel
       .findByIdAndUpdate(
         postId,
         {
           $inc: { likeCount: 1 },
-          $addToSet: { likes: likeId }, // $addToSet prevents duplicates
+          // $addToSet: { likes: likeId },
         },
-        options,
+        updateOptions,
       )
       .exec();
   }
 
+  // 🔄 IMPROVED: Better session handling
   async removeLike(
     postId: string,
     likeId: string,
     session?: ClientSession,
   ): Promise<void> {
-    const options = session ? { session, new: true } : { new: true };
+    // 🔄 IMPROVED: Cleaner session options handling
+    const updateOptions = session ? { session, new: true } : { new: true };
 
     await this.postModel
       .findByIdAndUpdate(
         postId,
         {
           $inc: { likeCount: -1 },
-          $pull: { likes: likeId },
+          // $pull: { likes: likeId },
         },
-        options,
+        updateOptions,
       )
       .exec();
   }
+
+  // async addLike(
+  //   postId: string,
+  //   likeId: string,
+  //   session?: ClientSession,
+  // ): Promise<void> {
+  //   const options = session ? { session, new: true } : { new: true };
+
+  //   await this.postModel
+  //     .findByIdAndUpdate(
+  //       postId,
+  //       {
+  //         $inc: { likeCount: 1 },
+  //         $addToSet: { likes: likeId }, // $addToSet prevents duplicates
+  //       },
+  //       options,
+  //     )
+  //     .exec();
+  // }
+
+  // async removeLike(
+  //   postId: string,
+  //   likeId: string,
+  //   session?: ClientSession,
+  // ): Promise<void> {
+  //   const options = session ? { session, new: true } : { new: true };
+
+  //   await this.postModel
+  //     .findByIdAndUpdate(
+  //       postId,
+  //       {
+  //         $inc: { likeCount: -1 },
+  //         $pull: { likes: likeId },
+  //       },
+  //       options,
+  //     )
+  //     .exec();
+  // }
   // Helper method to convert MongoDB document to domain entity
   private toDomainEntity(doc: PostDocument): Post {
     return new Post(
