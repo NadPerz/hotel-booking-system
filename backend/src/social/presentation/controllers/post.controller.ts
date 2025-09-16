@@ -19,33 +19,44 @@ export class PostController {
 
   @Post()
   async create(@Body() createPostDto: CreatePostDto) {
-    this.logger.log(`POST /posts - create called`);
+    this.logger.log(`POST /posts - Create post request received`, {
+      userId: createPostDto.user,
+      contentLength: createPostDto.content?.length || 0,
+    });
 
-    // try {
-    return await this.postService.create(createPostDto);
-    // } catch (error) {
-    //   this.logger.error(
-    //     `[PostController.create] Failed to create post`,
-    //     error.message,
-    //     error.stack,
-    //   );
-    //   throw new InternalServerErrorException(error.message); // 🆕 Return to frontend
-    // }
+    try {
+      const result = await this.postService.create(createPostDto);
+
+      // success logging
+      this.logger.log(`POST /posts - Post created successfully`, {
+        postId: result.id,
+        userId: result.user,
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error(`POST /posts - Failed to create post`, {
+        userId: createPostDto.user,
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
   }
 
   @Get()
   async getAllPosts() {
-    this.logger.log(`GET /posts - getAllPosts called`);
+    this.logger.log(`GET /posts - recieved get all posts request`);
 
-    // try {
-    return await this.postService.getAll();
-    // } catch (error) {
-    //   this.logger.error(
-    //     `[PostController.getAllPosts] Failed to fetch posts`,
-    //     error.stack,
-    //   );
-    //   throw new InternalServerErrorException(error.message);
-    // }
+    try {
+      return await this.postService.getAll();
+    } catch (error) {
+      this.logger.error(`GET /posts Failed to fetch posts`, {
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
   }
 
   //Getting posts by user ID NOT IMPLEMENTED
