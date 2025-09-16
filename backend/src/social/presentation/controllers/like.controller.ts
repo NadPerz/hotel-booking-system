@@ -1,19 +1,49 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+//like.controller.ts
+
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Logger,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { LikePostDto } from '@shared/types/social/like-post.dto';
 import { LikeService } from 'src/social/application/services/like.service';
 
 @Controller('likes')
 export class LikeController {
+  private readonly logger = new Logger(LikeController.name);
+
   constructor(private readonly likeService: LikeService) {}
 
   @Post()
   async likePost(@Body() likePostDto: LikePostDto) {
-    console.log(
-      `Liked post with id ${likePostDto.post} by user with id ${likePostDto.user}
-      Currently in like.controller.ts`,
-    );
+    this.logger.log(`POST /likes - Like post request received`, {
+      userId: likePostDto.user,
+      postId: likePostDto.post,
+    });
 
-    return await this.likeService.likePost(likePostDto);
+    try {
+      const result = await this.likeService.likePost(likePostDto);
+
+      this.logger.log(`POST /likes - Like post successful`, {
+        userId: likePostDto.user,
+        postId: likePostDto.post,
+        likeId: result.id,
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error(`POST /likes - Like post failed`, {
+        userId: likePostDto.user,
+        postId: likePostDto.post,
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
   }
 
   @Delete(/*':userId/:postId'*/)
@@ -22,11 +52,29 @@ export class LikeController {
     // @Param('userId') userId: string,
     // @Param('postId') postId: string,
   ) {
-    console.log(
-      `Unliking post ${likePostDto.post} by user ${likePostDto.user}
-      Currently in like.controller.ts`,
-    );
-    return await this.likeService.unlikePost(likePostDto);
-    // return { message: `Post ${postId} unliked by user ${userId}` };
+    this.logger.log(`DELETE /likes - Unlike post request received`, {
+      userId: likePostDto.user,
+      postId: likePostDto.post,
+    });
+    try {
+      await this.likeService.unlikePost(likePostDto);
+
+      // 🆕 NEW: Added success logging
+      this.logger.log(`DELETE /likes - Unlike post successful`, {
+        userId: likePostDto.user,
+        postId: likePostDto.post,
+      });
+
+      return { success: true, message: 'Post unliked successfully' };
+    } catch (error) {
+      // 🆕 NEW: Added error logging
+      this.logger.error(`DELETE /likes - Unlike post failed`, {
+        userId: likePostDto.user,
+        postId: likePostDto.post,
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
   }
 }

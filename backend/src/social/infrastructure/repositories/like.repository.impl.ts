@@ -1,6 +1,6 @@
 //like.repository.impl.ts
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { LikeRepository } from 'src/social/domain/repositories/like.repository';
 import { LikeDocument } from '../schemas/like.schema';
 import { Like } from 'src/social/domain/entities/like.entity';
@@ -13,6 +13,8 @@ import { Model, Types, ClientSession } from 'mongoose';
  */
 @Injectable()
 export class LikeRepositoryImpl extends LikeRepository {
+  private readonly logger = new Logger(LikeRepositoryImpl.name);
+
   constructor(
     @InjectModel(Like.name)
     private readonly likeModel: Model<LikeDocument>,
@@ -34,28 +36,28 @@ export class LikeRepositoryImpl extends LikeRepository {
     like: Like,
     operation: (session: any) => Promise<T>,
   ): Promise<T> {
-    console.log(
-      `[LikeRepositoryImpl.likePostWithTransaction] Starting transaction for PostID: ${like.post}, UserID: ${like.user}`,
+    this.logger.debug(
+      `[LikeRepositoryImpl.likePostWithTransaction] Starting like transaction for PostID: ${like.post}, UserID: ${like.user}`,
     );
 
     const session = await this.likeModel.db.startSession();
 
     try {
       session.startTransaction();
-      console.log(
+      this.logger.debug(
         `[LikeRepositoryImpl.likePostWithTransaction] Transaction started`,
       );
 
       const result = await operation(session);
 
       await session.commitTransaction();
-      console.log(
+      this.logger.log(
         `[LikeRepositoryImpl.likePostWithTransaction] Transaction committed successfully`,
       );
 
       return result;
     } catch (error) {
-      console.error(
+      this.logger.error(
         `[LikeRepositoryImpl.likePostWithTransaction] Transaction failed, rolling back`,
         {
           postId: like.post,
@@ -76,7 +78,9 @@ export class LikeRepositoryImpl extends LikeRepository {
       throw error;
     } finally {
       session.endSession();
-      console.log(`[LikeRepositoryImpl.likePostWithTransaction] Session ended`);
+      this.logger.debug(
+        `[LikeRepositoryImpl.likePostWithTransaction] Session ended`,
+      );
     }
   }
 
@@ -94,28 +98,28 @@ export class LikeRepositoryImpl extends LikeRepository {
     like: Like,
     operation: (session: any) => Promise<T>,
   ): Promise<T> {
-    console.log(
-      `[LikeRepositoryImpl.unlikePostWithTransaction] Starting transaction for PostID: ${like.post}, UserID: ${like.user}`,
+    this.logger.debug(
+      `[LikeRepositoryImpl.unlikePostWithTransaction] Starting unlike transaction for PostID: ${like.post}, UserID: ${like.user}`,
     );
 
     const session = await this.likeModel.db.startSession();
 
     try {
       session.startTransaction();
-      console.log(
+      this.logger.debug(
         `[LikeRepositoryImpl.unlikePostWithTransaction] Transaction started`,
       );
 
       const result = await operation(session);
 
       await session.commitTransaction();
-      console.log(
+      this.logger.log(
         `[LikeRepositoryImpl.unlikePostWithTransaction] Transaction committed successfully`,
       );
 
       return result;
     } catch (error) {
-      console.error(
+      this.logger.error(
         `[LikeRepositoryImpl.unlikePostWithTransaction] Transaction failed, rolling back`,
         {
           postId: like.post,
@@ -129,7 +133,7 @@ export class LikeRepositoryImpl extends LikeRepository {
       throw error;
     } finally {
       session.endSession();
-      console.log(
+      this.logger.debug(
         `[LikeRepositoryImpl.unlikePostWithTransaction] Session ended`,
       );
     }
@@ -144,7 +148,7 @@ export class LikeRepositoryImpl extends LikeRepository {
    * @throws Error if the save operation fails
    */
   async likePost(like: Like, session?: ClientSession): Promise<Like> {
-    console.log(
+    this.logger.debug(
       `[LikeRepositoryImpl.likePost] Creating like record - UserID: ${like.user}, PostID: ${like.post}`,
     );
 
@@ -154,16 +158,19 @@ export class LikeRepositoryImpl extends LikeRepository {
       post: new Types.ObjectId(like.post),
     });
 
-    console.log(`[LikeRepositoryImpl.likePost] MongoDB document prepared`, {
-      userObjectId: doc.user.toString(),
-      postObjectId: doc.post.toString(),
-      hasSession: !!session,
-    });
+    this.logger.debug(
+      `[LikeRepositoryImpl.likePost] MongoDB document prepared`,
+      {
+        userObjectId: doc.user.toString(),
+        postObjectId: doc.post.toString(),
+        hasSession: !!session,
+      },
+    );
 
     // Save with optional session
     const saved = await doc.save(session ? { session } : {});
 
-    console.log(
+    this.logger.log(
       `[LikeRepositoryImpl.likePost] Like document saved successfully with ID: ${saved._id}`,
     );
 
@@ -179,7 +186,7 @@ export class LikeRepositoryImpl extends LikeRepository {
    * @returns Promise resolving when the operation completes
    */
   async unlikePost(like: Like, session?: ClientSession): Promise<void> {
-    console.log(
+    this.logger.debug(
       `[LikeRepositoryImpl.unlikePost] Removing like record - UserID: ${like.user}, PostID: ${like.post}`,
     );
 
@@ -189,7 +196,7 @@ export class LikeRepositoryImpl extends LikeRepository {
       post: new Types.ObjectId(like.post),
     };
 
-    console.log(`[LikeRepositoryImpl.unlikePost] Query prepared`, {
+    this.logger.debug(`[LikeRepositoryImpl.unlikePost] Query prepared`, {
       userObjectId: query.user.toString(),
       postObjectId: query.post.toString(),
       hasSession: !!session,
@@ -202,11 +209,11 @@ export class LikeRepositoryImpl extends LikeRepository {
     );
 
     if (result) {
-      console.log(
+      this.logger.log(
         `[LikeRepositoryImpl.unlikePost] Like document removed successfully - ID: ${result._id}`,
       );
     } else {
-      console.log(
+      this.logger.warn(
         `[LikeRepositoryImpl.unlikePost] No like document found to remove`,
       );
     }
@@ -225,7 +232,7 @@ export class LikeRepositoryImpl extends LikeRepository {
     postId: string,
     session?: ClientSession,
   ): Promise<Like | null> {
-    console.log(
+    this.logger.debug(
       `[LikeRepositoryImpl.findByUserAndPost] Searching for like - UserID: ${userId}, PostID: ${postId}`,
     );
 
@@ -241,12 +248,12 @@ export class LikeRepositoryImpl extends LikeRepository {
     );
 
     if (doc) {
-      console.log(
+      this.logger.debug(
         `[LikeRepositoryImpl.findByUserAndPost] Like found with ID: ${doc._id}`,
       );
       return this.toDomainEntity(doc);
     } else {
-      console.log(
+      this.logger.debug(
         `[LikeRepositoryImpl.findByUserAndPost] No like found for UserID: ${userId}, PostID: ${postId}`,
       );
       return null;
