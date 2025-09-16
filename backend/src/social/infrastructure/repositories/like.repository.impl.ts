@@ -7,30 +7,66 @@ import { Like } from 'src/social/domain/entities/like.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, ClientSession } from 'mongoose';
 
+/**
+ * MongoDB implementation of the LikeRepository interface.
+ * Handles database operations for Like entities using Mongoose.
+ */
 @Injectable()
 export class LikeRepositoryImpl extends LikeRepository {
   constructor(
     @InjectModel(Like.name)
     private readonly likeModel: Model<LikeDocument>,
-    // 🗑️ REMOVED: PostRepository dependency - no longer needed!
   ) {
     super();
   }
 
-  // 🆕 NEW: Transaction wrapper for like operations
+  /**
+   * Executes a like operation within a MongoDB transaction.
+   * Handles session management, transaction lifecycle, and error handling.
+   *
+   * @template T - The return type of the operation
+   * @param like - The like entity involved in the transaction
+   * @param operation - The callback function to execute within the transaction
+   * @returns Promise resolving to the result of the operation
+   * @throws Error if transaction fails or duplicate key error occurs
+   */
   async likePostWithTransaction<T>(
     like: Like,
     operation: (session: any) => Promise<T>,
   ): Promise<T> {
+    console.log(
+      `[LikeRepositoryImpl.likePostWithTransaction] Starting transaction for PostID: ${like.post}, UserID: ${like.user}`,
+    );
+
     const session = await this.likeModel.db.startSession();
 
     try {
       session.startTransaction();
+      console.log(
+        `[LikeRepositoryImpl.likePostWithTransaction] Transaction started`,
+      );
+
       const result = await operation(session);
+
       await session.commitTransaction();
+      console.log(
+        `[LikeRepositoryImpl.likePostWithTransaction] Transaction committed successfully`,
+      );
+
       return result;
     } catch (error) {
+      console.error(
+        `[LikeRepositoryImpl.likePostWithTransaction] Transaction failed, rolling back`,
+        {
+          postId: like.post,
+          userId: like.user,
+          error: error.message,
+          code: error.code,
+        },
+      );
+
       await session.abortTransaction();
+
       // Handle duplicate key error at repository level
       if (error.code === 11000) {
         throw new Error(
@@ -40,63 +76,111 @@ export class LikeRepositoryImpl extends LikeRepository {
       throw error;
     } finally {
       session.endSession();
+      console.log(`[LikeRepositoryImpl.likePostWithTransaction] Session ended`);
     }
   }
 
-  // 🆕 NEW: Transaction wrapper for unlike operations
+  /**
+   * Executes an unlike operation within a MongoDB transaction.
+   * Handles session management, transaction lifecycle, and error handling.
+   *
+   * @template T - The return type of the operation
+   * @param like - The like entity involved in the transaction
+   * @param operation - The callback function to execute within the transaction
+   * @returns Promise resolving to the result of the operation
+   * @throws Error if transaction fails
+   */
   async unlikePostWithTransaction<T>(
     like: Like,
     operation: (session: any) => Promise<T>,
   ): Promise<T> {
+    console.log(
+      `[LikeRepositoryImpl.unlikePostWithTransaction] Starting transaction for PostID: ${like.post}, UserID: ${like.user}`,
+    );
+
     const session = await this.likeModel.db.startSession();
 
     try {
       session.startTransaction();
+      console.log(
+        `[LikeRepositoryImpl.unlikePostWithTransaction] Transaction started`,
+      );
+
       const result = await operation(session);
+
       await session.commitTransaction();
+      console.log(
+        `[LikeRepositoryImpl.unlikePostWithTransaction] Transaction committed successfully`,
+      );
+
       return result;
     } catch (error) {
+      console.error(
+        `[LikeRepositoryImpl.unlikePostWithTransaction] Transaction failed, rolling back`,
+        {
+          postId: like.post,
+          userId: like.user,
+          error: error.message,
+          code: error.code,
+        },
+      );
+
       await session.abortTransaction();
       throw error;
     } finally {
       session.endSession();
+      console.log(
+        `[LikeRepositoryImpl.unlikePostWithTransaction] Session ended`,
+      );
     }
   }
 
-  // 🔄 CHANGED: Simplified - no longer manages transactions internally
+  /**
+   * Creates a new like record in the MongoDB collection.
+   *
+   * @param like - The like entity to create
+   * @param session - Optional MongoDB session for transaction support
+   * @returns Promise resolving to the created like entity
+   * @throws Error if the save operation fails
+   */
   async likePost(like: Like, session?: ClientSession): Promise<Like> {
     console.log(
-      `DEBUG: Like entity data - user: ${like.user}, post: ${like.post}`,
+      `[LikeRepositoryImpl.likePost] Creating like record - UserID: ${like.user}, PostID: ${like.post}`,
     );
-    console.log(`DEBUG: Like entity full object:`, like);
 
-    // Create new MongoDB document with post content
+    // Create new MongoDB document
     const doc = new this.likeModel({
       user: new Types.ObjectId(like.user),
       post: new Types.ObjectId(like.post),
     });
 
-    console.log(`DEBUG: MongoDB document being saved:`, {
-      user: doc.user,
-      post: doc.post,
+    console.log(`[LikeRepositoryImpl.likePost] MongoDB document prepared`, {
+      userObjectId: doc.user.toString(),
+      postObjectId: doc.post.toString(),
+      hasSession: !!session,
     });
 
-    // 🔄 CHANGED: Save with optional session
+    // Save with optional session
     const saved = await doc.save(session ? { session } : {});
 
-    // 🗑️ REMOVED: No longer calls postRepository directly!
-
-    console.log(`Successfully created like document for post ${like.post} by user ${like.user}
-      Currently in like.repository.impl.ts`);
+    console.log(
+      `[LikeRepositoryImpl.likePost] Like document saved successfully with ID: ${saved._id}`,
+    );
 
     // Convert MongoDB document back to domain entity
     return this.toDomainEntity(saved);
   }
 
-  // 🔄 CHANGED: Simplified - no longer manages transactions internally
+  /**
+   * Removes a like record from the MongoDB collection.
+   *
+   * @param like - The like entity to remove
+   * @param session - Optional MongoDB session for transaction support
+   * @returns Promise resolving when the operation completes
+   */
   async unlikePost(like: Like, session?: ClientSession): Promise<void> {
     console.log(
-      `DEBUG: Attempting to delete like with user: ${like.user}, post: ${like.post}`,
+      `[LikeRepositoryImpl.unlikePost] Removing like record - UserID: ${like.user}, PostID: ${like.post}`,
     );
 
     // Convert string IDs to ObjectId for the query
@@ -105,28 +189,46 @@ export class LikeRepositoryImpl extends LikeRepository {
       post: new Types.ObjectId(like.post),
     };
 
-    console.log(`DEBUG: Query object:`, query);
+    console.log(`[LikeRepositoryImpl.unlikePost] Query prepared`, {
+      userObjectId: query.user.toString(),
+      postObjectId: query.post.toString(),
+      hasSession: !!session,
+    });
 
-    // 🔄 CHANGED: Remove with optional session
+    // Remove with optional session
     const result = await this.likeModel.findOneAndDelete(
       query,
       session ? { session } : {},
     );
 
-    console.log(`DEBUG: Delete result:`, result);
-
-    // 🗑️ REMOVED: No longer calls postRepository directly!
-
-    console.log(`Successfully deleted like document for post ${like.post} by user ${like.user}
-      Currently in like.repository.impl.ts`);
+    if (result) {
+      console.log(
+        `[LikeRepositoryImpl.unlikePost] Like document removed successfully - ID: ${result._id}`,
+      );
+    } else {
+      console.log(
+        `[LikeRepositoryImpl.unlikePost] No like document found to remove`,
+      );
+    }
   }
 
-  // 🆕 NEW: Method to find existing like
+  /**
+   * Finds a like record by user ID and post ID.
+   *
+   * @param userId - The ID of the user who liked the post
+   * @param postId - The ID of the post that was liked
+   * @param session - Optional MongoDB session for transaction support
+   * @returns Promise resolving to the like entity if found, null otherwise
+   */
   async findByUserAndPost(
     userId: string,
     postId: string,
     session?: ClientSession,
   ): Promise<Like | null> {
+    console.log(
+      `[LikeRepositoryImpl.findByUserAndPost] Searching for like - UserID: ${userId}, PostID: ${postId}`,
+    );
+
     const query = {
       user: new Types.ObjectId(userId),
       post: new Types.ObjectId(postId),
@@ -138,10 +240,26 @@ export class LikeRepositoryImpl extends LikeRepository {
       session ? { session } : {},
     );
 
-    return doc ? this.toDomainEntity(doc) : null;
+    if (doc) {
+      console.log(
+        `[LikeRepositoryImpl.findByUserAndPost] Like found with ID: ${doc._id}`,
+      );
+      return this.toDomainEntity(doc);
+    } else {
+      console.log(
+        `[LikeRepositoryImpl.findByUserAndPost] No like found for UserID: ${userId}, PostID: ${postId}`,
+      );
+      return null;
+    }
   }
 
-  // 🔄 UNCHANGED: Helper method remains the same
+  /**
+   * Converts a MongoDB document to a domain entity.
+   *
+   * @private
+   * @param doc - The MongoDB document to convert
+   * @returns The corresponding domain entity
+   */
   private toDomainEntity(doc: LikeDocument): Like {
     return new Like(
       doc._id.toString(),
@@ -152,176 +270,3 @@ export class LikeRepositoryImpl extends LikeRepository {
     );
   }
 }
-
-// import { Injectable } from '@nestjs/common';
-// import { LikeRepository } from 'src/social/domain/repositories/like.repository';
-// import { LikeDocument } from '../schemas/like.schema';
-// import { Like } from 'src/social/domain/entities/like.entity';
-// import { InjectModel } from '@nestjs/mongoose';
-// import { Model, Types } from 'mongoose';
-// import { PostRepository } from 'src/social/domain/repositories/post.repository';
-
-// @Injectable()
-// export class LikeRepositoryImpl extends LikeRepository {
-//   /**
-//    * Create a new LikeRepositoryImpl.
-//    *
-//    * @param likeModel - Mongoose model for Like documents (injected via @InjectModel).
-//    * @param postRepository - Domain-level repository for Post aggregate operations.
-//    */
-//   constructor(
-//     @InjectModel(Like.name) // Inject the Mongoose model for Like collection
-//     private readonly likeModel: Model<LikeDocument>,
-//     private readonly postRepository: PostRepository,
-//   ) {
-//     super();
-//   }
-
-//   /**
-//    * Persist a Like and update the corresponding Post in a single transaction.
-//    *
-//    * Domain intent: create a Like aggregate and reflect that change in the Post aggregate
-//    * (e.g., push like id and increment like count). Both operations must be atomic.
-//    *
-//    * @param like - Domain Like entity to persist.
-//    * @returns Promise<Like> - The persisted Like as a domain entity.
-//    * @throws Error - Re-throws underlying DB errors; caller should map to application-level errors if needed.
-//    *
-//    */
-//   async likePost(like: Like): Promise<Like> {
-//     // Use a transaction to ensure both operations succeed or fail together
-//     const session = await this.likeModel.db.startSession();
-
-//     try {
-//       session.startTransaction();
-
-//       console.log(
-//         `DEBUG: Like entity data - user: ${like.user}, post: ${like.post}`,
-//       );
-//       console.log(`DEBUG: Like entity full object:`, like);
-
-//       // Create new MongoDB document with post content
-//       const doc = new this.likeModel({
-//         user: new Types.ObjectId(like.user),
-//         post: new Types.ObjectId(like.post),
-//       });
-
-//       console.log(`DEBUG: MongoDB document being saved:`, {
-//         user: doc.user,
-//         post: doc.post,
-//       });
-
-//       // Save like document to database
-//       const saved = await doc.save({ session });
-
-//       // Add like reference to post and increment count in one operation
-//       await this.postRepository.addLike(
-//         like.post,
-//         saved._id.toString(),
-//         session,
-//       );
-
-//       await session.commitTransaction();
-
-//       console.log(`Successfully liked post ${like.post} by user ${like.user}
-//         Currently in like.repository.impl.ts`);
-
-//       // Convert MongoDB document back to domain entity
-//       return this.toDomainEntity(saved);
-//     } catch (error) {
-//       await session.abortTransaction();
-//       throw error;
-//     } finally {
-//       session.endSession();
-//     }
-//   }
-
-//   /**
-//    * Remove a Like created by userId on postId and update the Post aggregate accordingly.
-//    *
-//    * The deletion and the post update should be executed within the same database transaction.
-//    *
-//    * @param userId - ID of the user removing the like (string).
-//    * @param postId - ID of the post to unlike (string).
-//    * @returns Promise<void> - resolves if the operation completes; throws on error.
-//    */
-//   async unlikePost(like: Like): Promise<void> {
-//     const session = await this.likeModel.db.startSession();
-
-//     try {
-//       session.startTransaction();
-
-//       console.log(
-//         `DEBUG: Attempting to delete like with user: ${like.user}, post: ${like.post}`,
-//       );
-
-//       // Convert string IDs to ObjectId for the query
-//       const query = {
-//         user: new Types.ObjectId(like.user),
-//         post: new Types.ObjectId(like.post),
-//       };
-
-//       console.log(`DEBUG: Query object:`, query);
-
-//       // First, let's check if the document exists
-//       const existingLike = await this.likeModel.findOne(query).session(session);
-//       console.log(`DEBUG: Found existing like:`, existingLike);
-
-//       if (!existingLike) {
-//         console.log(`DEBUG: No like found to delete`);
-//         await session.commitTransaction();
-//         return;
-//       }
-
-//       // Remove the like
-//       const result = await this.likeModel.findOneAndDelete(query, { session });
-
-//       console.log(`DEBUG: Delete result:`, result);
-
-//       if (result) {
-//         // Remove like reference from post and decrement count
-
-//         console.log(
-//           `DEBUG: Calling removeLike with postId: ${like.post}, likeId: ${result._id.toString()}`,
-//         );
-
-//         await this.postRepository.removeLike(
-//           like.post,
-//           result._id.toString(),
-//           session,
-//         );
-//       } else {
-//         console.log(`DEBUG: No document was deleted`);
-//       }
-
-//       await session.commitTransaction();
-
-//       console.log(`Successfully un-liked post ${like.post} by user ${like.user}
-//         Currently in like.repository.impl.ts`);
-//     } catch (error) {
-//       console.error(`DEBUG: Error in unlikePost:`, error);
-
-//       await session.abortTransaction();
-//       throw error;
-//     } finally {
-//       session.endSession();
-//     }
-//   }
-
-//   /**
-//    * Map a persistence document to the domain entity.
-//    *
-//    * Keeps persistence concerns (ObjectId, mongoose methods) inside the infrastructure layer.
-//    *
-//    * @param doc - Mongoose LikeDocument.
-//    * @returns Like - Domain entity instance.
-//    */ private toDomainEntity(doc: LikeDocument): Like {
-//     return new Like(
-//       doc._id.toString(),
-//       doc.user.toString(),
-//       doc.post.toString(),
-//       doc.createdAt,
-//       doc.updatedAt,
-//     );
-//   }
-// }

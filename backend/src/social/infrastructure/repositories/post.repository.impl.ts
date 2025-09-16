@@ -83,43 +83,6 @@ export class PostRepositoryImpl extends PostRepository {
       .exec();
   }
 
-  // async addLike(
-  //   postId: string,
-  //   likeId: string,
-  //   session?: ClientSession,
-  // ): Promise<void> {
-  //   const options = session ? { session, new: true } : { new: true };
-
-  //   await this.postModel
-  //     .findByIdAndUpdate(
-  //       postId,
-  //       {
-  //         $inc: { likeCount: 1 },
-  //         $addToSet: { likes: likeId }, // $addToSet prevents duplicates
-  //       },
-  //       options,
-  //     )
-  //     .exec();
-  // }
-
-  // async removeLike(
-  //   postId: string,
-  //   likeId: string,
-  //   session?: ClientSession,
-  // ): Promise<void> {
-  //   const options = session ? { session, new: true } : { new: true };
-
-  //   await this.postModel
-  //     .findByIdAndUpdate(
-  //       postId,
-  //       {
-  //         $inc: { likeCount: -1 },
-  //         $pull: { likes: likeId },
-  //       },
-  //       options,
-  //     )
-  //     .exec();
-  // }
   // Helper method to convert MongoDB document to domain entity
   private toDomainEntity(doc: PostDocument): Post {
     return new Post(
