@@ -29,7 +29,7 @@ export class Post {
 
   // Virtual fields for relations
   author?: Types.ObjectId;
-  comments?: Types.ObjectId[];
+  // comments?: Types.ObjectId[];
   notifications?: Types.ObjectId[];
 }
 

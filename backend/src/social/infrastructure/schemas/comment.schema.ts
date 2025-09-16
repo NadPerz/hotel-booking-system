@@ -4,7 +4,7 @@ import { Document, Types } from 'mongoose';
 export type CommentDocument = Comment & Document & { _id: Types.ObjectId };
 
 @Schema({
-  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
+  timestamps: true,
   collection: 'comments',
 })
 export class Comment {
@@ -16,6 +16,9 @@ export class Comment {
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   user: Types.ObjectId;
+
+  @Prop({ type: Number, default: 0 })
+  likeCount: number;
 }
 
 export const CommentSchema = SchemaFactory.createForClass(Comment);

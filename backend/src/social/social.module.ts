@@ -17,10 +17,13 @@ import { LikeService } from './application/services/like.service';
 import { LikeRepository } from './domain/repositories/like.repository';
 import { LikeRepositoryImpl } from './infrastructure/repositories/like.repository.impl';
 
-//
-import { TravelerSchema } from './infrastructure/schemas/traveler.schema';
-//
+//Comments
 import { CommentSchema } from './infrastructure/schemas/comment.schema';
+import { CommentController } from './presentation/controllers/comment.controller';
+import { CommentService } from './application/services/comment.service';
+import { CommentRepository } from './domain/repositories/comment.repository';
+import { CommentRepositoryImpl } from './infrastructure/repositories/comment.repository.impl';
+
 //
 import { HasFriendshipSchema } from './infrastructure/schemas/friendships.schema';
 
@@ -28,19 +31,20 @@ import { HasFriendshipSchema } from './infrastructure/schemas/friendships.schema
   imports: [
     MongooseModule.forFeature([
       { name: 'Post', schema: PostSchema },
-      { name: 'Traveler', schema: TravelerSchema },
-      { name: 'PostComment', schema: CommentSchema },
+      { name: 'Comment', schema: CommentSchema },
       { name: 'Like', schema: LikeSchema },
       { name: 'HasFriendship', schema: HasFriendshipSchema },
     ]),
   ],
-  controllers: [PostController, LikeController],
+  controllers: [PostController, LikeController, CommentController],
   providers: [
     PostService,
     LikeService,
+    CommentService,
     { provide: PostRepository, useClass: PostRepositoryImpl },
     { provide: LikeRepository, useClass: LikeRepositoryImpl },
+    { provide: CommentRepository, useClass: CommentRepositoryImpl },
   ],
-  exports: [PostService, LikeService],
+  exports: [PostService, LikeService, CommentService],
 })
 export class SocialModule {}
