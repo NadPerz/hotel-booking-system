@@ -39,17 +39,39 @@ export class PostRepositoryImpl extends PostRepository {
       throw new Error('User ID is required to create a post');
     }
 
-    // Create new MongoDB document with post content
-    const doc = new this.postModel({
-      user: post.user,
-      content: post.content,
-    });
+    try {
+      // Create new MongoDB document with post content
+      const doc = new this.postModel({
+        user: post.user,
+        content: post.content,
+      });
 
-    // Save document to database
-    const saved = await doc.save();
+      //pre-save logging
+      this.logger.debug('MongoDB document prepared for save', {
+        userId: doc.user,
+        hasContent: !!doc.content,
+      });
 
-    // Convert MongoDB document back to domain entity
-    return this.toDomainEntity(saved);
+      // Save document to database
+      const saved = await doc.save();
+
+      //success logging
+      this.logger.log(`Post created successfully with ID: ${saved._id}`, {
+        postId: saved._id,
+        userId: saved.user,
+      });
+
+      // Convert MongoDB document back to domain entity
+      return this.toDomainEntity(saved);
+    } catch (error) {
+      // error logging
+      this.logger.error('Failed to create post', {
+        userId: post.user,
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
   }
 
   /**
@@ -61,14 +83,28 @@ export class PostRepositoryImpl extends PostRepository {
   async getAll(): Promise<Post[]> {
     this.logger.log(`[PostRepositoryImpl.getAll] Fetching posts from DB`);
 
-    // Query all posts from database, sorted by creation date (newest first)
-    const docs = await this.postModel
-      .find()
-      .sort({ createdAt: -1 }) // Most recent first
-      .exec();
+    try {
+      // Query all posts from database, sorted by creation date (newest first)
+      const docs = await this.postModel
+        .find()
+        .sort({ createdAt: -1 }) // Most recent first
+        .exec();
 
-    // Convert each MongoDB document to domain entity
-    return docs.map((doc) => this.toDomainEntity(doc));
+      // 🆕 NEW: Added result logging
+      this.logger.log(
+        `Successfully retrieved ${docs.length} posts from database`,
+      );
+
+      // Convert each MongoDB document to domain entity
+      return docs.map((doc) => this.toDomainEntity(doc));
+    } catch (error) {
+      // 🆕 NEW: Added error logging
+      this.logger.error('Failed to fetch posts from database', {
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
   }
 
   /**
@@ -85,19 +121,50 @@ export class PostRepositoryImpl extends PostRepository {
     likeId: string,
     session?: ClientSession,
   ): Promise<void> {
-    // 🔄 IMPROVED: Cleaner session options handling
-    const updateOptions = session ? { session, new: true } : { new: true };
+    // method entry logging
+    this.logger.debug(`Adding like to post`, {
+      postId,
+      likeId,
+      hasSession: !!session,
+    });
 
-    await this.postModel
-      .findByIdAndUpdate(
+    try {
+      // session options handling
+      const updateOptions = session ? { session, new: true } : { new: true };
+
+      const result = await this.postModel
+        .findByIdAndUpdate(
+          postId,
+          {
+            $inc: { likeCount: 1 },
+            // $addToSet: { likes: likeId },
+          },
+          updateOptions,
+        )
+        .exec();
+
+      if (result) {
+        //success logging
+        this.logger.log(`Successfully added like to post ${postId}`, {
+          postId,
+          likeId,
+          newLikeCount: result.likeCount + 1,
+        });
+      } else {
+        // warning for non-existent post
+        this.logger.warn(`Post not found when adding like`, { postId, likeId });
+        throw new Error(`Post with ID ${postId} not found`);
+      }
+    } catch (error) {
+      // error logging
+      this.logger.error('Failed to add like to post', {
         postId,
-        {
-          $inc: { likeCount: 1 },
-          // $addToSet: { likes: likeId },
-        },
-        updateOptions,
-      )
-      .exec();
+        likeId,
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
   }
 
   /**
@@ -114,19 +181,53 @@ export class PostRepositoryImpl extends PostRepository {
     likeId: string,
     session?: ClientSession,
   ): Promise<void> {
-    // 🔄 IMPROVED: Cleaner session options handling
-    const updateOptions = session ? { session, new: true } : { new: true };
+    // 🆕 NEW: Added method entry logging
+    this.logger.debug(`Removing like from post`, {
+      postId,
+      likeId,
+      hasSession: !!session,
+    });
 
-    await this.postModel
-      .findByIdAndUpdate(
+    try {
+      // IMPROVED: Cleaner session options handling
+      const updateOptions = session ? { session, new: true } : { new: true };
+
+      const result = await this.postModel
+        .findByIdAndUpdate(
+          postId,
+          {
+            $inc: { likeCount: -1 },
+            // $pull: { likes: likeId },
+          },
+          updateOptions,
+        )
+        .exec();
+
+      if (result) {
+        // 🆕 NEW: Added success logging
+        this.logger.log(`Successfully removed like from post ${postId}`, {
+          postId,
+          likeId,
+          newLikeCount: Math.max(0, result.likeCount - 1),
+        });
+      } else {
+        // 🆕 NEW: Added warning for non-existent post
+        this.logger.warn(`Post not found when removing like`, {
+          postId,
+          likeId,
+        });
+        throw new Error(`Post with ID ${postId} not found`);
+      }
+    } catch (error) {
+      // 🆕 NEW: Added error logging
+      this.logger.error('Failed to remove like from post', {
         postId,
-        {
-          $inc: { likeCount: -1 },
-          // $pull: { likes: likeId },
-        },
-        updateOptions,
-      )
-      .exec();
+        likeId,
+        error: error.message,
+        stack: error.stack,
+      });
+      throw error;
+    }
   }
 
   /**
