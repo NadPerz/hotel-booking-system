@@ -1,3 +1,5 @@
+//like.repository.impl.ts
+
 import { Injectable } from '@nestjs/common';
 import { LikeRepository } from 'src/social/domain/repositories/like.repository';
 import { LikeDocument } from '../schemas/like.schema';
@@ -21,20 +23,6 @@ export class LikeRepositoryImpl extends LikeRepository {
   ) {
     super();
   }
-
-  //   async likePost(like: Like): Promise<Like> {
-  //     // Create new MongoDB document with post content
-  //     const doc = new this.likeModel({
-  //       user: like.user,
-  //       post: like.post,
-  //     });
-
-  //     // Save document to database
-  //     const saved = await doc.save();
-
-  //     // Convert MongoDB document back to domain entity
-  //     return this.toDomainEntity(saved);
-  //   }
 
   /**
    * Persist a Like and update the corresponding Post in a single transaction.

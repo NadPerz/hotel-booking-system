@@ -1,3 +1,5 @@
+//post.service.ts
+
 import { Injectable } from '@nestjs/common';
 import { CreatePostDto } from '@shared/types/social/create-post.dto';
 import { Post } from 'src/social/domain/entities/post.entity';
