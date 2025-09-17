@@ -7,6 +7,6 @@ export class EventRsvp {
     public userId: string,
     public rsvpStatus: string,
     public guestCount: number,
-    public rsvpDate?: string,
+    // public rsvpDate?: string,
   ) {}
 }

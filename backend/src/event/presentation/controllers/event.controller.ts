@@ -8,6 +8,8 @@ import { CreateEventCategoryDto } from '../../application/dtos/create-event-cate
 import { CreateEventOrganizerDto } from '../../application/dtos/create-event-organizer.dto';
 import { CreateEventVenueDto } from '../../application/dtos/create-event-venue.dto';
 
+import { UpdateEventDto } from '../../application/dtos/update-event.dto';
+
 @Controller('events')
 export class EventController {
   constructor(private readonly eventService: EventService) {}
@@ -55,4 +57,39 @@ export class EventController {
   async createVenue(@Body() createDto: CreateEventVenueDto) {
     return await this.eventService.createVenue(createDto);
   }
+
+  //get venue by id
+  @Get('venue/:id')
+  async getVenueById(@Param('id') id: string) {
+    return await this.eventService.getVenueById(id);
+  }
+
+  //get category by id
+  @Get('category/:id')
+  async getCategoryById(@Param('id') id: string) {
+    return await this.eventService.getCategoryById(id);
+  }
+  //get organizer by id
+  @Get('organizer/:id')
+  async getOrganizerById(@Param('id') id: string) {
+    return await this.eventService.getOrganizerById(id);
+  }
+
+  //get rsvp by id
+  @Get('rsvp/:id')
+  async getRsvpById(@Param('id') id: string) {
+    return await this.eventService.getRsvpById(id);
+  }
+
+  //get hashtag by id
+  @Get('hashtag/:id')
+  async getHashtagById(@Param('id') id: string) {
+    return await this.eventService.getHashtagById(id);
+  }
+
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() updateDto: UpdateEventDto) {
+    return await this.eventService.update(id, updateDto);
+  }
+
 }

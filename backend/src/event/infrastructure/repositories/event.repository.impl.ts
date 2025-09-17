@@ -24,6 +24,11 @@ export class EventRepositoryImpl extends EventRepository {
     return doc ? this.toDomainEntity(doc) : null;
   }
 
+async update(event: Event): Promise<any | null> {
+    const updatedDoc = await this.eventModel.findByIdAndUpdate(event.id, event, { new: true }).exec();
+    return updatedDoc ? this.toDomainEntity(updatedDoc) : null;
+  }
+
   private toDomainEntity(doc: EventDocument): any {
     return {
       id: doc._id.toString(),

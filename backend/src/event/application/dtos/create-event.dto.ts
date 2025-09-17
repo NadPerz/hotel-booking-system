@@ -12,6 +12,6 @@ export class CreateEventDto {
   venueId: string;
   organizerId: string;
   categoryId: string;
-  hashtags?: string[];
-  location?: string;
+  // hashtags?: string[];
+  // location?: string;
 }

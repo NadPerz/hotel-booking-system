@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { EventRepository } from '../../domain/repositories/event.repository';
 import { Event } from '../../domain/entities/event.entity';
 import { CreateEventDto } from '../dtos/create-event.dto';
@@ -20,6 +20,8 @@ import { CreateEventVenueDto } from '../dtos/create-event-venue.dto';
 import { EventCategory } from '../../domain/entities/event-category.entity';
 import { EventOrganizer } from '../../domain/entities/event-organizer.entity';
 import { EventVenue } from '../../domain/entities/event-venue.entity';
+import { UpdateEventDto } from '../dtos/update-event.dto';
+
 
 @Injectable()
 export class EventService {
@@ -66,9 +68,36 @@ export class EventService {
     return await this.eventRepository.create(event);
   }
 
+  //find event by id
   async findById(id: string): Promise<Event | null> {
     return await this.eventRepository.findById(id);
   }
+
+  //find the venue by id
+  async getVenueById(id: string): Promise<EventVenue | null> {
+    return await this.eventVenueRepository.findById(id);
+  }
+
+  //find the organizer by id
+  async getOrganizerById(id: string): Promise<EventOrganizer | null> {
+    return await this.eventOrganizerRepository.findById(id);
+  }
+  
+  //find the category by id
+  async getCategoryById(id: string): Promise<EventCategory | null> {
+    return await this.eventCategoryRepository.findById(id);
+  }
+  //find the rsvp by id
+  async getRsvpById(id: string): Promise<EventRsvp | null> {
+    return await this.eventRsvpRepository.findById(id);
+  }
+
+  //find the hashtag by id
+  async getHashtagById(id: string): Promise<EventHashtag | null> {
+    return await this.eventHashtagRepository.findById(id);
+  }
+
+ 
 
   async createRsvp(createRsvpDto: CreateEventRsvpDto): Promise<EventRsvp> {
     const event = await this.eventRepository.findById(createRsvpDto.eventId);
@@ -158,5 +187,20 @@ export class EventService {
       createDto.facilities,
     );
     return await this.eventVenueRepository.create(venue);
+  }
+
+
+  //update event by id
+  async update(id: string, updateDto: UpdateEventDto): Promise<Event | null> {
+    const existingEvent = await this.eventRepository.findById(id);
+
+    if (!existingEvent) {
+      throw new NotFoundException(`Event with ID ${id} not found`);
+    }
+
+    // Apply updates from DTO to the existing domain entity
+    Object.assign(existingEvent, updateDto);
+
+    return await this.eventRepository.update (existingEvent);
   }
 }
