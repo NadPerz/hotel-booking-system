@@ -1,13 +1,16 @@
-import { Controller, Post, Get, Body, Param } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { ItineraryService } from 'src/itinerary/application/services/itinerary.service';
 import { CreateItineraryDto } from '../../application/dtos/create-itinerary.dto';
 import { ItineraryChatService } from 'src/itinerary/application/services/itinerary-chat.service';
-
+import { ChatItineraryRequestDto } from 'src/itinerary/application/dtos/requests/chatItinerary.dto';
+import { ItineraryChatServiceMock } from 'src/itinerary/application/services/mocks/itinerary-chat.service.mock';
+import { ChatItineraryResponseDto } from '@shared/types/itinerary/chat-itinerary.response.dto';
 @Controller('itineraries')
 export class ItineraryController {
   constructor(
     private readonly itineraryService: ItineraryService,
     private readonly itineraryChatService: ItineraryChatService,
+    private readonly itineraryChatServiceMock: ItineraryChatServiceMock,
   ) {}
 
   @Post()
@@ -15,15 +18,18 @@ export class ItineraryController {
     return await this.itineraryService.create(createDto);
   }
   @Post('chat')
-  chatItinerary(
+  async chatItinerary(
     @Body()
-    { message, conversationId }: { message: string; conversationId: string },
-  ) {
-    return this.itineraryChatService.chatItinerary(message, conversationId);
-  }
+    { message, conversationId }: ChatItineraryRequestDto,
+  ): Promise<ChatItineraryResponseDto> {
+    const mock = false;
 
-  @Get(':id')
-  async findById(@Param('id') id: string) {
-    return await this.itineraryService.findById(id);
+    if (mock) {
+      return this.itineraryChatServiceMock.chatItinerary();
+    }
+    return await this.itineraryChatService.chatItinerary(
+      message,
+      conversationId,
+    );
   }
 }
