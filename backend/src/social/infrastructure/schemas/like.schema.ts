@@ -1,21 +1,22 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-export type LikeDocument = Like & Document & { _id: Types.ObjectId };
+export type LikeDocument = Like &
+  Document & { _id: Types.ObjectId; createdAt: string; updatedAt: string };
 
 @Schema({
-  timestamps: { createdAt: 'created_at' },
+  timestamps: true,
   collection: 'likes',
 })
 export class Like {
-  @Prop({ type: Types.ObjectId, ref: 'Traveler', required: true })
-  user_id: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  user: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Post', required: true })
-  post_id: Types.ObjectId;
+  post: Types.ObjectId;
 }
 
 export const LikeSchema = SchemaFactory.createForClass(Like);
 
 // Index to prevent duplicate likes
-LikeSchema.index({ user_id: 1, post_id: 1 }, { unique: true });
+LikeSchema.index({ user: 1, post: 1 }, { unique: true });

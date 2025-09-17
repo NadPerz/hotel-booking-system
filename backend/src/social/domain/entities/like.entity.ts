@@ -1,10 +1,8 @@
-export class Post {
+export class Like {
   constructor(
     public id: string,
     public user: string,
-    public content?: string,
-    public likeCount: number = 0,
-    public commentCount: number = 0,
+    public post: string,
     public createdAt?: string,
     public updatedAt?: string,
   ) {}
