@@ -5,28 +5,38 @@ import { CreateCommentDto } from '@shared/types/social/create-comment.dto';
 
 import { CommentService } from 'src/social/application/services/comment.service';
 
-@Controller('comments')
+@Controller('posts/:postId/comments')
 export class CommentController {
   private readonly logger = new Logger(CommentController.name);
 
   constructor(private readonly commentService: CommentService) {}
 
   @Post()
-  async addComment(@Body() dto: CreateCommentDto) {
-    this.logger.log(`POST /comments request`, {
+  async addComment(
+    @Param('postId') postId: string,
+    @Body() body: { user?: string; content?: string },
+  ) {
+    const dto: CreateCommentDto = {
+      user: body?.user as string,
+      post: postId,
+      content: body?.content as string,
+    };
+
+    this.logger.log(`POST /posts/:postId/comments request`, {
       userId: dto.user,
       postId: dto.post,
     });
     return await this.commentService.addComment(dto);
   }
 
-  @Delete(':user/:post/:comment')
+  @Delete(':commentId')
   async deleteComment(
-    @Param('user') userId: string,
-    @Param('post') postId: string,
-    @Param('comment') commentId: string,
+    @Param('postId') postId: string,
+    @Param('commentId') commentId: string,
+    @Body() body: { user?: string },
   ) {
-    this.logger.log(`DELETE /comments request`, {
+    const userId = body?.user as string;
+    this.logger.log(`DELETE /posts/:postId/comments/:commentId request`, {
       userId,
       postId,
       commentId,

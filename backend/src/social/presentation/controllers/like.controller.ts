@@ -12,29 +12,40 @@ import {
 import { LikePostDto } from '@shared/types/social/like-post.dto';
 import { LikeService } from 'src/social/application/services/like.service';
 
-@Controller('likes')
+@Controller('posts/:postId/likes')
 export class LikeController {
   private readonly logger = new Logger(LikeController.name);
 
   constructor(private readonly likeService: LikeService) {}
 
   @Post()
-  async likePost(@Body() likePostDto: LikePostDto) {
-    this.logger.log(`POST /likes request`, {
+  async likePost(
+    @Param('postId') postId: string,
+    @Body() body: { user?: string },
+  ) {
+    const likePostDto: LikePostDto = {
+      user: body?.user as string,
+      post: postId,
+    };
+
+    this.logger.log(`POST /posts/:postId/likes request`, {
       userId: likePostDto.user,
       postId: likePostDto.post,
     });
     return await this.likeService.likePost(likePostDto);
   }
 
-  @Delete(':user/:post')
+  @Delete()
   async unlikePost(
-    @Param('user') userId: string,
-    @Param('post') postId: string,
+    @Param('postId') postId: string,
+    @Body() body: { user?: string },
   ) {
-    const likePostDto: LikePostDto = { user: userId, post: postId };
+    const likePostDto: LikePostDto = {
+      user: body?.user as string,
+      post: postId,
+    };
 
-    this.logger.log(`DELETE /likes request`, {
+    this.logger.log(`DELETE /posts/:postId/likes request`, {
       userId: likePostDto.user,
       postId: likePostDto.post,
     });
