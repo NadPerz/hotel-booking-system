@@ -30,6 +30,11 @@ export class EventHashtagRepositoryImpl extends EventHashtagRepository {
     return doc ? this.toDomainEntity(doc) : null;
   }
 
+  async update(eventHashtag: EventHashtag): Promise<any | null> {
+    const updatedDoc = await this.eventHashtagModel.findByIdAndUpdate(eventHashtag.id, eventHashtag, { new: true }).exec();
+    return updatedDoc ? this.toDomainEntity(updatedDoc) : null;
+  }
+
   private toDomainEntity(doc: EventHashtagDocument): any {
     return {
       id: doc._id.toString(),
