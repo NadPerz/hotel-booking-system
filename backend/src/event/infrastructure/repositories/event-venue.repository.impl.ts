@@ -29,6 +29,10 @@ export class EventVenueRepositoryImpl extends EventVenueRepository {
     return updatedDoc ? this.toDomainEntity(updatedDoc) : null;
   }
 
+  async delete(id: string): Promise<void> {
+    await this.eventVenueModel.findByIdAndDelete(id).exec();
+  }
+
 
   private toDomainEntity(doc: EventVenueDocument): any {
     return {

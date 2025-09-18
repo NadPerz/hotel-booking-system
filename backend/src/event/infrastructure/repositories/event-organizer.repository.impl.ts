@@ -29,6 +29,10 @@ export class EventOrganizerRepositoryImpl extends EventOrganizerRepository {
     return updatedDoc ? this.toDomainEntity(updatedDoc) : null;
   }
 
+  async delete(id: string): Promise<void> {
+    await this.eventOrganizerModel.findByIdAndDelete(id).exec();
+  }
+
 
   private toDomainEntity(doc: EventOrganizerDocument): any {
     return {

@@ -35,6 +35,10 @@ export class EventHashtagRepositoryImpl extends EventHashtagRepository {
     return updatedDoc ? this.toDomainEntity(updatedDoc) : null;
   }
 
+  async delete(id: string): Promise<void> {
+    await this.eventHashtagModel.findByIdAndDelete(id).exec();
+  }
+
   private toDomainEntity(doc: EventHashtagDocument): any {
     return {
       id: doc._id.toString(),
