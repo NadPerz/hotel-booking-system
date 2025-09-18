@@ -74,4 +74,9 @@ export abstract class PostRepository {
     commentId: string,
     session?: ClientSession,
   ): Promise<void>;
+
+  /**
+   * Deletes a post by its ID.
+   */
+  abstract delete(postId: string, session?: ClientSession): Promise<void>;
 }

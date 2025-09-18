@@ -110,6 +110,22 @@ export class CommentRepositoryImpl extends CommentRepository {
     }
   }
 
+  /**
+   * Deletes all comments for a given post. Not part of the abstract repository interface; used for cascading deletes.
+   */
+  async deleteManyByPost(
+    postId: string,
+    session?: ClientSession,
+  ): Promise<void> {
+    this.logger.debug(
+      `[CommentRepositoryImpl.deleteManyByPost] Deleting comments for post`,
+    );
+    await this.commentModel.deleteMany(
+      { post: new Types.ObjectId(postId) },
+      session ? { session } : {},
+    );
+  }
+
   private toDomainEntity(doc: CommentDocument): Comment {
     return new Comment(
       doc._id.toString(),

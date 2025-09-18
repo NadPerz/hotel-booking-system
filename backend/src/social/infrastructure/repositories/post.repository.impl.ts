@@ -256,6 +256,23 @@ export class PostRepositoryImpl extends PostRepository {
   }
 
   /**
+   * Deletes a post document by its ID.
+   * Not part of the abstract interface; used by service for cascading deletes.
+   */
+  async delete(postId: string, session?: ClientSession): Promise<void> {
+    this.logger.debug(`[PostRepositoryImpl.delete] Deleting post`);
+
+    const result = await this.postModel.findByIdAndDelete(
+      postId,
+      session ? { session } : {},
+    );
+
+    if (!result) {
+      this.logger.warn(`Post not found when deleting`, { postId });
+    }
+  }
+
+  /**
    * Converts a MongoDB document to a domain entity.
    *
    * @private

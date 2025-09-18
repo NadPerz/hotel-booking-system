@@ -243,4 +243,20 @@ export class LikeRepositoryImpl extends LikeRepository {
       doc.updatedAt,
     );
   }
+
+  /**
+   * Deletes all likes for a given post. Implements interface contract for cascading deletes.
+   */
+  async deleteManyByPost(
+    postId: string,
+    session?: ClientSession,
+  ): Promise<void> {
+    this.logger.debug(
+      `[LikeRepositoryImpl.deleteManyByPost] Deleting likes for post`,
+    );
+    await this.likeModel.deleteMany(
+      { post: new Types.ObjectId(postId) },
+      session ? { session } : {},
+    );
+  }
 }

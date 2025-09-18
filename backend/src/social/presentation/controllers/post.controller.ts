@@ -3,6 +3,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   InternalServerErrorException,
   Logger,
@@ -44,5 +45,19 @@ export class PostController {
   async getPostById(@Param('id') id: string) {
     this.logger.warn(`GET /posts/:id not implemented`, { postId: id });
     // return await this.postService.getById(id);
+  }
+
+  @Delete(':postId')
+  async delete(
+    @Param('postId') postId: string,
+    @Body() body: { user?: string },
+  ) {
+    const userId = body?.user as string;
+    this.logger.log(`DELETE /posts/:postId request`, {
+      userId,
+      postId,
+    });
+    await this.postService.delete(postId, userId);
+    return { success: true, message: 'Post deleted successfully' };
   }
 }
