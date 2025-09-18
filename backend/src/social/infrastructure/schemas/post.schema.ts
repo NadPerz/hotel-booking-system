@@ -18,10 +18,18 @@ export class Post {
   @Prop({ type: String })
   image?: string;
 
+  @Prop({ type: Number, default: 0 })
+  likeCount: number;
+
+  @Prop({ type: Number, default: 0 })
+  commentCount: number;
+
+  // @Prop({ type: [Types.ObjectId], ref: 'Like', default: [] })
+  // likes?: Types.ObjectId[];
+
   // Virtual fields for relations
   author?: Types.ObjectId;
-  comments?: Types.ObjectId[];
-  likes?: Types.ObjectId[];
+  // comments?: Types.ObjectId[];
   notifications?: Types.ObjectId[];
 }
 
