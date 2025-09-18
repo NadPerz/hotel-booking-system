@@ -21,26 +21,19 @@ export class CommentRepositoryImpl extends CommentRepository {
     operation: (session: ClientSession) => Promise<T>,
   ): Promise<T> {
     this.logger.debug(
-      `[CommentRepositoryImpl.createWithTransaction] Starting transaction for create comment on PostID: ${comment.post}, UserID: ${comment.user}`,
+      `[CommentRepositoryImpl.createWithTransaction] Starting create comment transaction`,
     );
     const session = await this.commentModel.db.startSession();
     try {
       session.startTransaction();
       const result = await operation(session);
       await session.commitTransaction();
-      this.logger.log(
-        `[CommentRepositoryImpl.createWithTransaction] Transaction committed successfully`,
-      );
+      // success log removed to reduce noise
       return result;
     } catch (error) {
       this.logger.error(
         `[CommentRepositoryImpl.createWithTransaction] Transaction failed, rolling back`,
-        {
-          postId: comment.post,
-          userId: comment.user,
-          error: error.message,
-          code: error.code,
-        },
+        error.stack,
       );
       await session.abortTransaction();
       throw error;
@@ -57,27 +50,19 @@ export class CommentRepositoryImpl extends CommentRepository {
     operation: (session: ClientSession) => Promise<T>,
   ): Promise<T> {
     this.logger.debug(
-      `[CommentRepositoryImpl.deleteWithTransaction] Starting transaction for delete comment ${comment.id} on PostID: ${comment.post}, UserID: ${comment.user}`,
+      `[CommentRepositoryImpl.deleteWithTransaction] Starting delete comment transaction`,
     );
     const session = await this.commentModel.db.startSession();
     try {
       session.startTransaction();
       const result = await operation(session);
       await session.commitTransaction();
-      this.logger.log(
-        `[CommentRepositoryImpl.deleteWithTransaction] Transaction committed successfully`,
-      );
+      // success log removed to reduce noise
       return result;
     } catch (error) {
       this.logger.error(
         `[CommentRepositoryImpl.deleteWithTransaction] Transaction failed, rolling back`,
-        {
-          postId: comment.post,
-          userId: comment.user,
-          commentId: comment.id,
-          error: error.message,
-          code: error.code,
-        },
+        error.stack,
       );
       await session.abortTransaction();
       throw error;
@@ -90,10 +75,7 @@ export class CommentRepositoryImpl extends CommentRepository {
   }
 
   async create(comment: Comment, session?: ClientSession): Promise<Comment> {
-    this.logger.debug(`[CommentRepositoryImpl.create] Creating comment`, {
-      userId: comment.user,
-      postId: comment.post,
-    });
+    this.logger.debug(`[CommentRepositoryImpl.create] Creating comment`);
 
     const doc = new this.commentModel({
       user: new Types.ObjectId(comment.user),
@@ -102,9 +84,7 @@ export class CommentRepositoryImpl extends CommentRepository {
     });
 
     const saved = await doc.save(session ? { session } : {});
-    this.logger.log(
-      `[CommentRepositoryImpl.create] Comment saved successfully with ID: ${saved._id}`,
-    );
+    // success log removed to reduce noise
     return this.toDomainEntity(saved);
   }
 
@@ -112,11 +92,7 @@ export class CommentRepositoryImpl extends CommentRepository {
     comment: Pick<Comment, 'id' | 'user' | 'post'>,
     session?: ClientSession,
   ): Promise<void> {
-    this.logger.debug(`[CommentRepositoryImpl.delete] Deleting comment`, {
-      commentId: comment.id,
-      userId: comment.user,
-      postId: comment.post,
-    });
+    this.logger.debug(`[CommentRepositoryImpl.delete] Deleting comment`);
 
     const result = await this.commentModel.findOneAndDelete(
       {
@@ -127,15 +103,27 @@ export class CommentRepositoryImpl extends CommentRepository {
       session ? { session } : {},
     );
 
-    if (result) {
-      this.logger.log(
-        `[CommentRepositoryImpl.delete] Comment removed successfully - ID: ${result._id}`,
-      );
-    } else {
+    if (!result) {
       this.logger.warn(
         `[CommentRepositoryImpl.delete] No comment document found to remove`,
       );
     }
+  }
+
+  /**
+   * Deletes all comments for a given post. Not part of the abstract repository interface; used for cascading deletes.
+   */
+  async deleteManyByPost(
+    postId: string,
+    session?: ClientSession,
+  ): Promise<void> {
+    this.logger.debug(
+      `[CommentRepositoryImpl.deleteManyByPost] Deleting comments for post`,
+    );
+    await this.commentModel.deleteMany(
+      { post: new Types.ObjectId(postId) },
+      session ? { session } : {},
+    );
   }
 
   private toDomainEntity(doc: CommentDocument): Comment {

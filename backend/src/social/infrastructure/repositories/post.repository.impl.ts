@@ -30,9 +30,7 @@ export class PostRepositoryImpl extends PostRepository {
    * @throws Error if the save operation fails
    */
   async create(post: Post): Promise<Post> {
-    this.logger.log(
-      `[PostRepositoryImpl.create] Creating new post for user ${post.user}`,
-    );
+    this.logger.debug(`[PostRepositoryImpl.create] Creating new post`);
 
     if (!post.user) {
       this.logger.error('Cannot create post: missing user ID', { post });
@@ -46,30 +44,19 @@ export class PostRepositoryImpl extends PostRepository {
         content: post.content,
       });
 
-      //pre-save logging
-      this.logger.debug('MongoDB document prepared for save', {
-        userId: doc.user,
-        hasContent: !!doc.content,
-      });
+      //pre-save logging (debug only)
+      this.logger.debug('MongoDB document prepared for save');
 
       // Save document to database
       const saved = await doc.save();
 
-      //success logging
-      this.logger.log(`Post created successfully with ID: ${saved._id}`, {
-        postId: saved._id,
-        userId: saved.user,
-      });
+      //success log removed to reduce noise
 
       // Convert MongoDB document back to domain entity
       return this.toDomainEntity(saved);
     } catch (error) {
-      // error logging
-      this.logger.error('Failed to create post', {
-        userId: post.user,
-        error: error.message,
-        stack: error.stack,
-      });
+      // error logging with minimal context
+      this.logger.error('Failed to create post', error.stack);
       throw error;
     }
   }
@@ -81,7 +68,7 @@ export class PostRepositoryImpl extends PostRepository {
    * @throws Error if the query operation fails
    */
   async getAll(): Promise<Post[]> {
-    this.logger.log(`[PostRepositoryImpl.getAll] Fetching posts from DB`);
+    this.logger.debug(`[PostRepositoryImpl.getAll] Fetching posts from DB`);
 
     try {
       // Query all posts from database, sorted by creation date (newest first)
@@ -90,19 +77,12 @@ export class PostRepositoryImpl extends PostRepository {
         .sort({ createdAt: -1 }) // Most recent first
         .exec();
 
-      // result logging
-      this.logger.log(
-        `Successfully retrieved ${docs.length} posts from database`,
-      );
+      // success log removed to reduce noise
 
       // Convert each MongoDB document to domain entity
       return docs.map((doc) => this.toDomainEntity(doc));
     } catch (error) {
-      // error logging
-      this.logger.error('Failed to fetch posts from database', {
-        error: error.message,
-        stack: error.stack,
-      });
+      this.logger.error('Failed to fetch posts from database', error.stack);
       throw error;
     }
   }
@@ -121,12 +101,8 @@ export class PostRepositoryImpl extends PostRepository {
     likeId: string,
     session?: ClientSession,
   ): Promise<void> {
-    // method entry logging
-    this.logger.debug(`Adding like to post`, {
-      postId,
-      likeId,
-      hasSession: !!session,
-    });
+    // method entry logging (debug only)
+    this.logger.debug(`Adding like to post`);
 
     try {
       // session options handling
@@ -143,26 +119,14 @@ export class PostRepositoryImpl extends PostRepository {
         )
         .exec();
 
-      if (result) {
-        //success logging
-        this.logger.log(`Successfully added like to post ${postId}`, {
-          postId,
-          likeId,
-          newLikeCount: result.likeCount,
-        });
-      } else {
+      if (!result) {
         // warning for non-existent post
-        this.logger.warn(`Post not found when adding like`, { postId, likeId });
+        this.logger.warn(`Post not found when adding like`);
         throw new Error(`Post with ID ${postId} not found`);
       }
     } catch (error) {
       // error logging
-      this.logger.error('Failed to add like to post', {
-        postId,
-        likeId,
-        error: error.message,
-        stack: error.stack,
-      });
+      this.logger.error('Failed to add like to post', error.stack);
       throw error;
     }
   }
@@ -181,12 +145,8 @@ export class PostRepositoryImpl extends PostRepository {
     likeId: string,
     session?: ClientSession,
   ): Promise<void> {
-    //  method entry logging
-    this.logger.debug(`Removing like from post`, {
-      postId,
-      likeId,
-      hasSession: !!session,
-    });
+    //  method entry logging (debug only)
+    this.logger.debug(`Removing like from post`);
 
     try {
       //session options handling
@@ -203,29 +163,14 @@ export class PostRepositoryImpl extends PostRepository {
         )
         .exec();
 
-      if (result) {
-        //success logging
-        this.logger.log(`Successfully removed like from post ${postId}`, {
-          postId,
-          likeId,
-          newLikeCount: Math.max(0, result.likeCount - 1),
-        });
-      } else {
+      if (!result) {
         // warning for non-existent post
-        this.logger.warn(`Post not found when removing like`, {
-          postId,
-          likeId,
-        });
+        this.logger.warn(`Post not found when removing like`);
         throw new Error(`Post with ID ${postId} not found`);
       }
     } catch (error) {
       // error logging
-      this.logger.error('Failed to remove like from post', {
-        postId,
-        likeId,
-        error: error.message,
-        stack: error.stack,
-      });
+      this.logger.error('Failed to remove like from post', error.stack);
       throw error;
     }
   }
@@ -242,11 +187,7 @@ export class PostRepositoryImpl extends PostRepository {
     commentId: string,
     session?: ClientSession,
   ): Promise<void> {
-    this.logger.debug(`Adding comment to post`, {
-      postId,
-      commentId,
-      hasSession: !!session,
-    });
+    this.logger.debug(`Adding comment to post`);
 
     try {
       const updateOptions = session ? { session, new: true } : { new: true };
@@ -261,13 +202,7 @@ export class PostRepositoryImpl extends PostRepository {
         )
         .exec();
 
-      if (result) {
-        this.logger.log(`Successfully added comment to post ${postId}`, {
-          postId,
-          commentId,
-          newCommentCount: result.commentCount,
-        });
-      } else {
+      if (!result) {
         this.logger.warn(`Post not found when adding comment`, {
           postId,
           commentId,
@@ -275,12 +210,7 @@ export class PostRepositoryImpl extends PostRepository {
         throw new Error(`Post with ID ${postId} not found`);
       }
     } catch (error) {
-      this.logger.error('Failed to add comment to post', {
-        postId,
-        commentId,
-        error: error.message,
-        stack: error.stack,
-      });
+      this.logger.error('Failed to add comment to post', error.stack);
       throw error;
     }
   }
@@ -297,11 +227,7 @@ export class PostRepositoryImpl extends PostRepository {
     commentId: string,
     session?: ClientSession,
   ): Promise<void> {
-    this.logger.debug(`Removing comment from post`, {
-      postId,
-      commentId,
-      hasSession: !!session,
-    });
+    this.logger.debug(`Removing comment from post`);
 
     try {
       const updateOptions = session ? { session, new: true } : { new: true };
@@ -316,13 +242,7 @@ export class PostRepositoryImpl extends PostRepository {
         )
         .exec();
 
-      if (result) {
-        this.logger.log(`Successfully removed comment from post ${postId}`, {
-          postId,
-          commentId,
-          newCommentCount: Math.max(0, result.commentCount - 1),
-        });
-      } else {
+      if (!result) {
         this.logger.warn(`Post not found when removing comment`, {
           postId,
           commentId,
@@ -330,13 +250,25 @@ export class PostRepositoryImpl extends PostRepository {
         throw new Error(`Post with ID ${postId} not found`);
       }
     } catch (error) {
-      this.logger.error('Failed to remove comment from post', {
-        postId,
-        commentId,
-        error: error.message,
-        stack: error.stack,
-      });
+      this.logger.error('Failed to remove comment from post', error.stack);
       throw error;
+    }
+  }
+
+  /**
+   * Deletes a post document by its ID.
+   * Not part of the abstract interface; used by service for cascading deletes.
+   */
+  async delete(postId: string, session?: ClientSession): Promise<void> {
+    this.logger.debug(`[PostRepositoryImpl.delete] Deleting post`);
+
+    const result = await this.postModel.findByIdAndDelete(
+      postId,
+      session ? { session } : {},
+    );
+
+    if (!result) {
+      this.logger.warn(`Post not found when deleting`, { postId });
     }
   }
 

@@ -3,6 +3,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   InternalServerErrorException,
   Logger,
@@ -19,57 +20,44 @@ export class PostController {
 
   @Post()
   async create(@Body() createPostDto: CreatePostDto) {
-    this.logger.log(`POST /posts - Create post request received`, {
+    this.logger.log(`POST /posts request`, {
       userId: createPostDto.user,
       contentLength: createPostDto.content?.length || 0,
     });
-
-    try {
-      const result = await this.postService.create(createPostDto);
-
-      // success logging
-      this.logger.log(`POST /posts - Post created successfully`, {
-        postId: result.id,
-        userId: result.user,
-      });
-
-      return result;
-    } catch (error) {
-      this.logger.error(`POST /posts - Failed to create post`, {
-        userId: createPostDto.user,
-        error: error.message,
-        stack: error.stack,
-      });
-      throw error;
-    }
+    return await this.postService.create(createPostDto);
   }
 
   @Get()
   async getAllPosts() {
-    this.logger.log(`GET /posts - recieved get all posts request`);
-
-    try {
-      return await this.postService.getAll();
-    } catch (error) {
-      this.logger.error(`GET /posts Failed to fetch posts`, {
-        error: error.message,
-        stack: error.stack,
-      });
-      throw error;
-    }
+    this.logger.log(`GET /posts request`);
+    return await this.postService.getAll();
   }
 
   //Getting posts by user ID NOT IMPLEMENTED
   @Get('user/:userId')
   async getPostsByUserId(@Param('userId') userId: string) {
-    console.log(`Getting posts for user: ${userId}.  NOT IMPLEMENTED`);
+    this.logger.warn(`GET /posts/user/:userId not implemented`, { userId });
     // return await this.postService.getByUserId(userId);
   }
 
   //Getting posts by post ID NOT IMPLEMENTED
   @Get(':id')
   async getPostById(@Param('id') id: string) {
-    console.log(`Getting post with ID: ${id}. NOT IMPLEMENTED`);
+    this.logger.warn(`GET /posts/:id not implemented`, { postId: id });
     // return await this.postService.getById(id);
+  }
+
+  @Delete(':postId')
+  async delete(
+    @Param('postId') postId: string,
+    @Body() body: { user?: string },
+  ) {
+    const userId = body?.user as string;
+    this.logger.log(`DELETE /posts/:postId request`, {
+      userId,
+      postId,
+    });
+    await this.postService.delete(postId, userId);
+    return { success: true, message: 'Post deleted successfully' };
   }
 }

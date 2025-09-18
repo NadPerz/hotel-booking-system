@@ -37,7 +37,7 @@ export class LikeRepositoryImpl extends LikeRepository {
     operation: (session: any) => Promise<T>,
   ): Promise<T> {
     this.logger.debug(
-      `[LikeRepositoryImpl.likePostWithTransaction] Starting like transaction for PostID: ${like.post}, UserID: ${like.user}`,
+      `[LikeRepositoryImpl.likePostWithTransaction] Starting like transaction`,
     );
 
     const session = await this.likeModel.db.startSession();
@@ -51,20 +51,13 @@ export class LikeRepositoryImpl extends LikeRepository {
       const result = await operation(session);
 
       await session.commitTransaction();
-      this.logger.log(
-        `[LikeRepositoryImpl.likePostWithTransaction] Transaction committed successfully`,
-      );
+      // success log removed to reduce noise
 
       return result;
     } catch (error) {
       this.logger.error(
         `[LikeRepositoryImpl.likePostWithTransaction] Transaction failed, rolling back`,
-        {
-          postId: like.post,
-          userId: like.user,
-          error: error.message,
-          code: error.code,
-        },
+        error.stack,
       );
 
       await session.abortTransaction();
@@ -99,7 +92,7 @@ export class LikeRepositoryImpl extends LikeRepository {
     operation: (session: any) => Promise<T>,
   ): Promise<T> {
     this.logger.debug(
-      `[LikeRepositoryImpl.unlikePostWithTransaction] Starting unlike transaction for PostID: ${like.post}, UserID: ${like.user}`,
+      `[LikeRepositoryImpl.unlikePostWithTransaction] Starting unlike transaction`,
     );
 
     const session = await this.likeModel.db.startSession();
@@ -113,20 +106,13 @@ export class LikeRepositoryImpl extends LikeRepository {
       const result = await operation(session);
 
       await session.commitTransaction();
-      this.logger.log(
-        `[LikeRepositoryImpl.unlikePostWithTransaction] Transaction committed successfully`,
-      );
+      // success log removed to reduce noise
 
       return result;
     } catch (error) {
       this.logger.error(
         `[LikeRepositoryImpl.unlikePostWithTransaction] Transaction failed, rolling back`,
-        {
-          postId: like.post,
-          userId: like.user,
-          error: error.message,
-          code: error.code,
-        },
+        error.stack,
       );
 
       await session.abortTransaction();
@@ -148,9 +134,7 @@ export class LikeRepositoryImpl extends LikeRepository {
    * @throws Error if the save operation fails
    */
   async likePost(like: Like, session?: ClientSession): Promise<Like> {
-    this.logger.debug(
-      `[LikeRepositoryImpl.likePost] Creating like record - UserID: ${like.user}, PostID: ${like.post}`,
-    );
+    this.logger.debug(`[LikeRepositoryImpl.likePost] Creating like record`);
 
     // Create new MongoDB document
     const doc = new this.likeModel({
@@ -160,19 +144,12 @@ export class LikeRepositoryImpl extends LikeRepository {
 
     this.logger.debug(
       `[LikeRepositoryImpl.likePost] MongoDB document prepared`,
-      {
-        userObjectId: doc.user.toString(),
-        postObjectId: doc.post.toString(),
-        hasSession: !!session,
-      },
     );
 
     // Save with optional session
     const saved = await doc.save(session ? { session } : {});
 
-    this.logger.log(
-      `[LikeRepositoryImpl.likePost] Like document saved successfully with ID: ${saved._id}`,
-    );
+    // success log removed to reduce noise
 
     // Convert MongoDB document back to domain entity
     return this.toDomainEntity(saved);
@@ -186,9 +163,7 @@ export class LikeRepositoryImpl extends LikeRepository {
    * @returns Promise resolving when the operation completes
    */
   async unlikePost(like: Like, session?: ClientSession): Promise<void> {
-    this.logger.debug(
-      `[LikeRepositoryImpl.unlikePost] Removing like record - UserID: ${like.user}, PostID: ${like.post}`,
-    );
+    this.logger.debug(`[LikeRepositoryImpl.unlikePost] Removing like record`);
 
     // Convert string IDs to ObjectId for the query
     const query = {
@@ -196,11 +171,7 @@ export class LikeRepositoryImpl extends LikeRepository {
       post: new Types.ObjectId(like.post),
     };
 
-    this.logger.debug(`[LikeRepositoryImpl.unlikePost] Query prepared`, {
-      userObjectId: query.user.toString(),
-      postObjectId: query.post.toString(),
-      hasSession: !!session,
-    });
+    this.logger.debug(`[LikeRepositoryImpl.unlikePost] Query prepared`);
 
     // Remove with optional session
     const result = await this.likeModel.findOneAndDelete(
@@ -209,9 +180,7 @@ export class LikeRepositoryImpl extends LikeRepository {
     );
 
     if (result) {
-      this.logger.log(
-        `[LikeRepositoryImpl.unlikePost] Like document removed successfully - ID: ${result._id}`,
-      );
+      // success log removed to reduce noise
     } else {
       this.logger.warn(
         `[LikeRepositoryImpl.unlikePost] No like document found to remove`,
@@ -233,7 +202,7 @@ export class LikeRepositoryImpl extends LikeRepository {
     session?: ClientSession,
   ): Promise<Like | null> {
     this.logger.debug(
-      `[LikeRepositoryImpl.findByUserAndPost] Searching for like - UserID: ${userId}, PostID: ${postId}`,
+      `[LikeRepositoryImpl.findByUserAndPost] Searching for like`,
     );
 
     const query = {
@@ -248,9 +217,7 @@ export class LikeRepositoryImpl extends LikeRepository {
     );
 
     if (doc) {
-      this.logger.debug(
-        `[LikeRepositoryImpl.findByUserAndPost] Like found with ID: ${doc._id}`,
-      );
+      this.logger.debug(`[LikeRepositoryImpl.findByUserAndPost] Like found`);
       return this.toDomainEntity(doc);
     } else {
       this.logger.debug(
@@ -274,6 +241,22 @@ export class LikeRepositoryImpl extends LikeRepository {
       doc.post.toString(),
       doc.createdAt,
       doc.updatedAt,
+    );
+  }
+
+  /**
+   * Deletes all likes for a given post. Implements interface contract for cascading deletes.
+   */
+  async deleteManyByPost(
+    postId: string,
+    session?: ClientSession,
+  ): Promise<void> {
+    this.logger.debug(
+      `[LikeRepositoryImpl.deleteManyByPost] Deleting likes for post`,
+    );
+    await this.likeModel.deleteMany(
+      { post: new Types.ObjectId(postId) },
+      session ? { session } : {},
     );
   }
 }

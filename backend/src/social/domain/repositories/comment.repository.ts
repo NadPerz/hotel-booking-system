@@ -36,4 +36,12 @@ export abstract class CommentRepository {
     comment: Pick<Comment, 'id' | 'user' | 'post'>,
     operation: (session: ClientSession) => Promise<T>,
   ): Promise<T>;
+
+  /**
+   * Deletes all comments associated with a given post.
+   */
+  abstract deleteManyByPost(
+    postId: string,
+    session?: ClientSession,
+  ): Promise<void>;
 }
