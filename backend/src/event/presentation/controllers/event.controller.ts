@@ -87,9 +87,9 @@ export class EventController {
     return await this.eventService.getHashtagById(id);
   }
 
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateDto: UpdateEventDto) {
-    return await this.eventService.update(id, updateDto);
-  }
+  // @Patch(':id')
+  // async update(@Param('id') id: string, @Body() updateDto: UpdateEventDto) {
+  //   return await this.eventService.update(id, updateDto);
+  // }
 
 }

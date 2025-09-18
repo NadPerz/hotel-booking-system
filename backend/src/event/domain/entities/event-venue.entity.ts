@@ -1,6 +1,6 @@
 export class EventVenue {
   constructor(
-    public id: string,
+    public id: string | null,
     public venueName: string,
     public address: string,
     public city: string,

@@ -2,7 +2,7 @@ import { Event } from './event.entity';
 
 export class EventRsvp {
   constructor(
-    public id: string,
+    public id: string | null,
     public event: Event,
     public userId: string,
     public rsvpStatus: string,

@@ -4,7 +4,7 @@ import { EventCategory } from './event-category.entity';
 
 export class Event {
   constructor(
-    public id: string,
+    public id: string | null,
     public eventName: string,
     public description: string,
     public startDate: string,

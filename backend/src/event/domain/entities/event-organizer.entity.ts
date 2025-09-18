@@ -1,6 +1,6 @@
 export class EventOrganizer {
   constructor(
-    public id: string,
+    public id: string | null,
     public organizerName: string,
     public contactEmail: string,
     public contactPhone: string,
