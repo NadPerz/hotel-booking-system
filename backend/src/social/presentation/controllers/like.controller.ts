@@ -20,30 +20,11 @@ export class LikeController {
 
   @Post()
   async likePost(@Body() likePostDto: LikePostDto) {
-    this.logger.log(`POST /likes - Like post request received`, {
+    this.logger.log(`POST /likes request`, {
       userId: likePostDto.user,
       postId: likePostDto.post,
     });
-
-    try {
-      const result = await this.likeService.likePost(likePostDto);
-
-      this.logger.log(`POST /likes - Like post successful`, {
-        userId: likePostDto.user,
-        postId: likePostDto.post,
-        likeId: result.id,
-      });
-
-      return result;
-    } catch (error) {
-      this.logger.error(`POST /likes - Like post failed`, {
-        userId: likePostDto.user,
-        postId: likePostDto.post,
-        error: error.message,
-        stack: error.stack,
-      });
-      throw error;
-    }
+    return await this.likeService.likePost(likePostDto);
   }
 
   @Delete(':user/:post')
@@ -53,29 +34,11 @@ export class LikeController {
   ) {
     const likePostDto: LikePostDto = { user: userId, post: postId };
 
-    this.logger.log(`DELETE /likes - Unlike post request received`, {
+    this.logger.log(`DELETE /likes request`, {
       userId: likePostDto.user,
       postId: likePostDto.post,
     });
-    try {
-      await this.likeService.unlikePost(likePostDto);
-
-      // success logging
-      this.logger.log(`DELETE /likes - Unlike post successful`, {
-        userId: likePostDto.user,
-        postId: likePostDto.post,
-      });
-
-      return { success: true, message: 'Post unliked successfully' };
-    } catch (error) {
-      // error logging
-      this.logger.error(`DELETE /likes - Unlike post failed`, {
-        userId: likePostDto.user,
-        postId: likePostDto.post,
-        error: error.message,
-        stack: error.stack,
-      });
-      throw error;
-    }
+    await this.likeService.unlikePost(likePostDto);
+    return { success: true, message: 'Post unliked successfully' };
   }
 }

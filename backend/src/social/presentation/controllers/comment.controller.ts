@@ -13,28 +13,11 @@ export class CommentController {
 
   @Post()
   async addComment(@Body() dto: CreateCommentDto) {
-    this.logger.log(`POST /comments - Add comment request received`, {
+    this.logger.log(`POST /comments request`, {
       userId: dto.user,
       postId: dto.post,
     });
-
-    try {
-      const result = await this.commentService.addComment(dto);
-      this.logger.log(`POST /comments - Add comment successful`, {
-        userId: dto.user,
-        postId: dto.post,
-        commentId: result.id,
-      });
-      return result;
-    } catch (error) {
-      this.logger.error(`POST /comments - Add comment failed`, {
-        userId: dto.user,
-        postId: dto.post,
-        error: error.message,
-        stack: error.stack,
-      });
-      throw error;
-    }
+    return await this.commentService.addComment(dto);
   }
 
   @Delete(':user/:post/:comment')
@@ -43,28 +26,12 @@ export class CommentController {
     @Param('post') postId: string,
     @Param('comment') commentId: string,
   ) {
-    this.logger.log(`DELETE /comments - Delete comment request received`, {
+    this.logger.log(`DELETE /comments request`, {
       userId,
       postId,
       commentId,
     });
-    try {
-      await this.commentService.deleteComment(commentId, userId, postId);
-      this.logger.log(`DELETE /comments - Delete comment successful`, {
-        userId,
-        postId,
-        commentId,
-      });
-      return { success: true, message: 'Comment deleted successfully' };
-    } catch (error) {
-      this.logger.error(`DELETE /comments - Delete comment failed`, {
-        userId,
-        postId,
-        commentId,
-        error: error.message,
-        stack: error.stack,
-      });
-      throw error;
-    }
+    await this.commentService.deleteComment(commentId, userId, postId);
+    return { success: true, message: 'Comment deleted successfully' };
   }
 }
