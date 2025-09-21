@@ -13,7 +13,7 @@ import {
 import { CreatePostDto } from '@shared/types/social/create-post.dto';
 import { PostService } from 'src/social/application/services/post.service';
 
-@Controller('posts')
+@Controller('social/posts')
 export class PostController {
   private readonly logger = new Logger(PostController.name);
   constructor(private readonly postService: PostService) {}
