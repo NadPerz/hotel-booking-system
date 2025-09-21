@@ -1,5 +1,5 @@
 import { ClientSession } from 'mongoose';
-import { Post } from '../entities/post.entity';
+import { Post, PostWithLikeStatus } from '../entities/post.entity';
 
 export abstract class PostRepository {
   /**
@@ -18,6 +18,13 @@ export abstract class PostRepository {
    * @throws Error if the query operation fails
    */
   abstract getAll(): Promise<Post[]>;
+
+  /**
+   * Retrieves all posts with like status for a specific user.
+   * @param userId - Optional user ID to check like status
+   * @returns Promise resolving to an array of PostWithLikeStatus entities
+   */
+  abstract getAllWithLikeStatus(userId?: string): Promise<PostWithLikeStatus[]>;
 
   /**
    * Adds a like to a post by incrementing the like count and adding the like ID to the likes array.

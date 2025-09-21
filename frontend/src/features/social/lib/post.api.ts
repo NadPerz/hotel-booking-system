@@ -21,8 +21,13 @@ export const createPost = async (content: string): Promise<any> => {
   return response.json();
 };
 
-export const getAllPosts = async (): Promise<any[]> => {
-  const response = await fetch(`${API_BASE_URL}/posts`);
+export const getAllPosts = async (userId?: string): Promise<any[]> => {
+  // Build URL with optional userId query parameter
+  const url = userId
+    ? `${API_BASE_URL}/posts?userId=${encodeURIComponent(userId)}`
+    : `${API_BASE_URL}/posts`;
+
+  const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error("Failed to fetch posts");

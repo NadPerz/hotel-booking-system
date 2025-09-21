@@ -3,7 +3,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model } from 'mongoose';
-import { Post } from 'src/social/domain/entities/post.entity';
+import {
+  Post,
+  PostWithLikeStatus,
+} from 'src/social/domain/entities/post.entity';
 import { PostRepository } from 'src/social/domain/repositories/post.repository';
 import { PostDocument } from '../schemas/post.schema';
 
@@ -83,6 +86,90 @@ export class PostRepositoryImpl extends PostRepository {
       return docs.map((doc) => this.toDomainEntity(doc));
     } catch (error) {
       this.logger.error('Failed to fetch posts from database', error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieves all posts with like status for a specific user.
+   * Uses MongoDB aggregation to efficiently join posts with likes in a single query.
+   *
+   * @param userId - Optional user ID to check like status
+   * @returns Promise resolving to an array of PostWithLikeStatus entities
+   * @throws Error if the query operation fails
+   */
+  async getAllWithLikeStatus(userId?: string): Promise<PostWithLikeStatus[]> {
+    this.logger.debug(
+      `[PostRepositoryImpl.getAllWithLikeStatus] Fetching posts with like status for user: ${userId || 'anonymous'}`,
+    );
+
+    try {
+      if (!userId) {
+        // If no userId provided, return posts without like status
+        this.logger.debug(
+          `[PostRepositoryImpl.getAllWithLikeStatus] No userId provided, returning posts without like status`,
+        );
+        const posts = await this.getAll();
+        return posts.map((post) => this.toPostWithLikeStatus(post, false));
+      }
+
+      // Use MongoDB aggregation to join posts with likes in a single query
+      const docs = await this.postModel
+        .aggregate([
+          // Match all posts
+          { $match: {} },
+
+          // Sort by creation date (newest first)
+          { $sort: { createdAt: -1 } },
+
+          // Lookup likes for the specific user
+          {
+            $lookup: {
+              from: 'likes', // Collection name for likes
+              let: { postId: '$_id' },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        { $eq: ['$post', '$$postId'] },
+                        { $eq: ['$user', { $toObjectId: userId }] },
+                      ],
+                    },
+                  },
+                },
+              ],
+              as: 'userLikes',
+            },
+          },
+
+          // Add userLiked field based on whether userLikes array has any items
+          {
+            $addFields: {
+              userLiked: { $gt: [{ $size: '$userLikes' }, 0] },
+            },
+          },
+
+          // Remove the userLikes array as we only need the boolean
+          {
+            $project: {
+              userLikes: 0,
+            },
+          },
+        ])
+        .exec();
+
+      this.logger.debug(
+        `[PostRepositoryImpl.getAllWithLikeStatus] Found ${docs.length} posts with like status`,
+      );
+
+      // Convert MongoDB documents to PostWithLikeStatus entities
+      return docs.map((doc) => this.toPostWithLikeStatusFromDoc(doc));
+    } catch (error) {
+      this.logger.error(
+        'Failed to fetch posts with like status from database',
+        error.stack,
+      );
       throw error;
     }
   }
@@ -278,13 +365,58 @@ export class PostRepositoryImpl extends PostRepository {
    * @private
    * @param doc - The MongoDB document to convert
    * @returns The corresponding domain entity
-   */ private toDomainEntity(doc: PostDocument): Post {
+   */
+  private toDomainEntity(doc: PostDocument): Post {
     return new Post(
       doc._id.toString(),
       doc.user.toString(),
       doc.content ?? '', //If undefined, it will return empty string
       doc.likeCount ?? 0,
       doc.commentCount ?? 0,
+      doc.createdAt,
+      doc.updatedAt,
+    );
+  }
+
+  /**
+   * Converts a Post entity to PostWithLikeStatus entity.
+   *
+   * @private
+   * @param post - The Post entity to convert
+   * @param userLiked - Whether the user has liked this post
+   * @returns The corresponding PostWithLikeStatus entity
+   */
+  private toPostWithLikeStatus(
+    post: Post,
+    userLiked: boolean,
+  ): PostWithLikeStatus {
+    return new PostWithLikeStatus(
+      post.id,
+      post.user,
+      post.content,
+      post.likeCount,
+      post.commentCount,
+      userLiked,
+      post.createdAt,
+      post.updatedAt,
+    );
+  }
+
+  /**
+   * Converts a MongoDB aggregation result to PostWithLikeStatus entity.
+   *
+   * @private
+   * @param doc - The MongoDB aggregation result document
+   * @returns The corresponding PostWithLikeStatus entity
+   */
+  private toPostWithLikeStatusFromDoc(doc: any): PostWithLikeStatus {
+    return new PostWithLikeStatus(
+      doc._id.toString(),
+      doc.user.toString(),
+      doc.content ?? '',
+      doc.likeCount ?? 0,
+      doc.commentCount ?? 0,
+      doc.userLiked ?? false,
       doc.createdAt,
       doc.updatedAt,
     );

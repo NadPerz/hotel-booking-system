@@ -9,6 +9,7 @@ import {
   Logger,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import { CreatePostDto } from '@shared/types/social/create-post.dto';
 import { PostService } from 'src/social/application/services/post.service';
@@ -28,9 +29,11 @@ export class PostController {
   }
 
   @Get()
-  async getAllPosts() {
-    this.logger.log(`GET /posts request`);
-    return await this.postService.getAll();
+  async getAllPosts(@Query('userId') userId?: string) {
+    this.logger.log(`GET /posts request`, { userId: userId || 'anonymous' });
+
+    // Use new service method that returns PostWithLikeStatus entities
+    return await this.postService.getAllWithLikeStatus(userId);
   }
 
   //Getting posts by user ID NOT IMPLEMENTED
