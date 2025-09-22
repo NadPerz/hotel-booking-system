@@ -16,6 +16,23 @@ export class CommentRepositoryImpl extends CommentRepository {
     super();
   }
 
+  async findCommentsByPostId(postId: string): Promise<Comment[]> {
+    this.logger.debug(
+      `[CommentRepositoryImpl.findCommentsByPostId] Finding comments for post ${postId}`,
+    );
+
+    const docs = await this.commentModel
+      .find({ post: new Types.ObjectId(postId) })
+      .sort({ createdAt: -1 })
+      .exec();
+
+    this.logger.debug(
+      `[CommentRepositoryImpl.findCommentsByPostId] Found ${docs.length} comments for post ${postId}`,
+    );
+
+    return docs.map((doc) => this.toDomainEntity(doc));
+  }
+
   async createWithTransaction<T>(
     comment: Comment,
     operation: (session: ClientSession) => Promise<T>,

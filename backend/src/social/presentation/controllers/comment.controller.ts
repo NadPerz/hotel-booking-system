@@ -1,15 +1,32 @@
 //comment.controller.ts
 
-import { Body, Controller, Delete, Logger, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Logger,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { CreateCommentDto } from '@shared/types/social/create-comment.dto';
 
 import { CommentService } from 'src/social/application/services/comment.service';
 
-@Controller('posts/:postId/comments')
+@Controller('social/posts/:postId/comments')
 export class CommentController {
   private readonly logger = new Logger(CommentController.name);
 
   constructor(private readonly commentService: CommentService) {}
+
+  @Get()
+  async getCommentsForPost(@Param('postId') postId: string) {
+    this.logger.log(
+      `[CommentController.getCommentsForPost] GET /posts/:postId/comments request`,
+      { postId },
+    );
+    return await this.commentService.getCommentsForPost(postId);
+  }
 
   @Post()
   async addComment(
