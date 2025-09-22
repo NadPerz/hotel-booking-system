@@ -14,7 +14,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 
 import { likePost, unlikePost } from "../lib/like.api";
-import { addComment, deleteComment } from "../lib/comment.api";
+import { addComment, deleteComment, getComments } from "../lib/comment.api";
 import { deletePost } from "../lib/post.api";
 
 // Post type: you may want to import from a types file or shape to backend PostWithLikeStatus
@@ -32,7 +32,7 @@ export type Post = {
   likeCount: number;
   commentCount: number;
   userLiked?: boolean;
-  comments?: Comment[]; // If available; can update as your API expands
+  //comments?: Comment[]; // If available; can update as your API expands
   createdAt?: string;
 };
 
@@ -51,6 +51,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
   const [commentText, setCommentText] = useState("");
   const [isCommenting, setIsCommenting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [commentsLoaded, setCommentsLoaded] = useState(false);
 
   // Like handling
   const handleLike = async () => {
@@ -72,7 +75,15 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
     try {
       await addComment(post.id, commentText);
       setCommentText("");
-      // Optionally, trigger re-fetch of comments or pass up an event
+      //Optionally refetch comments after posting (for accurate display)
+      if (showComments) {
+        setLoadingComments(true);
+        const updated = await getComments(post.id);
+        //And temporarily incrementing commentCount in frontend until a screen refresh can bring the updated values
+        post.commentCount = post.commentCount + 1;
+        setComments(updated);
+        setLoadingComments(false);
+      }
     } catch {}
     setIsCommenting(false);
   };
@@ -85,6 +96,23 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
       if (onDelete) onDelete(post.id); // Remove from list in parent
     } catch {}
     setIsDeleting(false);
+  };
+
+  //To fetch comments only when opening the comments section for the first time
+  const handleShowComments = async () => {
+    setShowComments(!showComments);
+    if (!commentsLoaded && !showComments) {
+      // only fetch if opening
+      setLoadingComments(true);
+      try {
+        const fetchedComments = await getComments(post.id);
+        setComments(fetchedComments);
+        setCommentsLoaded(true);
+      } catch (e) {
+        // Optionally display error
+      }
+      setLoadingComments(false);
+    }
   };
 
   return (
@@ -114,6 +142,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
         </div>
         <div className="mb-3">{post.content}</div>
 
+        {/* Like and comment buttons */}
         <div className="flex items-center gap-3 mb-2">
           <Button
             variant="ghost"
@@ -124,11 +153,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
             <HeartIcon className="size-4" />
             <span className="ml-2">{optimisticLikes}</span>
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowComments(!showComments)}
-          >
+          <Button variant="ghost" size="sm" onClick={handleShowComments}>
             <MessageCircleIcon className="size-4" />
             <span className="ml-2">{post.commentCount}</span>
           </Button>
@@ -137,9 +162,10 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
         {/* Comments Section */}
         {showComments && (
           <div className="pt-3 border-t">
-            <div className="space-y-3">
-              {/* Comments mapping - replace with actual data if available */}
-              {(post.comments || []).map((comment) => (
+            {loadingComments ? (
+              <div>Loading comments...</div>
+            ) : (
+              comments.map((comment) => (
                 <div key={comment.id} className="flex items-start gap-2">
                   <Avatar>
                     <AvatarImage src="/alien-profile-pic-1.jpg" />
@@ -152,8 +178,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
                     <div>{comment.content}</div>
                   </div>
                 </div>
-              ))}
-            </div>
+              ))
+            )}
             <div className="flex items-end gap-2 mt-4">
               <Textarea
                 placeholder="Write a comment..."
