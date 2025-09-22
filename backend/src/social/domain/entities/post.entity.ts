@@ -9,3 +9,16 @@ export class Post {
     public updatedAt?: string,
   ) {}
 }
+
+export class PostWithLikeStatus {
+  constructor(
+    public id: string,
+    public user: string,
+    public content?: string,
+    public likeCount: number = 0,
+    public commentCount: number = 0,
+    public userLiked: boolean = false, // Domain property
+    public createdAt?: string,
+    public updatedAt?: string,
+  ) {}
+}
