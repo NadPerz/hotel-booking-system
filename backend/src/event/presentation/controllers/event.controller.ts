@@ -61,26 +61,45 @@ export class EventController {
 
 
 
+  // Add this route to get all venues
+@Get('venue')
+async getVenues() {
+  return await this.eventService.getVenues();
+}
 
+@Get('organizer')
+async getOrganizers() {
+  return await this.eventService.getOrganizers();
+}
+
+@Get('category')
+async getCategories() {
+  return await this.eventService.getCategories();
+}
+
+// @Get('rsvp')
+// async getRsvps() {
+//   return await this.eventService.getRsvps();
+// }
+
+ @Get('hashtag')
+async getAllHashtags() {
+  return await this.eventService.getHashtags();
+}
   
-  //get event by id
-  @Get(':id')
-  async findById(@Param('id') id: string) {
-    return await this.eventService.findById(id);
-  }
-
   //get venue by id
   @Get('venue/:id')
   async getVenueById(@Param('id') id: string) {
     return await this.eventService.getVenueById(id);
   }
-
+  
   //get category by id
   @Get('category/:id')
   async getCategoryById(@Param('id') id: string) {
     return await this.eventService.getCategoryById(id);
   }
-  //get organizer by id
+
+   //get organizer by id
   @Get('organizer/:id')
   async getOrganizerById(@Param('id') id: string) {
     return await this.eventService.getOrganizerById(id);
@@ -97,18 +116,17 @@ export class EventController {
   async getHashtagById(@Param('id') id: string) {
     return await this.eventService.getHashtagById(id);
   }
-
+  
+  //get event by id
+  @Get(':id')
+  async findById(@Param('id') id: string) {
+    return await this.eventService.findById(id);
+  }
 
 
 
 
   //update
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateDto: UpdateEventDto) {
-    return await this.eventService.update(id, updateDto);
-  }
-
-  
   @Patch('venue/:id')
   async updateVenue(@Param('id') id: string, @Body() updateDto: UpdateEventVenueDto) {
     return await this.eventService.updateVenue(id, updateDto);
@@ -134,17 +152,14 @@ export class EventController {
     return await this.eventService.updateRsvp(id, updateDto);
   }
 
-
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() updateDto: UpdateEventDto) {
+    return await this.eventService.update(id, updateDto);
+  }
 
 
 
   //delete event by id
-  @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return await this.eventService.delete(id);
-  }
-
-
   @Delete('hashtag/:id')
   async deleteHashtag(@Param('id') id: string) {
     return await this.eventService.deleteHashtag(id);
@@ -170,4 +185,8 @@ export class EventController {
     return await this.eventService.deleteRsvp(id);
   }
 
+   @Delete(':id')
+  async delete(@Param('id') id: string) {
+    return await this.eventService.delete(id);
+  }
 }

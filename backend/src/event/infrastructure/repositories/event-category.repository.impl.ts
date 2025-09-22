@@ -19,6 +19,11 @@ export class EventCategoryRepositoryImpl extends EventCategoryRepository {
     return this.toDomainEntity(savedEventCategory);
   }
 
+  async findAll(): Promise<any[]> {
+    const docs = await this.eventCategoryModel.find().exec();
+    return docs.map(doc => this.toDomainEntity(doc));
+  }
+
   async findById(id: string): Promise<any | null> {
     const doc = await this.eventCategoryModel.findById(id).exec();
     return doc ? this.toDomainEntity(doc) : null;
