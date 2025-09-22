@@ -73,6 +73,28 @@ export class EventService {
     return await this.eventRepository.create(event);
   }
 
+  async getVenues(): Promise<EventVenue[]> {
+  return await this.eventVenueRepository.findAll();
+  }
+
+  async getOrganizers(): Promise<EventOrganizer[]> {
+    return await this.eventOrganizerRepository.findAll();
+  }
+
+  async getCategories(): Promise<EventCategory[]> {
+    return await this.eventCategoryRepository.findAll();
+  }
+
+  async getHashtags(): Promise<EventHashtag[]> {
+    return await this.eventHashtagRepository.findAll();
+  }
+
+  // async getRsvps(): Promise<EventRsvp[]> {
+  //   return await this.eventRsvpRepository.findAll();
+  // }
+
+
+
   //find event by id
   async findById(id: string): Promise<Event | null> {
     return await this.eventRepository.findById(id);

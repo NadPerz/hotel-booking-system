@@ -33,6 +33,11 @@ export class EventVenueRepositoryImpl extends EventVenueRepository {
     await this.eventVenueModel.findByIdAndDelete(id).exec();
   }
 
+  async findAll(): Promise<any[]> {
+    const docs = await this.eventVenueModel.find().exec();
+    return docs.map(doc => this.toDomainEntity(doc));
+  }
+
 
   private toDomainEntity(doc: EventVenueDocument): any {
     return {

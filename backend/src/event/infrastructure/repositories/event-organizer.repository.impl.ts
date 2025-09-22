@@ -19,6 +19,11 @@ export class EventOrganizerRepositoryImpl extends EventOrganizerRepository {
     return this.toDomainEntity(savedEventOrganizer);
   }
 
+  async findAll(): Promise<any[]> {
+    const docs = await this.eventOrganizerModel.find().exec();
+    return docs.map(doc => this.toDomainEntity(doc));
+  }
+  
   async findById(id: string): Promise<any | null> {
     const doc = await this.eventOrganizerModel.findById(id).exec();
     return doc ? this.toDomainEntity(doc) : null;
