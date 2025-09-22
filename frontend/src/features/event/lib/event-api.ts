@@ -1,7 +1,7 @@
 
 // import { Venue } from "@shared/types/event/venue.types";
 
-const API_BASE_URL = 'http://localhost:3000/events';
+const API_BASE_URL = 'http://localhost:3000/api/events';
 
 // Venue API
 export const getVenues = async (): Promise<any[]> => {
