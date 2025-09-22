@@ -2,7 +2,10 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { CreatePostDto } from '@shared/types/social/create-post.dto';
-import { Post } from 'src/social/domain/entities/post.entity';
+import {
+  Post,
+  PostWithLikeStatus,
+} from 'src/social/domain/entities/post.entity';
 import { PostRepository } from 'src/social/domain/repositories/post.repository';
 import { CommentRepository } from 'src/social/domain/repositories/comment.repository';
 import { LikeRepository } from 'src/social/domain/repositories/like.repository';
@@ -54,6 +57,23 @@ export class PostService {
   async getAll(): Promise<Post[]> {
     this.logger.log(`[PostService.getAll] Fetching all posts`);
     return await this.postRepository.getAll();
+  }
+
+  /**
+   * Retrieves all posts with like status for a specific user.
+   * Delegates to repository layer for efficient data retrieval.
+   *
+   * @param userId - Optional user ID to check like status
+   * @returns Promise resolving to an array of PostWithLikeStatus entities
+   * @throws Error if the retrieval operation fails
+   */
+  async getAllWithLikeStatus(userId?: string): Promise<PostWithLikeStatus[]> {
+    this.logger.log(
+      `[PostService.getAllWithLikeStatus] Fetching posts with like status for user: ${userId || 'anonymous'}`,
+    );
+
+    // Delegate to repository layer - this keeps the complex logic in infrastructure
+    return await this.postRepository.getAllWithLikeStatus(userId);
   }
 
   /**

@@ -8,6 +8,8 @@ import { ClientSession } from 'mongoose';
  * Provides methods for CRUD operations and transaction management.
  */
 export abstract class CommentRepository {
+  abstract findCommentsByPostId(postId: string): Promise<Comment[]>;
+
   /**
    * Creates a new comment record in the database.
    */
