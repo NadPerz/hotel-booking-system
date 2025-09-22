@@ -1,5 +1,6 @@
 import CreatePost from "@frontend/features/social/components/CreatePost";
 import Navbar from "@frontend/features/social/components/Navbar";
+import PostList from "@frontend/features/social/components/PostList";
 import Sidebar from "@frontend/features/social/components/Sidebar";
 import { ThemeProvider } from "@frontend/features/social/components/ThemeProvider";
 import React from "react";
@@ -28,7 +29,14 @@ const page = (props: Props) => {
               {/*Main content */}
               <div className="lg:col-span-9">
                 <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-                  <div className="lg:col-span-6">{<CreatePost />}</div>
+                  <div className="lg:col-span-6">
+                    {
+                      <>
+                        <CreatePost />
+                        <PostList />
+                      </>
+                    }
+                  </div>
                   <div className="hidden lg:block lg:col-span-4 stciky top-20">
                     Who to Follow
                   </div>

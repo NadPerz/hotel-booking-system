@@ -1,3 +1,5 @@
+//comment.api.ts
+
 const API_BASE_URL = "http://localhost:3000/api/social";
 const STATIC_USER_ID = "68bb23a6701962edcadb67e0";
 
