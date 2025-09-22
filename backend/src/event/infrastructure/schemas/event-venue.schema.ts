@@ -11,25 +11,25 @@ export class EventVenue {
   @Prop({ required: true })
   venueName: string;
 
-  @Prop({ required: true })
+  @Prop()
   address: string;
 
-  @Prop({ required: true })
+  @Prop()
   city: string;
 
-  @Prop({ required: true })
+  @Prop()
   province: string;
 
-  @Prop({ required: true })
+  @Prop()
   postalCode: string;
 
-  @Prop({ required: true })
+  @Prop()
   country: string;
 
-  @Prop({ required: true })
+  @Prop()
   capacity: number;
 
-  @Prop({ type: [String], required: true })
+  @Prop({ type: [String] })
   facilities: string[];
 }
 

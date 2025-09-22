@@ -12,7 +12,7 @@ import {
 import { LikePostDto } from '@shared/types/social/like-post.dto';
 import { LikeService } from 'src/social/application/services/like.service';
 
-@Controller('posts/:postId/likes')
+@Controller('social/posts/:postId/likes')
 export class LikeController {
   private readonly logger = new Logger(LikeController.name);
 

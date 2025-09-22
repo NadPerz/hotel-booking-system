@@ -13,6 +13,11 @@ export class CommentService {
     private readonly postRepository: PostRepository,
   ) {}
 
+  async getCommentsForPost(postId: string): Promise<Comment[]> {
+    this.logger.log(`Attempting to fetch comments of post ${postId}`);
+    return await this.commentRepository.findCommentsByPostId(postId);
+  }
+
   /**
    * Creates a comment and increments the post's comment count within a transaction.
    */

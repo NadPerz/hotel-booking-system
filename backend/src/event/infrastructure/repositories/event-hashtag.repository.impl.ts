@@ -20,6 +20,11 @@ export class EventHashtagRepositoryImpl extends EventHashtagRepository {
     return this.toDomainEntity(savedEventHashtag);
   }
 
+  async findAll(): Promise<any[]> {
+    const docs = await this.eventHashtagModel.find().exec();
+    return docs.map(doc => this.toDomainEntity(doc));
+  }
+
   async findById(id: string): Promise<any | null> {
     const doc = await this.eventHashtagModel.findById(id).exec();
     return doc ? this.toDomainEntity(doc) : null;
