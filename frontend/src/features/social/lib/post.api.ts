@@ -1,11 +1,15 @@
 //post.api.ts
 
-const API_BASE_URL = "http://localhost:3000/api/social";
-const STATIC_USER_ID = "68bb23a6701962edcadb67e0";
+export const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL_SOCIAL = "http://localhost:3000/api/social";
+export const STATIC_USER_ID = "68bb23a6701962edcadb67e0";
 
 // Post API
-export const createPost = async (content: string): Promise<any> => {
-  const response = await fetch(`${API_BASE_URL}/posts`, {
+export const createPost = async (
+  content: string,
+  imageUrl?: string
+): Promise<any> => {
+  const response = await fetch(`${API_BASE_URL_SOCIAL}/posts`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -13,6 +17,7 @@ export const createPost = async (content: string): Promise<any> => {
     body: JSON.stringify({
       user: STATIC_USER_ID,
       content: content,
+      image: imageUrl,
     }),
   });
 
@@ -26,8 +31,8 @@ export const createPost = async (content: string): Promise<any> => {
 export const getAllPosts = async (userId?: string): Promise<any[]> => {
   // Build URL with optional userId query parameter
   const url = userId
-    ? `${API_BASE_URL}/posts?userId=${encodeURIComponent(userId)}`
-    : `${API_BASE_URL}/posts`;
+    ? `${API_BASE_URL_SOCIAL}/posts?userId=${encodeURIComponent(userId)}`
+    : `${API_BASE_URL_SOCIAL}/posts`;
 
   const response = await fetch(url);
 
@@ -39,7 +44,7 @@ export const getAllPosts = async (userId?: string): Promise<any[]> => {
 };
 
 export const deletePost = async (postId: string): Promise<any> => {
-  const response = await fetch(`${API_BASE_URL}/posts/${postId}`, {
+  const response = await fetch(`${API_BASE_URL_SOCIAL}/posts/${postId}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
