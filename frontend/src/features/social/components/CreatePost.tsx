@@ -6,21 +6,52 @@ import { Textarea } from "@frontend/components/ui/textarea";
 import { Avatar, AvatarImage } from "@frontend/components/ui/avatar";
 // import { useUser } from "@clerk/nextjs";
 // import { SetStateAction, useState } from "react";
-// import { Card, CardContent } from "./ui/card";
-// import { Avatar, AvatarImage } from "./ui/avatar";
-// import { Textarea } from "./ui/textarea";
-// import { Button } from "./ui/button";
+
 import { ImageIcon, Loader2Icon, SendIcon } from "lucide-react";
 import { useState } from "react";
+import { createPost, STATIC_USER_ID } from "../lib";
+import {
+  getSignedUploadUrl,
+  uploadFileToSignedUrl,
+} from "../lib/post.media.api";
 
 const CreatePost = () => {
-  // const { user } = useUser();
+  const user = `${STATIC_USER_ID}`;
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isPosting, setIsPosting] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [showImageUpload, setShowImageUpload] = useState(false);
 
-  const handleSubmit = async () => {};
+  const handleSubmit = async () => {
+    setIsPosting(true);
+    let uploadedImageUrl = "";
+
+    try {
+      // Step 1: If image selected, get signed URL and upload
+      if (selectedImage) {
+        const fileName = `${user}_${Date.now()}_${selectedImage.name}`;
+        const signedUrl = await getSignedUploadUrl(fileName);
+        uploadedImageUrl = await uploadFileToSignedUrl(
+          selectedImage,
+          signedUrl
+        );
+        setImageUrl(uploadedImageUrl);
+      }
+
+      // Step 2: Create the post with image reference
+      await createPost(content, uploadedImageUrl);
+
+      setContent("");
+      setSelectedImage(null);
+      setImageUrl("");
+      setShowImageUpload(false);
+    } catch (error: any) {
+      alert("Error posting: " + error.message);
+    } finally {
+      setIsPosting(false);
+    }
+  };
 
   return (
     <Card className="mb-6">
@@ -52,6 +83,27 @@ const CreatePost = () => {
               />
             </div>
           )} */}
+          {(showImageUpload || imageUrl) && (
+            <div className="border rounded-lg p-4">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  setSelectedImage(file || null);
+                }}
+                disabled={isPosting}
+              />
+              {/* Optional preview: */}
+              {selectedImage && (
+                <img
+                  src={URL.createObjectURL(selectedImage)}
+                  alt="preview"
+                  className="max-w-xs rounded mt-2"
+                />
+              )}
+            </div>
+          )}
 
           <div className="flex items-center justify-between border-t pt-4">
             <div className="flex space-x-2">

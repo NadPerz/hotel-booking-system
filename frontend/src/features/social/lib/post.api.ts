@@ -1,10 +1,13 @@
 //post.api.ts
 
-const API_BASE_URL = "http://localhost:3000/api/social";
-const STATIC_USER_ID = "68bb23a6701962edcadb67e0";
+export const API_BASE_URL = "http://localhost:3000/api/social";
+export const STATIC_USER_ID = "68bb23a6701962edcadb67e0";
 
 // Post API
-export const createPost = async (content: string): Promise<any> => {
+export const createPost = async (
+  content: string,
+  imageUrl?: string
+): Promise<any> => {
   const response = await fetch(`${API_BASE_URL}/posts`, {
     method: "POST",
     headers: {
@@ -13,6 +16,7 @@ export const createPost = async (content: string): Promise<any> => {
     body: JSON.stringify({
       user: STATIC_USER_ID,
       content: content,
+      image: imageUrl,
     }),
   });
 
