@@ -64,7 +64,7 @@ const OrganizerList = () => {
                 <TableCell>{organizer.contactPhone}</TableCell>
                 <TableCell>{organizer.organization}</TableCell>
                 <TableCell>
-                  <Link href={`/event/organizers/edit/${organizer.id}`} passHref>
+                  <Link href={`/admin/event/organizers/edit/${organizer.id}`} passHref>
                     <Button variant="outline" size="sm" className="mr-2">
                       Edit
                     </Button>

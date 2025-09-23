@@ -27,7 +27,7 @@ const EditOrganizerPage = () => {
           setOrganizer(organizerData);
         } catch (error) {
           console.error('Failed to fetch organizer for editing:', error);
-          router.push('/event/organizers');
+          router.push('/admin/event/organizers');
         } finally {
           setLoading(false);
         }
@@ -44,7 +44,7 @@ const EditOrganizerPage = () => {
     <div className="container mx-auto max-w-2xl px-4 py-8">
       <h1 className="text-2xl font-bold mb-4">Edit Organizer</h1>
       {organizer ? (
-        <OrganizerForm organizer={organizer} onSuccess={() => router.push('/event/organizers')} />
+        <OrganizerForm organizer={organizer} onSuccess={() => router.push('/admin/event/organizers')} />
       ) : (
         <div>Organizer not found.</div>
       )}

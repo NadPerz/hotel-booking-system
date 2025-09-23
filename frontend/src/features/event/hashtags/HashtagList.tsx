@@ -55,7 +55,7 @@ const HashtagList = () => {
               <TableRow key={hashtag.id}>
                 <TableCell>{hashtag.hashtagName}</TableCell>
                 <TableCell>
-                  <Link href={`/event/hashtags/edit/${hashtag.id}`} passHref>
+                  <Link href={`/admin/event/hashtags/edit/${hashtag.id}`} passHref>
                     <Button variant="outline" size="sm" className="mr-2">
                       Edit
                     </Button>

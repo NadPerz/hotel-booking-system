@@ -58,7 +58,7 @@ const CategoryList = () => {
                 <TableCell>{category.categoryName}</TableCell>
                 <TableCell>{category.description}</TableCell>
                 <TableCell>
-                  <Link href={`/event/categories/edit/${category.id}`} passHref>
+                  <Link href={`/admin/event/categories/edit/${category.id}`} passHref>
                     <Button variant="outline" size="sm" className="mr-2">
                       Edit
                     </Button>

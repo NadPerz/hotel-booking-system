@@ -24,7 +24,7 @@ const EditHashtagPage = () => {
           setHashtag(hashtagData);
         } catch (error) {
           console.error('Failed to fetch hashtag for editing:', error);
-          router.push('/event/hashtags');
+          router.push('/admin/event/hashtags');
         } finally {
           setLoading(false);
         }
@@ -41,7 +41,7 @@ const EditHashtagPage = () => {
     <div className="container mx-auto max-w-2xl px-4 py-8">
       <h1 className="text-2xl font-bold mb-4">Edit Hashtag </h1>
       {hashtag ? (
-        <HashtagForm hashtag={hashtag} onSuccess={() => router.push('/event/hashtags')} />
+        <HashtagForm hashtag={hashtag} onSuccess={() => router.push('/admin/event/hashtags')} />
       ) : (
         <div>Hashtag not found.</div>
       )}

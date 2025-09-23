@@ -77,7 +77,7 @@ const VenueList = () => {
                 <TableCell>{venue.capacity}</TableCell>
                 <TableCell>{venue.facilities.join(', ')}</TableCell>
                 <TableCell>
-             <Link href={`/event/venues/edit/${venue.id}`} passHref>
+             <Link href={`/admin/event/venues/edit/${venue.id}`} passHref>
                 <Button variant="outline" size="sm" className="mr-2">
                   Edit
                 </Button>

@@ -25,7 +25,7 @@ const EditCategoryPage = () => {
           setCategory(categoryData);
         } catch (error) {
           console.error('Failed to fetch category for editing:', error);
-          router.push('/event/categories');
+          router.push('/admin/event/categories');
         } finally {
           setLoading(false);
         }
@@ -42,7 +42,7 @@ const EditCategoryPage = () => {
     <div className="container mx-auto max-w-2xl px-4 py-8">
       <h1 className="text-2xl font-bold mb-4">Edit Category</h1>
       {category ? (
-        <CategoryForm category={category} onSuccess={() => router.push('/event/categories')} />
+        <CategoryForm category={category} onSuccess={() => router.push('/admin/event/categories')} />
       ) : (
         <div>Category not found.</div>
       )}
