@@ -26,12 +26,15 @@ const CreatePost = () => {
   const handleSubmit = async () => {
     setIsPosting(true);
     let uploadedImageUrl = "";
+    let fileKeyStored = "";
 
     try {
-      // Step 1: If image selected, get signed URL and upload
+      //If image selected, get signed URL and upload
       if (selectedImage) {
+        const bucket = "social-media";
         const fileName = `${user}_${Date.now()}_${selectedImage.name}`;
-        const signedUrl = await getSignedUploadUrl(fileName);
+        fileKeyStored = `${bucket}/${fileName}`;
+        const signedUrl = await getSignedUploadUrl(fileName, bucket);
         uploadedImageUrl = await uploadFileToSignedUrl(
           selectedImage,
           signedUrl
@@ -39,8 +42,8 @@ const CreatePost = () => {
         setImageUrl(uploadedImageUrl);
       }
 
-      // Step 2: Create the post with image reference
-      await createPost(content, uploadedImageUrl);
+      //Create the post with image reference
+      await createPost(content, fileKeyStored);
 
       setContent("");
       setSelectedImage(null);

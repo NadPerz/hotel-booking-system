@@ -11,11 +11,12 @@ import {
   TrashIcon,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { likePost, unlikePost } from "../lib/like.api";
 import { addComment, deleteComment, getComments } from "../lib/comment.api";
 import { deletePost } from "../lib/post.api";
+import { getSignedGetUrl } from "../lib/post.media.api";
 
 // Post type: you may want to import from a types file or shape to backend PostWithLikeStatus
 export type Comment = {
@@ -34,6 +35,7 @@ export type Post = {
   userLiked?: boolean;
   //comments?: Comment[]; // If available; can update as your API expands
   createdAt?: string;
+  image?: string;
 };
 
 const STATIC_USER_ID = "68bb23a6701962edcadb67e0";
@@ -54,6 +56,41 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [commentsLoaded, setCommentsLoaded] = useState(false);
+  // ADDED state for image signed URL
+  const [imageSignedUrl, setImageSignedUrl] = useState<string>("");
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  const user = STATIC_USER_ID;
+
+  useEffect(() => {
+    const fetchImageSignedUrl = async () => {
+      if (post.image) {
+        console.log(
+          "🔍 DEBUG: Fetching signed URL for image path:",
+          post.image
+        );
+
+        setImageLoading(true);
+        setImageError(false);
+        try {
+          const signedUrl = await getSignedGetUrl(post.image);
+          console.log("✅ DEBUG: Successfully got signed URL:", signedUrl);
+
+          setImageSignedUrl(signedUrl);
+        } catch (error) {
+          console.error("❌ DEBUG: Failed to get signed URL for image:", error);
+          console.error("❌ DEBUG: Image path that failed:", post.image);
+          console.error("Failed to get signed URL for image:", error);
+          setImageError(true);
+        } finally {
+          setImageLoading(false);
+        }
+      }
+    };
+
+    fetchImageSignedUrl();
+  }, [post.image]);
 
   // Like handling
   const handleLike = async () => {
@@ -129,7 +166,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
               ago
             </div>
           </div>
-          {post.user === STATIC_USER_ID && (
+          {post.user === user && (
             <Button
               size="icon"
               variant="ghost"
@@ -141,6 +178,53 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
           )}
         </div>
         <div className="mb-3">{post.content}</div>
+
+        {/* POST IMAGE //Old one
+        {post.image && (
+          <div className="rounded-lg border overflow-hidden">
+            <img
+              src={post.image}
+              alt="Post content"
+              className="w-full h-auto object-cover"
+            />
+          </div>
+        )} */}
+
+        {/* POST IMAGE - UPDATED to use signed URL */}
+        {post.image && (
+          <div className="rounded-lg border overflow-hidden mb-3">
+            {imageLoading && (
+              <div className="flex items-center justify-center h-32 bg-gray-100">
+                <div className="text-gray-500">Loading image...</div>
+              </div>
+            )}
+            {imageError && (
+              <div className="flex items-center justify-center h-32 bg-gray-100">
+                <div className="text-red-500">Failed to load image</div>
+              </div>
+            )}
+            {!imageLoading && !imageError && imageSignedUrl && (
+              <img
+                src={imageSignedUrl}
+                alt="Post content"
+                className="w-full h-auto object-cover"
+                onError={(e) => {
+                  console.error(
+                    "❌ DEBUG: Image failed to load from URL:",
+                    imageSignedUrl
+                  );
+                  setImageError(true);
+                }}
+                onLoad={() => {
+                  console.log(
+                    "✅ DEBUG: Image successfully loaded from URL:",
+                    imageSignedUrl
+                  );
+                }}
+              />
+            )}
+          </div>
+        )}
 
         {/* Like and comment buttons */}
         <div className="flex items-center gap-3 mb-2">

@@ -45,6 +45,7 @@ export class PostRepositoryImpl extends PostRepository {
       const doc = new this.postModel({
         user: post.user,
         content: post.content,
+        image: post.image,
       });
 
       //pre-save logging (debug only)
