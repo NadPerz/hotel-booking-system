@@ -16,6 +16,10 @@ export class MinioService implements StorageService {
     this.defaultBucket =
       this.configService.get<string>('minio.bucketName') || 'app-storage';
     this.initializeBucket();
+    console.log(
+      'MINIO PORT number from config:',
+      configService.get<string>('minio.port'),
+    );
   }
 
   private async initializeBucket(): Promise<void> {
@@ -37,6 +41,12 @@ export class MinioService implements StorageService {
   ): Promise<string> {
     const bucket = bucketName || this.defaultBucket;
     try {
+      // Auto-create bucket if it doesn't exist
+      const exists = await this.bucketExists(bucket);
+      if (!exists) {
+        await this.createBucket(bucket);
+        this.logger.log(`Bucket created on demand: ${bucket}`);
+      } // End of bucket autocreation code
       return await this.minioClient.presignedPutObject(
         bucket,
         fileName,
@@ -59,6 +69,12 @@ export class MinioService implements StorageService {
     const bucket = bucketName || this.defaultBucket;
 
     try {
+      // Auto-create bucket if it doesn't exist
+      const exists = await this.bucketExists(bucket);
+      if (!exists) {
+        await this.createBucket(bucket);
+        this.logger.log(`Bucket created on demand: ${bucket}`);
+      } //End of bucket autocreation code
       const result = await this.minioClient.putObject(
         bucket,
         fileName,
@@ -129,6 +145,7 @@ export class MinioService implements StorageService {
       this.logger.log(`Bucket created: ${bucketName}`);
     } catch (error) {
       this.logger.error(`Failed to create bucket: ${bucketName}`, error);
+      console.error('Minio bucket creation error details:', error);
       throw error;
     }
   }
