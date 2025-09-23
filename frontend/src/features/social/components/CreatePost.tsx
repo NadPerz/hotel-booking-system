@@ -10,10 +10,7 @@ import { Avatar, AvatarImage } from "@frontend/components/ui/avatar";
 import { ImageIcon, Loader2Icon, SendIcon } from "lucide-react";
 import { useState } from "react";
 import { createPost, STATIC_USER_ID } from "../lib";
-import {
-  getSignedUploadUrl,
-  uploadFileToSignedUrl,
-} from "../lib/post.media.api";
+import { getSignedUploadUrl, uploadFileToSignedUrl } from "src/lib/media.api";
 
 const CreatePost = () => {
   const user = `${STATIC_USER_ID}`;

@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 import { likePost, unlikePost } from "../lib/like.api";
 import { addComment, deleteComment, getComments } from "../lib/comment.api";
 import { deletePost } from "../lib/post.api";
-import { getSignedGetUrl } from "../lib/post.media.api";
+import { getSignedGetUrl } from "src/lib/media.api";
 
 // Post type: you may want to import from a types file or shape to backend PostWithLikeStatus
 export type Comment = {
@@ -192,7 +192,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
 
         {/* POST IMAGE - UPDATED to use signed URL */}
         {post.image && (
-          <div className="rounded-lg border overflow-hidden mb-3">
+          <div className="rounded-lg overflow-hidden mb-3">
             {imageLoading && (
               <div className="flex items-center justify-center h-32 bg-gray-100">
                 <div className="text-gray-500">Loading image...</div>
