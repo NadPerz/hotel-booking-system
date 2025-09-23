@@ -4,6 +4,7 @@
 export interface StorageService {
   /**
    * Uploads a file buffer to the specified bucket under a given file name.
+   * This is done when files are to be uploaded from backend server
    * @param file The file data as a Buffer
    * @param fileName The desired name for the file in storage
    * @param bucketName (Optional) The destination bucket; uses default if omitted
