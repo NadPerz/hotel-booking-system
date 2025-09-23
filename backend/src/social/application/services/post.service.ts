@@ -40,6 +40,11 @@ export class PostService {
       'null', // post Id will be given by db
       createPostDto.user,
       createPostDto?.content ?? '',
+      undefined, // likeCount
+      undefined, // commentCount
+      undefined, // createdAt
+      undefined, // updatedAt
+      createPostDto.image ?? undefined,
     );
 
     // content: dto?.content || "",   // fallback to blank string
