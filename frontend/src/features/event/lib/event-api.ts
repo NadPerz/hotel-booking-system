@@ -236,6 +236,25 @@ export const deleteHashtag = async (id: string): Promise<void> => {
     }
 };
 
+// RSVP API
+
+export const getRsvps = async (): Promise<any[]> => {
+    const response = await fetch(`${API_BASE_URL}/rsvp`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch rsvps');
+    }
+    return response.json();
+}
+
+export const deleteRsvp = async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/rsvp/${id}`, {
+        method: 'DELETE',
+    });
+    if (!response.ok) {
+        throw new Error('Failed to delete rsvp');
+    }
+}
+
 // Event API
 
 export const createEvent = async (eventData: any): Promise<any> => {

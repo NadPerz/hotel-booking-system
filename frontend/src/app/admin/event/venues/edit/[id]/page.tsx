@@ -33,7 +33,7 @@ const EditVenuePage = () => {
         } catch (error) {
           console.error('Failed to fetch venue for editing:', error);
           // Redirect or show an error message
-          router.push('/event/venues'); 
+          router.push('/admin/event/venues'); 
         } finally {
           setLoading(false);
         }
@@ -52,7 +52,7 @@ const EditVenuePage = () => {
       <h1 className="text-2xl font-bold mb-4">Edit Venue</h1>
 
      {venue ? (
-        <VenueForm venue={venue} onSuccess={() => router.push('/event/venues')} />
+        <VenueForm venue={venue} onSuccess={() => router.push('/admin/event/venues')} />
       ) : (
         <div>Venue not found.</div>
       )}

@@ -1,10 +1,10 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 import { getCategories, deleteCategory } from '../lib/event-api';
 import Link from 'next/link';
 
@@ -16,6 +16,7 @@ interface Category {
 
 const CategoryList = () => {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -38,12 +39,24 @@ const CategoryList = () => {
     }
   };
 
+  const filteredCategories = categories.filter((category) =>
+    category.categoryName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Categories</CardTitle>
       </CardHeader>
       <CardContent>
+        <div className="flex items-center mb-4">
+          <Input
+            placeholder="Search by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -53,12 +66,12 @@ const CategoryList = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {categories.map((category) => (
+            {filteredCategories.map((category) => (
               <TableRow key={category.id}>
                 <TableCell>{category.categoryName}</TableCell>
                 <TableCell>{category.description}</TableCell>
                 <TableCell>
-                  <Link href={`/event/categories/edit/${category.id}`} passHref>
+                  <Link href={`/admin/event/categories/edit/${category.id}`} passHref>
                     <Button variant="outline" size="sm" className="mr-2">
                       Edit
                     </Button>
