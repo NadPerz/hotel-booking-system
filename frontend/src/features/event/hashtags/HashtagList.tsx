@@ -1,10 +1,10 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 import { getHashtags, deleteHashtag } from '../lib/event-api';
 import Link from 'next/link';
 
@@ -15,6 +15,7 @@ interface Hashtag {
 
 const HashtagList = () => {
   const [hashtags, setHashtags] = useState<Hashtag[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchHashtags = async () => {
@@ -37,12 +38,24 @@ const HashtagList = () => {
     }
   };
 
+  const filteredHashtags = hashtags.filter((hashtag) =>
+    hashtag.hashtagName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Hashtags</CardTitle>
       </CardHeader>
       <CardContent>
+        <div className="flex items-center mb-4">
+          <Input
+            placeholder="Search by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -51,7 +64,7 @@ const HashtagList = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {hashtags.map((hashtag) => (
+            {filteredHashtags.map((hashtag) => (
               <TableRow key={hashtag.id}>
                 <TableCell>{hashtag.hashtagName}</TableCell>
                 <TableCell>

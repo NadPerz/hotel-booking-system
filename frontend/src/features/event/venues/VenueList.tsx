@@ -1,10 +1,10 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 import { getVenues, deleteVenue } from '../lib/event-api';
 import Link from 'next/link';
 
@@ -23,6 +23,7 @@ interface Venue {
 
 const VenueList = () => {
   const [venues, setVenues] = useState<Venue[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchVenues = async () => {
@@ -45,12 +46,24 @@ const VenueList = () => {
     }
   };
 
+  const filteredVenues = venues.filter((venue) =>
+    venue.venueName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Venues</CardTitle>
       </CardHeader>
       <CardContent>
+        <div className="flex items-center mb-4">
+          <Input
+            placeholder="Search by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -66,7 +79,7 @@ const VenueList = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {venues.map((venue) => (
+            {filteredVenues.map((venue) => (
               <TableRow key={venue.id}>
                 <TableCell>{venue.venueName}</TableCell>
                 <TableCell>{venue.address}</TableCell>
