@@ -1,10 +1,10 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 import { getOrganizers, deleteOrganizer } from '../lib/event-api';
 import Link from 'next/link';
 
@@ -18,6 +18,7 @@ interface Organizer {
 
 const OrganizerList = () => {
   const [organizers, setOrganizers] = useState<Organizer[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchOrganizers = async () => {
@@ -40,12 +41,24 @@ const OrganizerList = () => {
     }
   };
 
+  const filteredOrganizers = organizers.filter((organizer) =>
+    organizer.organizerName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Organizers</CardTitle>
       </CardHeader>
       <CardContent>
+        <div className="flex items-center mb-4">
+          <Input
+            placeholder="Search by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -57,14 +70,14 @@ const OrganizerList = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {organizers.map((organizer) => (
+            {filteredOrganizers.map((organizer) => (
               <TableRow key={organizer.id}>
                 <TableCell>{organizer.organizerName}</TableCell>
                 <TableCell>{organizer.contactEmail}</TableCell>
                 <TableCell>{organizer.contactPhone}</TableCell>
                 <TableCell>{organizer.organization}</TableCell>
                 <TableCell>
-                  <Link href={`/event/organizers/edit/${organizer.id}`} passHref>
+                  <Link href={`/admin/event/organizers/edit/${organizer.id}`} passHref>
                     <Button variant="outline" size="sm" className="mr-2">
                       Edit
                     </Button>

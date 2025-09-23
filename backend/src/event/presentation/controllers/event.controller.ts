@@ -77,10 +77,10 @@ async getCategories() {
   return await this.eventService.getCategories();
 }
 
-// @Get('rsvp')
-// async getRsvps() {
-//   return await this.eventService.getRsvps();
-// }
+@Get('rsvp')
+async getRsvps() {
+  return await this.eventService.getRsvps();
+}
 
  @Get('hashtag')
 async getAllHashtags() {

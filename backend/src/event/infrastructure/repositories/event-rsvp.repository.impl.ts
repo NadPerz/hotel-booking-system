@@ -19,6 +19,11 @@ export class EventRsvpRepositoryImpl extends EventRsvpRepository {
     return this.toDomainEntity(savedEventRsvp);
   }
 
+  async findAll(): Promise<any[]> {
+    const docs = await this.eventRsvpModel.find().exec();
+    return docs.map(doc => this.toDomainEntity(doc));
+  }
+
   async findById(id: string): Promise<any | null> {
     const doc = await this.eventRsvpModel.findById(id).exec();
     return doc ? this.toDomainEntity(doc) : null;

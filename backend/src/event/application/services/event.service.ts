@@ -89,9 +89,9 @@ export class EventService {
     return await this.eventHashtagRepository.findAll();
   }
 
-  // async getRsvps(): Promise<EventRsvp[]> {
-  //   return await this.eventRsvpRepository.findAll();
-  // }
+  async getRsvps(): Promise<EventRsvp[]> {
+    return await this.eventRsvpRepository.findAll();
+  }
 
 
 
