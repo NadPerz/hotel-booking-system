@@ -68,6 +68,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [mediaLoading, setMediaLoading] = useState(false);
   const [mediaError, setMediaError] = useState(false);
+  const MAX_MEDIA_HEIGHT = 500; // px
+  const [mediaContainerHeight, setMediaContainerHeight] =
+    useState<number>(MAX_MEDIA_HEIGHT);
 
   const user = STATIC_USER_ID;
 
@@ -101,6 +104,15 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
 
     fetchSignedUrls();
   }, [post.mediaFiles, post.image]);
+
+  //Capture natural height of the FIRST media to set a fixed container height
+  const handleFirstMediaHeight = (naturalHeight: number) => {
+    setMediaContainerHeight((prev) =>
+      prev === MAX_MEDIA_HEIGHT
+        ? Math.min(naturalHeight, MAX_MEDIA_HEIGHT)
+        : prev
+    );
+  };
 
   // Like handling
   const handleLike = async () => {
@@ -208,7 +220,10 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
 
         {/* ⭐ Media Carousel */}
         {signedMediaUrls.length > 0 && (
-          <div className="relative rounded-lg overflow-hidden mb-3">
+          <div
+            className="relative rounded-lg overflow-hidden mb-3 flex items-center justify-center bg-gray-100"
+            style={{ height: `${mediaContainerHeight}px` }}
+          >
             {mediaLoading && (
               <div className="flex items-center justify-center h-48 bg-gray-100">
                 Loading media...
@@ -225,13 +240,25 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
                   <video
                     src={currentMedia}
                     controls
-                    className="w-full h-auto object-contain bg-black"
+                    className="max-h-full max-w-full object-contain bg-black" // ⭐ CHANGED
+                    onLoadedMetadata={(e) => {
+                      if (currentIndex === 0) {
+                        const h = (e.target as HTMLVideoElement).videoHeight;
+                        handleFirstMediaHeight(h);
+                      }
+                    }}
                   />
                 ) : (
                   <img
                     src={currentMedia}
                     alt="Post media"
-                    className="w-full h-auto object-cover"
+                    className="max-h-full max-w-full object-contain bg-gray-200" // ⭐ CHANGED
+                    onLoad={(e) => {
+                      if (currentIndex === 0) {
+                        const h = (e.target as HTMLImageElement).naturalHeight;
+                        handleFirstMediaHeight(h);
+                      }
+                    }}
                   />
                 )}
 
