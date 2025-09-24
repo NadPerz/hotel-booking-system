@@ -66,22 +66,13 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
   useEffect(() => {
     const fetchImageSignedUrl = async () => {
       if (post.image) {
-        console.log(
-          "🔍 DEBUG: Fetching signed URL for image path:",
-          post.image
-        );
-
+        console.log(post.image);
         setImageLoading(true);
         setImageError(false);
         try {
           const signedUrl = await getSignedGetUrl(post.image);
-          console.log("✅ DEBUG: Successfully got signed URL:", signedUrl);
-
           setImageSignedUrl(signedUrl);
         } catch (error) {
-          console.error("❌ DEBUG: Failed to get signed URL for image:", error);
-          console.error("❌ DEBUG: Image path that failed:", post.image);
-          console.error("Failed to get signed URL for image:", error);
           setImageError(true);
         } finally {
           setImageLoading(false);

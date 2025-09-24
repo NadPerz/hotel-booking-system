@@ -29,9 +29,9 @@ const CreatePost = () => {
       //If image selected, get signed URL and upload
       if (selectedImage) {
         const bucket = "social-media";
-        const fileName = `posts/${user}/${Date.now()}_${selectedImage.name}`;
-        fileKeyStored = `${bucket}/${fileName}`;
-        const signedUrl = await getSignedUploadUrl(fileName, bucket);
+        const filePath = `posts/${user}/${Date.now()}_${selectedImage.name}`;
+        fileKeyStored = `${bucket}/${filePath}`;
+        const signedUrl = await getSignedUploadUrl(filePath, bucket);
         uploadedImageUrl = await uploadFileToSignedUrl(
           selectedImage,
           signedUrl
