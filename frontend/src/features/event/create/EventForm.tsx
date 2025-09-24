@@ -28,6 +28,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { cn } from "@/lib/utils";
 import { getVenues, getOrganizers, getCategories, getHashtags, createEvent } from '../lib/event-api';
+import { getSignedUploadUrl, uploadFileToSignedUrl } from "src/lib/media.api";
 
 const formSchema = z.object({
   eventName: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -100,9 +101,12 @@ const EventForm = () => {
         ...values,
         maxAttendees: Number(values.maxAttendees) || 0,
         ticketPrice: Number(values.ticketPrice) || 0,
+        imagesUrl: imageKey ? [imageKey] : [],
       });
       alert('Event created successfully!');
       form.reset();
+      setImageKey(""); // Reset image key state
+      setSelectedImage(null);
     } catch (error) {
       console.error('Failed to create event:', error);
       alert('Failed to create event. Please try again.');
@@ -123,6 +127,28 @@ const EventForm = () => {
   const filteredHashtags = hashtags.filter((h) =>
     h.hashtagName?.toLowerCase().includes(hashtagSearch.toLowerCase())
   );
+
+  // Handle image upload
+const [selectedImage, setSelectedImage] = useState<File | null>(null);
+const [imageKey, setImageKey] = useState("");
+
+const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = e.target.files;
+  if (!files || files.length === 0) return;
+  const file = files[0];
+  setSelectedImage(file);
+  // Generate a unique file name (e.g., userId + timestamp + original name)
+  const fileName = `event-${Date.now()}-${file.name}`;
+  const bucket = "events"; // Use a dedicated bucket or folder
+  try {
+    const signedUrl = await getSignedUploadUrl(fileName, bucket);
+    await uploadFileToSignedUrl(file, signedUrl);
+    setImageKey(`${bucket}/${fileName}`); // Store the key/path for DB
+  } catch (err) {
+    alert("Image upload failed");
+  }
+};
+
 
   return (
     <Form {...(form as any)}>
@@ -437,6 +463,8 @@ const EventForm = () => {
             </FormItem>
           )}
         /> */}
+        <input type="file" accept="image/*" onChange={handleImageChange} />
+
         <Button type="submit">Create Event</Button>
       </form>
     </Form>

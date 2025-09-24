@@ -86,7 +86,12 @@ async getRsvps() {
 async getAllHashtags() {
   return await this.eventService.getHashtags();
 }
-  
+
+  @Get('allEvents')
+  async getAllEvents() {
+    return await this.eventService.getAllEvents();
+  }
+
   //get venue by id
   @Get('venue/:id')
   async getVenueById(@Param('id') id: string) {

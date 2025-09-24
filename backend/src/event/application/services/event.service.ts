@@ -93,6 +93,10 @@ export class EventService {
     return await this.eventRsvpRepository.findAll();
   }
 
+  async getAllEvents(): Promise<Event[]> {
+    return await this.eventRepository.findAll();
+  }
+
 
 
   //find event by id
