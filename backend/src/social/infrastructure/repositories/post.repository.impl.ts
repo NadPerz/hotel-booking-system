@@ -45,6 +45,7 @@ export class PostRepositoryImpl extends PostRepository {
       const doc = new this.postModel({
         user: post.user,
         content: post.content,
+        image: post.image,
       });
 
       //pre-save logging (debug only)
@@ -375,6 +376,7 @@ export class PostRepositoryImpl extends PostRepository {
       doc.commentCount ?? 0,
       doc.createdAt,
       doc.updatedAt,
+      doc.image,
     );
   }
 
@@ -399,6 +401,7 @@ export class PostRepositoryImpl extends PostRepository {
       userLiked,
       post.createdAt,
       post.updatedAt,
+      post.image,
     );
   }
 
@@ -419,6 +422,7 @@ export class PostRepositoryImpl extends PostRepository {
       doc.userLiked ?? false,
       doc.createdAt,
       doc.updatedAt,
+      doc.image,
     );
   }
 }

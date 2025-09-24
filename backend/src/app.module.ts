@@ -6,10 +6,11 @@ import { ItineraryModule } from './itinerary/itinerary.module';
 import { HotelBookingModule } from './hotel-booking/hotel-booking.module'; // Add this
 
 import { SocialModule } from './social/social.module';
-import { EventModule } from './event/event.module'; 
+import { EventModule } from './event/event.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserManagementModule } from './user-management/user-management.module';
+import { StorageModule } from './shared/kernel/storage/storage.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { UserManagementModule } from './user-management/user-management.module';
     UserManagementModule,
     EventModule,
 
+    StorageModule,
   ],
   controllers: [AppController],
   providers: [AppService],
