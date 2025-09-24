@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { 
   LayoutDashboard, 
-  Hotel, 
+  Building2, // Changed from Hotel to Building2
   Calendar, 
   BarChart3, 
   Settings, 
@@ -26,13 +26,13 @@ const sidebarItems = [
   },
   {
     title: 'Hotels',
-    icon: Hotel,
+    icon: Building2, // Using Building2 instead of Hotel
     href: '/dashboard/hotels',
   },
   {
     title: 'Bookings',
     icon: Calendar,
-    href: '/bookings',
+    href: '/dashboard/bookings',
   },
   {
     title: 'Analytics',
@@ -48,7 +48,7 @@ const sidebarItems = [
   {
     title: 'Conflicts',
     icon: AlertTriangle,
-    href: '/bookings/conflicts',
+    href: '/dashboard/conflicts',
     badge: '2',
     badgeVariant: 'destructive' as const,
   },
@@ -78,7 +78,7 @@ export default function DashboardSidebar() {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center px-6 py-4 border-b">
-            <Hotel className="h-8 w-8 text-gray-800 mr-3" />
+            <Building2 className="h-8 w-8 text-gray-800 mr-3" />
             <span className="text-xl font-bold text-gray-800">HotelManager</span>
           </div>
 

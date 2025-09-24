@@ -2,12 +2,11 @@ export interface Hotel {
   id: string;
   title: string;
   description: string;
-  image: string;
+  image?: string;
   country: string;
   state: string;
   city: string;
   locationDescription: string;
-  userId: string;
   gym: boolean;
   spa: boolean;
   bar: boolean;
@@ -20,8 +19,9 @@ export interface Hotel {
   movieNights: boolean;
   swimmingPool: boolean;
   coffeeShop: boolean;
-  createdAt: string;
-  updatedAt: string;
+  userId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateHotelRequest {

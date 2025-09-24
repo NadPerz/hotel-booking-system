@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { hotelApi } from '../services/api/hotels.api';
-import { Hotel } from '../types/hotel.types';
+import { Hotel, CreateHotelRequest } from '../types/hotel.types';
 import { toast } from 'react-hot-toast';
 
 export const useHotels = () => {
@@ -12,7 +11,7 @@ export const useHotels = () => {
     data: hotels = [],
     isLoading,
     error
-  } = useQuery({
+  } = useQuery<Hotel[]>({
     queryKey: ['hotels'],
     queryFn: hotelApi.getHotels,
   });
@@ -21,14 +20,14 @@ export const useHotels = () => {
   const {
     data: myHotels = [],
     isLoading: isLoadingMyHotels
-  } = useQuery({
+  } = useQuery<Hotel[]>({
     queryKey: ['my-hotels'],
     queryFn: hotelApi.getMyHotels,
   });
 
   // Create hotel mutation
   const createHotelMutation = useMutation({
-    mutationFn: hotelApi.createHotel,
+    mutationFn: (data: CreateHotelRequest & { imageFile?: File }) => hotelApi.createHotel(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hotels'] });
       queryClient.invalidateQueries({ queryKey: ['my-hotels'] });
@@ -41,7 +40,8 @@ export const useHotels = () => {
 
   // Update hotel mutation
   const updateHotelMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => hotelApi.updateHotel(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<CreateHotelRequest> }) => 
+      hotelApi.updateHotel(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hotels'] });
       queryClient.invalidateQueries({ queryKey: ['my-hotels'] });
@@ -54,7 +54,7 @@ export const useHotels = () => {
 
   // Delete hotel mutation
   const deleteHotelMutation = useMutation({
-    mutationFn: hotelApi.deleteHotel,
+    mutationFn: (id: string) => hotelApi.deleteHotel(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hotels'] });
       queryClient.invalidateQueries({ queryKey: ['my-hotels'] });
@@ -79,11 +79,11 @@ export const useHotels = () => {
   };
 };
 
-// Hook for single hotel
-export const useHotel = (hotelId: string) => {
-  return useQuery({
-    queryKey: ['hotel', hotelId],
-    queryFn: () => hotelApi.getHotel(hotelId),
-    enabled: !!hotelId,
+// Get single hotel
+export const useHotel = (id: string) => {
+  return useQuery<Hotel>({
+    queryKey: ['hotel', id],
+    queryFn: () => hotelApi.getHotel(id),
+    enabled: !!id,
   });
 };
