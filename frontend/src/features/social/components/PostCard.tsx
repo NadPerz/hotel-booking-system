@@ -5,6 +5,8 @@ import { Button } from "@frontend/components/ui/button";
 import { Avatar, AvatarImage } from "@frontend/components/ui/avatar";
 import { Textarea } from "@frontend/components/ui/textarea";
 import {
+  ChevronLeft,
+  ChevronRight,
   HeartIcon,
   MessageCircleIcon,
   SendIcon,
@@ -35,7 +37,8 @@ export type Post = {
   userLiked?: boolean;
   //comments?: Comment[]; // If available; can update as your API expands
   createdAt?: string;
-  image?: string;
+  image?: string; // Kept for backward compatibility
+  mediaFiles?: string[];
 };
 
 const STATIC_USER_ID = "68bb23a6701962edcadb67e0";
@@ -43,7 +46,6 @@ const STATIC_USER_ID = "68bb23a6701962edcadb67e0";
 interface PostCardProps {
   post: Post;
   onDelete?: (id: string) => void;
-  // You can pass additional props as needed
 }
 
 const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
@@ -57,31 +59,48 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
   const [loadingComments, setLoadingComments] = useState(false);
   const [commentsLoaded, setCommentsLoaded] = useState(false);
   // ADDED state for image signed URL
-  const [imageSignedUrl, setImageSignedUrl] = useState<string>("");
-  const [imageLoading, setImageLoading] = useState(false);
-  const [imageError, setImageError] = useState(false);
+  // const [imageSignedUrl, setImageSignedUrl] = useState<string>("");
+  // const [imageLoading, setImageLoading] = useState(false);
+  // const [imageError, setImageError] = useState(false);
+
+  //Media state
+  const [signedMediaUrls, setSignedMediaUrls] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [mediaError, setMediaError] = useState(false);
 
   const user = STATIC_USER_ID;
 
   useEffect(() => {
-    const fetchImageSignedUrl = async () => {
-      if (post.image) {
-        console.log(post.image);
-        setImageLoading(true);
-        setImageError(false);
-        try {
-          const signedUrl = await getSignedGetUrl(post.image);
-          setImageSignedUrl(signedUrl);
-        } catch (error) {
-          setImageError(true);
-        } finally {
-          setImageLoading(false);
-        }
+    const fetchSignedUrls = async () => {
+      const mediaKeys =
+        post.mediaFiles && post.mediaFiles.length > 0
+          ? post.mediaFiles
+          : post.image
+          ? [post.image] // fallback
+          : [];
+
+      if (mediaKeys.length === 0) return;
+
+      setMediaLoading(true);
+      setMediaError(false);
+      try {
+        const urls = await Promise.all(
+          mediaKeys.map((k) => getSignedGetUrl(k))
+        );
+        // console.log(" mediaKeys:", mediaKeys);
+        // console.log(" signedMediaUrls:", urls);
+        setSignedMediaUrls(urls);
+      } catch (err) {
+        console.error("Error fetching signed media URLs", err);
+        setMediaError(true);
+      } finally {
+        setMediaLoading(false);
       }
     };
 
-    fetchImageSignedUrl();
-  }, [post.image]);
+    fetchSignedUrls();
+  }, [post.mediaFiles, post.image]);
 
   // Like handling
   const handleLike = async () => {
@@ -143,6 +162,10 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
     }
   };
 
+  //Helper added for multiple media display
+  const currentMedia = signedMediaUrls[currentIndex] ?? "";
+  const isVideo = (url: string) => /\.(mp4|webm|ogg)$/i.test(url.split("?")[0]);
+
   return (
     <Card className="mb-4">
       <CardContent className="p-4">
@@ -182,7 +205,81 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
         )} */}
 
         {/* POST IMAGE - UPDATED to use signed URL */}
-        {post.image && (
+
+        {/* ⭐ Media Carousel */}
+        {signedMediaUrls.length > 0 && (
+          <div className="relative rounded-lg overflow-hidden mb-3">
+            {mediaLoading && (
+              <div className="flex items-center justify-center h-48 bg-gray-100">
+                Loading media...
+              </div>
+            )}
+            {mediaError && (
+              <div className="flex items-center justify-center h-48 bg-gray-100 text-red-500">
+                Failed to load media
+              </div>
+            )}
+            {!mediaLoading && !mediaError && currentMedia && (
+              <>
+                {isVideo(currentMedia) ? (
+                  <video
+                    src={currentMedia}
+                    controls
+                    className="w-full h-auto object-contain bg-black"
+                  />
+                ) : (
+                  <img
+                    src={currentMedia}
+                    alt="Post media"
+                    className="w-full h-auto object-cover"
+                  />
+                )}
+
+                {/* Navigation Arrows */}
+                {signedMediaUrls.length > 1 && (
+                  <>
+                    <button
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full p-1"
+                      onClick={() =>
+                        setCurrentIndex(
+                          (prev) =>
+                            (prev - 1 + signedMediaUrls.length) %
+                            signedMediaUrls.length
+                        )
+                      }
+                    >
+                      <ChevronLeft className="h-6 w-6" />
+                    </button>
+                    <button
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full p-1"
+                      onClick={() =>
+                        setCurrentIndex(
+                          (prev) => (prev + 1) % signedMediaUrls.length
+                        )
+                      }
+                    >
+                      <ChevronRight className="h-6 w-6" />
+                    </button>
+
+                    {/* Dots */}
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-1">
+                      {signedMediaUrls.map((_, i) => (
+                        <span
+                          key={i}
+                          className={`h-2 w-2 rounded-full ${
+                            i === currentIndex ? "bg-white" : "bg-white/40"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* {post.image && (
           <div className="rounded-lg overflow-hidden mb-3">
             {imageLoading && (
               <div className="flex items-center justify-center h-32 bg-gray-100">
@@ -215,7 +312,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
               />
             )}
           </div>
-        )}
+        )} */}
 
         {/* Like and comment buttons */}
         <div className="flex items-center gap-3 mb-2">
