@@ -31,6 +31,7 @@ export class MinioService implements StorageService {
       }
     } catch (error) {
       this.logger.error('Failed to initialize bucket', error);
+      throw error;
     }
   }
 
@@ -158,6 +159,7 @@ export class MinioService implements StorageService {
         `Failed to check bucket existence: ${bucketName}`,
         error,
       );
+      throw error;
       return false;
     }
   }
