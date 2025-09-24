@@ -4,7 +4,6 @@ import { Card, CardContent } from "@frontend/components/ui/card";
 import { Button } from "@frontend/components/ui/button";
 import { Avatar, AvatarImage } from "@frontend/components/ui/avatar";
 import { Textarea } from "@frontend/components/ui/textarea";
-// ⭐ REMOVED: ChevronLeft, ChevronRight (no longer needed)
 import {
   HeartIcon,
   MessageCircleIcon,
@@ -14,7 +13,6 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
 
-// ⭐ ADDED: shadcn Carousel imports
 import {
   Carousel,
   CarouselContent,
@@ -28,7 +26,7 @@ import { addComment, deleteComment, getComments } from "../lib/comment.api";
 import { deletePost } from "../lib/post.api";
 import { getSignedGetUrl } from "src/lib/media.api";
 
-// Post type: you may want to import from a types file or shape to backend PostWithLikeStatus
+// Post type:  may want to import from a types file or shape to backend PostWithLikeStatus
 export type Comment = {
   id: string;
   user: string;
@@ -43,7 +41,7 @@ export type Post = {
   likeCount: number;
   commentCount: number;
   userLiked?: boolean;
-  //comments?: Comment[]; // If available; can update as your API expands
+  //comments?: Comment[]; // If available; can update as API expands
   createdAt?: string;
   image?: string; // Kept for backward compatibility
   mediaFiles?: string[];
@@ -69,12 +67,12 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
 
   //Media state
   const [signedMediaUrls, setSignedMediaUrls] = useState<string[]>([]);
-  // ⭐ REMOVED: currentIndex state (handled by shadcn carousel internally)
   const [mediaLoading, setMediaLoading] = useState(false);
   const [mediaError, setMediaError] = useState(false);
   const MAX_MEDIA_HEIGHT = 500; // px
-  const [mediaContainerHeight, setMediaContainerHeight] =
-    useState<number>(MAX_MEDIA_HEIGHT);
+  const [mediaContainerHeight, setMediaContainerHeight] = useState<
+    number | null
+  >(null);
 
   const user = STATIC_USER_ID;
 
@@ -91,6 +89,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
 
       setMediaLoading(true);
       setMediaError(false);
+      setMediaContainerHeight(null);
       try {
         const urls = await Promise.all(
           mediaKeys.map((k) => getSignedGetUrl(k))
@@ -107,15 +106,13 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
     fetchSignedUrls();
   }, [post.mediaFiles, post.image]);
 
-  // ⭐ MODIFIED: Updated to work with index parameter for carousel items
+  //height calculation logic
   const handleFirstMediaHeight = (naturalHeight: number, index: number) => {
-    // Only set height based on the first media item
-    if (index === 0) {
-      setMediaContainerHeight((prev) =>
-        prev === MAX_MEDIA_HEIGHT
-          ? Math.min(naturalHeight, MAX_MEDIA_HEIGHT)
-          : prev
-      );
+    // Only set height based on the first media item and only if not already set
+    if (index === 0 && mediaContainerHeight === null) {
+      // Use the smaller of natural height or MAX_HEIGHT (true maximum behavior)
+      const calculatedHeight = Math.min(naturalHeight, MAX_MEDIA_HEIGHT);
+      setMediaContainerHeight(calculatedHeight);
     }
   };
 
@@ -209,7 +206,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
         </div>
         <div className="mb-3">{post.content}</div>
 
-        {/* ⭐ COMPLETELY REPLACED: Media Carousel using shadcn/ui */}
+        {/* Media Carousel using shadcn/ui */}
         {signedMediaUrls.length > 0 && (
           <div className="mb-3">
             {mediaLoading && (
@@ -229,13 +226,20 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
                     <CarouselItem key={index}>
                       <div
                         className="relative rounded-lg overflow-hidden flex items-center justify-center bg-gray-100"
-                        style={{ height: `${mediaContainerHeight}px` }}
+                        style={{
+                          //  Use calculated height or fallback, with max-height constraint
+                          height: mediaContainerHeight
+                            ? `${mediaContainerHeight}px`
+                            : `${MAX_MEDIA_HEIGHT}px`,
+                          maxHeight: `${MAX_MEDIA_HEIGHT}px`, //  Explicit max-height constraint
+                        }}
                       >
                         {isVideo(url) ? (
                           <video
                             src={url}
                             controls
                             className="max-h-full max-w-full object-contain bg-black"
+                            style={{ maxHeight: `${MAX_MEDIA_HEIGHT}px` }}
                             onLoadedMetadata={(e) => {
                               const h = (e.target as HTMLVideoElement)
                                 .videoHeight;
@@ -247,6 +251,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
                             src={url}
                             alt="Post media"
                             className="max-h-full max-w-full object-contain bg-gray-200"
+                            style={{ maxHeight: `${MAX_MEDIA_HEIGHT}px` }}
                             onLoad={(e) => {
                               const h = (e.target as HTMLImageElement)
                                 .naturalHeight;
@@ -258,7 +263,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                {/* ⭐ ADDED: shadcn carousel navigation (only show if multiple items) */}
+                {/*  shadcn carousel navigation (only show if multiple items) */}
                 {signedMediaUrls.length > 1 && (
                   <>
                     <CarouselPrevious />
