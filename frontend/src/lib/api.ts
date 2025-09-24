@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Use environment variable with /api prefix as fallback
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+// Remove /api prefix since your backend doesn't use it
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 console.log('🔧 API Base URL:', API_BASE_URL);
 
@@ -17,7 +17,6 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
-    console.log('📊 Full URL will be:', `${config.baseURL}${config.url}`);
     return config;
   },
   (error) => {
@@ -26,7 +25,7 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor
+// Response interceptor - Clean error handling
 api.interceptors.response.use(
   (response) => {
     console.log(`✅ API Response: ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`);
@@ -42,8 +41,12 @@ api.interceptors.response.use(
       fullURL: `${error.config?.baseURL}${error.config?.url}`,
     };
 
-    console.error('❌ API Response Error:', errorInfo);
-    console.error('🎯 Expected URL format: http://localhost:3000/api/hotels');
+    // Don't spam console for known missing endpoints
+    if (error.response?.status === 404 && error.config?.url?.includes('/analytics/')) {
+      console.warn(`⚠️ Analytics endpoint not implemented: ${errorInfo.fullURL}`);
+    } else {
+      console.error('❌ API Response Error:', errorInfo);
+    }
     
     return Promise.reject(error);
   }

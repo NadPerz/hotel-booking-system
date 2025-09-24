@@ -1,7 +1,44 @@
-// Use the same environment variable as the main API
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+import { ResourceType, getBucketConfig, generateFileName } from './bucket-manager';
 
-// Request a signed upload URL from backend
+// Remove /api prefix to match your backend
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+
+// Enhanced upload with dynamic bucket support
+export const uploadToResourceBucket = async (
+  file: File,
+  resourceType: ResourceType,
+  userId: string = 'NadPerz'
+): Promise<string> => {
+  try {
+    const bucketConfig = getBucketConfig(resourceType);
+    const fileName = generateFileName(resourceType, file.name, userId);
+    
+    console.log(`🪣 ${resourceType.toUpperCase()} Bucket Upload:`, {
+      resourceType,
+      bucketName: bucketConfig.bucketName,
+      fileName,
+      userId
+    });
+
+    // Get signed URL with dynamic bucket
+    const signedUrl = await getSignedUploadUrl(fileName, bucketConfig.bucketName);
+    console.log(`✅ Got signed URL for ${bucketConfig.bucketName}`);
+    
+    // Upload file
+    await uploadFileToSignedUrl(file, signedUrl);
+    
+    // Return the PATH (bucket/filename), not full HTTP URL
+    const filePath = `${bucketConfig.bucketName}/${fileName}`;
+    console.log(`✅ File uploaded to ${bucketConfig.bucketName}, returning path:`, filePath);
+    
+    return filePath;
+    
+  } catch (error) {
+    console.error(`❌ ${resourceType} upload failed:`, error);
+    throw error;
+  }
+};
+
 export const getSignedUploadUrl = async (
   fileName: string,
   bucket?: string
@@ -9,50 +46,28 @@ export const getSignedUploadUrl = async (
   const body: { fileName: string; bucket?: string } = { fileName };
   if (bucket) body.bucket = bucket;
 
-  console.log('🚀 Media API - Requesting signed upload URL:', { fileName, bucket, API_BASE_URL });
+  console.log('🚀 Requesting signed upload URL:', { fileName, bucket, API_BASE_URL });
 
+  // Remove /api prefix from media endpoints
   const response = await fetch(`${API_BASE_URL}/media/signed-upload-url`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 
-  console.log('📡 Media API - Upload URL response status:', response.status);
-  
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('❌ Media API - Failed to get signed URL:', errorText);
     throw new Error(`Failed to get signed URL: ${response.status} - ${errorText}`);
   }
   
   const result = await response.json();
-  console.log('✅ Media API - Got signed URL:', result.url);
   return result.url;
 };
 
-// Request a signed GET URL for any file
-export const getSignedGetUrl = async (
-  filePath: string,
-  expiry?: number
-): Promise<string> => {
-  if (!filePath) throw new Error("filePath is required");
-  const params = new URLSearchParams({ filePath });
-  if (expiry) params.append("expiry", expiry.toString());
-  
-  const response = await fetch(
-    `${API_BASE_URL}/media/signed-get-url?${params.toString()}`
-  );
-  if (!response.ok) throw new Error("Failed to get signed URL");
-  return (await response.json()).url;
-};
-
-// Upload file directly to MinIO signed URL
 export const uploadFileToSignedUrl = async (
   file: File,
   signedUrl: string
-): Promise<string> => {
-  console.log('📤 Media API - Uploading file to Minio:', { fileName: file.name, size: file.size });
-  
+): Promise<void> => {
   const uploadResponse = await fetch(signedUrl, {
     method: "PUT",
     headers: {
@@ -62,12 +77,33 @@ export const uploadFileToSignedUrl = async (
   });
   
   if (!uploadResponse.ok) {
-    console.error('❌ Media API - File upload failed:', uploadResponse.status, uploadResponse.statusText);
     throw new Error("File upload failed");
   }
   
-  // Return path without query params for DB reference
-  const fileUrl = signedUrl.split("?")[0];
-  console.log('✅ Media API - File uploaded successfully:', fileUrl);
-  return fileUrl;
+  console.log('✅ File uploaded successfully to Minio');
+};
+
+export const getSignedGetUrl = async (
+  filePath: string,
+  expiry?: number
+): Promise<string> => {
+  if (!filePath) throw new Error("filePath is required");
+  
+  const params = new URLSearchParams({ filePath });
+  if (expiry) params.append("expiry", expiry.toString());
+  
+  console.log('🔍 Getting signed GET URL for path:', filePath);
+  
+  // Remove /api prefix from media endpoints
+  const response = await fetch(
+    `${API_BASE_URL}/media/signed-get-url?${params.toString()}`
+  );
+  
+  if (!response.ok) {
+    throw new Error("Failed to get signed GET URL");
+  }
+  
+  const result = await response.json();
+  console.log('✅ Got signed GET URL for:', filePath);
+  return result.url;
 };

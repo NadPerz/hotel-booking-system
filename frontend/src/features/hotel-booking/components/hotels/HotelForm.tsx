@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,20 +10,19 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Loader2, ArrowLeft } from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+import { X, Loader2, Hotel } from 'lucide-react';
 import MinioImageUpload from '../shared/MinioImageUpload';
 import { useHotels } from '../../hooks/useHotels';
+import { Hotel as HotelType } from '../../types/hotel.types';
 
-// Fixed Zod schema with non-optional boolean fields
+// Define the hotel schema with optional locationDescription
 const hotelSchema = z.object({
   title: z.string().min(1, 'Hotel name is required'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   country: z.string().min(1, 'Country is required'),
   state: z.string().min(1, 'State is required'),
   city: z.string().min(1, 'City is required'),
-  locationDescription: z.string().min(5, 'Location description is required'),
+  locationDescription: z.string().optional(), // Optional field
   gym: z.boolean(),
   spa: z.boolean(),
   bar: z.boolean(),
@@ -40,33 +39,41 @@ const hotelSchema = z.object({
 
 type HotelFormData = z.infer<typeof hotelSchema>;
 
-export default function HotelForm() {
-  const router = useRouter();
-  const { createHotel, isCreating } = useHotels();
+interface HotelFormProps {
+  hotel?: HotelType | null;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+}
+
+export default function HotelForm({ hotel, onSuccess, onCancel }: HotelFormProps) {
+  const { createHotel, updateHotel, isCreating, isUpdating } = useHotels();
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+
+  const isEditMode = !!hotel;
+  const isSubmitting = isCreating || isUpdating;
 
   const form = useForm<HotelFormData>({
     resolver: zodResolver(hotelSchema),
     defaultValues: {
-      title: '',
-      description: '',
-      country: '',
-      state: '',
-      city: '',
-      locationDescription: '',
-      gym: false,
-      spa: false,
-      bar: false,
-      laundry: false,
-      restaurant: false,
-      shopping: false,
-      freeParking: false,
-      bikeRental: false,
-      freeWifi: false,
-      movieNights: false,
-      swimmingPool: false,
-      coffeeShop: false,
+      title: hotel?.title || '',
+      description: hotel?.description || '',
+      country: hotel?.country || '',
+      state: hotel?.state || '',
+      city: hotel?.city || '',
+      locationDescription: hotel?.locationDescription || '', // Will be empty string if undefined
+      gym: hotel?.gym || false,
+      spa: hotel?.spa || false,
+      bar: hotel?.bar || false,
+      laundry: hotel?.laundry || false,
+      restaurant: hotel?.restaurant || false,
+      shopping: hotel?.shopping || false,
+      freeParking: hotel?.freeParking || false,
+      bikeRental: hotel?.bikeRental || false,
+      freeWifi: hotel?.freeWifi || true,
+      movieNights: hotel?.movieNights || false,
+      swimmingPool: hotel?.swimmingPool || false,
+      coffeeShop: hotel?.coffeeShop || false,
     },
   });
 
@@ -85,26 +92,41 @@ export default function HotelForm() {
 
   const onSubmit: SubmitHandler<HotelFormData> = async (data) => {
     try {
-      console.log('🏨 Submitting hotel form:', data);
+      console.log(`🏨 ${isEditMode ? 'Updating' : 'Creating'} hotel:`, data);
       
-      await createHotel({
+      // Clean the data - convert empty locationDescription to undefined
+      const cleanData = {
         ...data,
+        locationDescription: data.locationDescription?.trim() || undefined,
         imageFile: selectedImage || undefined,
-      });
+      };
+      
+      if (isEditMode && hotel) {
+        // UPDATE existing hotel
+        console.log('🔄 Updating hotel ID:', hotel.id);
+        await updateHotel({
+          id: hotel.id,
+          data: cleanData,
+        });
+        console.log('✅ Hotel updated successfully');
+      } else {
+        // CREATE new hotel
+        console.log('🆕 Creating new hotel');
+        await createHotel(cleanData);
+        console.log('✅ Hotel created successfully');
+      }
 
-      toast.success('Hotel created successfully!');
-      router.push('/dashboard/hotels');
+      onSuccess?.();
     } catch (error: any) {
-      console.error('❌ Failed to create hotel:', error);
-      toast.error(error.message || 'Failed to create hotel');
+      console.error(`❌ Failed to ${isEditMode ? 'update' : 'create'} hotel:`, error);
     }
   };
 
-  const amenities: Array<{ key: keyof HotelFormData; label: string }> = [
+  const amenities = [
     { key: 'gym', label: 'Gym' },
     { key: 'spa', label: 'Spa' },
     { key: 'bar', label: 'Bar' },
-    { key: 'laundry', label: 'Laundry' },
+    { key: 'laundry', label: 'Laundry Service' },
     { key: 'restaurant', label: 'Restaurant' },
     { key: 'shopping', label: 'Shopping' },
     { key: 'freeParking', label: 'Free Parking' },
@@ -113,28 +135,31 @@ export default function HotelForm() {
     { key: 'movieNights', label: 'Movie Nights' },
     { key: 'swimmingPool', label: 'Swimming Pool' },
     { key: 'coffeeShop', label: 'Coffee Shop' },
-  ];
+  ] as const;
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.back()}
-            disabled={isCreating}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <div>
-            <CardTitle>Create New Hotel</CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
-              Fill in the details to add a new hotel property
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Hotel className="h-5 w-5" />
+            <CardTitle>{isEditMode ? 'Edit Hotel' : 'Create New Hotel'}</CardTitle>
           </div>
+          {onCancel && (
+            <Button variant="ghost" size="sm" onClick={onCancel}>
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
+        <p className="text-sm text-gray-600">
+          {isEditMode 
+            ? `Update "${hotel?.title}" details`
+            : 'Fill in the details to add a new hotel property'
+          }
+        </p>
+        <p className="text-xs text-blue-600">
+          📦 Images will be stored in hotel-bucket/images/hotels_NadPerz_timestamp_filename
+        </p>
       </CardHeader>
       
       <CardContent>
@@ -152,9 +177,9 @@ export default function HotelForm() {
                     <FormLabel>Hotel Name *</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="Enter hotel name" 
+                        placeholder="e.g. Grand Palace Hotel" 
                         {...field} 
-                        disabled={isCreating}
+                        disabled={isSubmitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -170,10 +195,10 @@ export default function HotelForm() {
                     <FormLabel>Description *</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Describe your hotel..." 
+                        placeholder="Describe your hotel, its features, and what makes it special..." 
                         className="min-h-[100px]"
                         {...field} 
-                        disabled={isCreating}
+                        disabled={isSubmitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -181,20 +206,23 @@ export default function HotelForm() {
                 )}
               />
 
-              {/* Image Upload */}
+              {/* Image Upload - will go to hotel-bucket */}
               <div>
                 <MinioImageUpload
                   label="Hotel Image"
                   onImageSelect={handleImageSelect}
                   preview={imagePreview}
-                  bucket="common-itinerary-ai-storage"
-                  folder="hotels"
-                  isUploading={isCreating}
+                  bucket="hotel-bucket"
+                  folder="images"
+                  isUploading={isSubmitting}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  💾 File will be stored as: hotel-bucket/images/hotels_NadPerz_{Date.now()}_filename.jpg
+                </p>
               </div>
             </div>
 
-            {/* Location */}
+            {/* Location Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Location</h3>
               
@@ -207,9 +235,9 @@ export default function HotelForm() {
                       <FormLabel>Country *</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Country" 
+                          placeholder="e.g. Sri Lanka" 
                           {...field} 
-                          disabled={isCreating}
+                          disabled={isSubmitting}
                         />
                       </FormControl>
                       <FormMessage />
@@ -222,12 +250,12 @@ export default function HotelForm() {
                   name="state"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>State *</FormLabel>
+                      <FormLabel>State/Province *</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="State" 
+                          placeholder="e.g. Western" 
                           {...field} 
-                          disabled={isCreating}
+                          disabled={isSubmitting}
                         />
                       </FormControl>
                       <FormMessage />
@@ -243,9 +271,9 @@ export default function HotelForm() {
                       <FormLabel>City *</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="City" 
+                          placeholder="e.g. Colombo" 
                           {...field} 
-                          disabled={isCreating}
+                          disabled={isSubmitting}
                         />
                       </FormControl>
                       <FormMessage />
@@ -259,12 +287,12 @@ export default function HotelForm() {
                 name="locationDescription"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Location Description *</FormLabel>
+                    <FormLabel>Location Description (Optional)</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Describe the location and nearby attractions..." 
+                        placeholder="Additional details about the location, nearby attractions, etc..." 
                         {...field} 
-                        disabled={isCreating}
+                        disabled={isSubmitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -273,10 +301,10 @@ export default function HotelForm() {
               />
             </div>
 
-            {/* Amenities */}
+            {/* Hotel Amenities */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Amenities</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <h3 className="text-lg font-semibold">Hotel Amenities & Services</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {amenities.map((amenity) => (
                   <FormField
                     key={amenity.key}
@@ -290,7 +318,7 @@ export default function HotelForm() {
                             onCheckedChange={(checked) => {
                               field.onChange(checked === true);
                             }}
-                            disabled={isCreating}
+                            disabled={isSubmitting}
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
@@ -306,27 +334,29 @@ export default function HotelForm() {
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end space-x-4 pt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-                disabled={isCreating}
-              >
-                Cancel
-              </Button>
+            <div className="flex justify-end space-x-4 pt-6 border-t">
+              {onCancel && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+              )}
               <Button
                 type="submit"
-                disabled={isCreating}
-                className="min-w-[120px]"
+                disabled={isSubmitting}
+                className="min-w-[150px]"
               >
-                {isCreating ? (
+                {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
+                    {isEditMode ? 'Updating Hotel...' : 'Creating Hotel...'}
                   </>
                 ) : (
-                  'Create Hotel'
+                  `${isEditMode ? 'Update Hotel' : 'Create Hotel'}`
                 )}
               </Button>
             </div>
