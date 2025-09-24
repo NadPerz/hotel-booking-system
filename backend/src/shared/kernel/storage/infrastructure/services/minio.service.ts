@@ -160,7 +160,7 @@ export class MinioService implements StorageService {
         error,
       );
       throw error;
-      return false;
+      // return false;
     }
   }
 }
