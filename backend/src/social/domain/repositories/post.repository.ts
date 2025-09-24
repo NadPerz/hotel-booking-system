@@ -20,6 +20,14 @@ export abstract class PostRepository {
   abstract getAll(): Promise<Post[]>;
 
   /**
+   * Finds a single post by its ID.
+   */
+  abstract findById(
+    postId: string,
+    session?: ClientSession,
+  ): Promise<Post | null>;
+
+  /**
    * Retrieves all posts with like status for a specific user.
    * @param userId - Optional user ID to check like status
    * @returns Promise resolving to an array of PostWithLikeStatus entities

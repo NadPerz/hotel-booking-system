@@ -18,6 +18,9 @@ export class Post {
   @Prop({ type: String })
   image?: string;
 
+  @Prop({ type: [String], default: [] })
+  mediaFiles?: string[];
+
   @Prop({ type: Number, default: 0 })
   likeCount: number;
 
