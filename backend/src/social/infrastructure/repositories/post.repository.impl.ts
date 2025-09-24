@@ -45,7 +45,8 @@ export class PostRepositoryImpl extends PostRepository {
       const doc = new this.postModel({
         user: post.user,
         content: post.content,
-        image: post.image,
+        image: post.image, //kept for backwards compatibiility
+        mediaFiles: post.mediaFiles,
       });
 
       //pre-save logging (debug only)
@@ -80,8 +81,6 @@ export class PostRepositoryImpl extends PostRepository {
         .find()
         .sort({ createdAt: -1 }) // Most recent first
         .exec();
-
-      // success log removed to reduce noise
 
       // Convert each MongoDB document to domain entity
       return docs.map((doc) => this.toDomainEntity(doc));
@@ -412,6 +411,7 @@ export class PostRepositoryImpl extends PostRepository {
       doc.createdAt,
       doc.updatedAt,
       doc.image,
+      doc.mediaFiles ?? [],
     );
   }
 
@@ -437,6 +437,7 @@ export class PostRepositoryImpl extends PostRepository {
       post.createdAt,
       post.updatedAt,
       post.image,
+      post.mediaFiles,
     );
   }
 
@@ -458,6 +459,7 @@ export class PostRepositoryImpl extends PostRepository {
       doc.createdAt,
       doc.updatedAt,
       doc.image,
+      doc.mediaFiles ?? [],
     );
   }
 }

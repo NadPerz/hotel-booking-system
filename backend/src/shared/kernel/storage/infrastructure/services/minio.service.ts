@@ -43,6 +43,7 @@ export class MinioService implements StorageService {
     const bucket = bucketName || this.defaultBucket;
     try {
       // Auto-create bucket if it doesn't exist
+      // const pathName = `social-media/posts/${fileName}`;
       const exists = await this.bucketExists(bucket);
       if (!exists) {
         await this.createBucket(bucket);
