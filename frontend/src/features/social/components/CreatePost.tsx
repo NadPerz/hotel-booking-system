@@ -49,6 +49,7 @@ const CreatePost = () => {
         });
 
         uploadedMediaUrls = await Promise.all(uploadPromises);
+        console.log("Uploaded file keys:", uploadedMediaUrls);
       }
 
       await createPost(content, uploadedMediaUrls);

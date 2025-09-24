@@ -7,7 +7,7 @@ export const STATIC_USER_ID = "68bb23a6701962edcadb67e0";
 // Post API
 export const createPost = async (
   content: string,
-  mediaUrls?: string[],
+  mediaFiles?: string[],
   imageUrl?: string
 ): Promise<any> => {
   const response = await fetch(`${API_BASE_URL_SOCIAL}/posts`, {
@@ -19,7 +19,7 @@ export const createPost = async (
       user: STATIC_USER_ID,
       content: content,
       image: imageUrl,
-      mediaUrls: mediaUrls,
+      mediaFiles: mediaFiles,
     }),
   });
 

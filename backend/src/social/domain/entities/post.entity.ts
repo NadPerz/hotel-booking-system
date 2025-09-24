@@ -1,3 +1,5 @@
+//post.entity.ts
+
 export class Post {
   constructor(
     public id: string,
