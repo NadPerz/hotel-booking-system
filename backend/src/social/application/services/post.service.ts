@@ -54,7 +54,8 @@ export class PostService {
       undefined, // commentCount
       undefined, // createdAt
       undefined, // updatedAt
-      createPostDto.image ?? undefined,
+      createPostDto.image ?? undefined, //kept for backwards compatibility
+      createPostDto.mediaFiles ?? [],
     );
 
     // content: dto?.content || "",   // fallback to blank string
@@ -124,6 +125,11 @@ export class PostService {
         // 3. Store media files to delete after transaction succeeds
         if (post.image) {
           mediaToDelete.push(post.image);
+        }
+
+        // 3a. same as above, but if multiple media files exist
+        if (post.mediaFiles && post.mediaFiles.length > 0) {
+          mediaToDelete.push(...post.mediaFiles);
         }
 
         // 4. Delete related comments
@@ -232,7 +238,7 @@ export class PostService {
   }
 
   /**
-   * Future method for handling multiple media files per post
+   * Enhanced method for handling multiple media files per post
    */
   private async deleteMultipleMediaFiles(mediaKeys: string[]): Promise<void> {
     this.logger.log(
