@@ -92,6 +92,41 @@ export class PostRepositoryImpl extends PostRepository {
   }
 
   /**
+   * Finds a single post by its ID.
+   *
+   * @param postId - The ID of the post to find
+   * @param session - Optional MongoDB session for transaction support
+   * @returns Promise resolving to the post entity or null if not found
+   */
+  async findById(
+    postId: string,
+    session?: ClientSession,
+  ): Promise<Post | null> {
+    this.logger.debug(
+      `[PostRepositoryImpl.findById] Finding post by ID: ${postId}`,
+    );
+
+    try {
+      const queryOptions = session ? { session } : {};
+      const doc = await this.postModel
+        .findById(postId, null, queryOptions)
+        .exec();
+
+      if (!doc) {
+        this.logger.debug(
+          `[PostRepositoryImpl.findById] Post not found: ${postId}`,
+        );
+        return null;
+      }
+
+      return this.toDomainEntity(doc);
+    } catch (error) {
+      this.logger.error(`Failed to find post by ID: ${postId}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
    * Retrieves all posts with like status for a specific user.
    * Uses MongoDB aggregation to efficiently join posts with likes in a single query.
    *
