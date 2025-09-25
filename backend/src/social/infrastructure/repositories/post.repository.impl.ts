@@ -395,6 +395,50 @@ export class PostRepositoryImpl extends PostRepository {
   }
 
   /**
+   * Updates an existing post with partial data.
+   * Supports updating content, media files, and other post properties.
+   * @param postId - The ID of the post to update
+   * @param updateData - Partial post data containing fields to update
+   * @param session - Optional MongoDB session for transaction support
+   * @returns Promise resolving to the updated post entity
+   * @throws Error if the post is not found or update fails
+   */
+  async update(
+    postId: string,
+    updateData: Partial<Post>,
+    session?: ClientSession,
+  ): Promise<Post> {
+    this.logger.debug(
+      `[PostRepositoryImpl.update] Updating post ${postId} with data:`,
+      { updateData },
+    );
+
+    try {
+      const queryOptions = session ? { session, new: true } : { new: true };
+
+      const doc = await this.postModel
+        .findByIdAndUpdate(postId, updateData, queryOptions)
+        .exec();
+
+      if (!doc) {
+        throw new Error(`Post with ID ${postId} not found`);
+      }
+
+      const result = this.toDomainEntity(doc);
+      this.logger.debug(
+        `[PostRepositoryImpl.update] Successfully updated post: ${postId}`,
+      );
+      return result;
+    } catch (error) {
+      this.logger.error(
+        `[PostRepositoryImpl.update] Failed to update post ${postId}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Converts a MongoDB document to a domain entity.
    *
    * @private
