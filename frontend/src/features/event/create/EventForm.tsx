@@ -27,8 +27,8 @@ import {
 } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { cn } from "@/lib/utils";
-import { getVenues, getOrganizers, getCategories, getHashtags, createEvent } from '../lib/event-api';
-import { getSignedUploadUrl, uploadFileToSignedUrl } from "src/lib/media.api";
+import { getVenues, getOrganizers, getCategories, getHashtags, createEvent, updateEvent } from '../lib/event-api';
+import { getSignedGetUrl, getSignedUploadUrl, uploadFileToSignedUrl } from "src/lib/media.api";
 
 const formSchema = z.object({
   eventName: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -48,13 +48,93 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const EventForm = () => {
+type EventFormProps = {
+  initialValues?: Partial<FormValues> & {
+    id?: string;
+    imagesUrl?: string[];
+    venue?: { id: string; venueName: string; [key: string]: any };
+    organizer?: { id: string; organizerName: string; [key: string]: any };
+    category?: { id: string; categoryName: string; [key: string]: any };
+    hashtags?: { id: string; hashtagName: string }[];
+  };
+  onSuccess?: () => void;
+};
+
+const EventForm: React.FC<EventFormProps> = ({ initialValues, onSuccess }) => {
   const [venues, setVenues] = useState<any[]>([]);
   const [organizers, setOrganizers] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [hashtags, setHashtags] = useState<any[]>([]);
   const [isHashtagDialogOpen, setIsHashtagDialogOpen] = useState(false);
   const [hashtagSearch, setHashtagSearch] = useState('');
+
+const form = useForm<FormValues>({
+  resolver: zodResolver(formSchema) as any,
+  defaultValues: {
+    eventName: initialValues?.eventName ?? '',
+    description: initialValues?.description ?? '',
+    startDate: initialValues?.startDate ?? '',
+    endDate: initialValues?.endDate ?? '',
+    startTime: initialValues?.startTime ?? '',
+    endTime: initialValues?.endTime ?? '',
+    maxAttendees: initialValues?.maxAttendees ?? 0,
+    ticketPrice: initialValues?.ticketPrice ?? 0,
+    eventStatus: initialValues?.eventStatus ?? 'active',
+    venueId: initialValues?.venue?.id ?? '',
+    organizerId: initialValues?.organizer?.id ?? '',
+    categoryId: initialValues?.category?.id ?? '',
+    // hashtagIds: initialValues?.hashtags?.map(tag => tag.id) ?? [],
+    // hashtagIds: initialValues?.hashtagIds ?? [],
+    hashtagIds: initialValues?.hashtagIds 
+      ?? initialValues?.hashtags?.map(tag => tag.id).filter(Boolean) 
+      ?? [],
+  },
+});
+  console.log("Hashtags in state (initial component render):", hashtags);
+  console.log("Selected hashtagIds in form:", form.getValues('hashtagIds'));
+
+// if (
+//   venues.length === 0 ||
+//   organizers.length === 0 ||
+//   categories.length === 0
+// ) {
+//   return <div>Loading event info...</div>;
+// }
+console.log('Comparing initialValues.venueId:', initialValues?.venueId);
+venues.forEach(v => console.log('Venue id:', v.id));
+
+useEffect(() => {
+  console.log("Initial values from DB/API:", initialValues);
+  console.log('venueId from initialValues', initialValues?.venueId, typeof initialValues?.venueId);
+venues.forEach(v => console.log(v.id, typeof v.id));
+
+  if (
+    initialValues &&
+    venues.length > 0 &&
+    organizers.length > 0 &&
+    categories.length > 0
+  ) {
+    form.reset({
+      eventName: initialValues.eventName ?? '',
+      description: initialValues.description ?? '',
+      startDate: initialValues.startDate ?? '',
+      endDate: initialValues.endDate ?? '',
+      startTime: initialValues.startTime ?? '',
+      endTime: initialValues.endTime ?? '',
+      maxAttendees: initialValues.maxAttendees ?? 0,
+      ticketPrice: initialValues.ticketPrice ?? 0,
+      eventStatus: initialValues.eventStatus ?? 'active',
+      venueId: initialValues.venue?.id ?? '',
+      organizerId: initialValues.organizer?.id ?? '',
+      categoryId: initialValues.category?.id ?? '',
+      // hashtagIds: initialValues.hashtagIds ?? [],
+      hashtagIds: initialValues.hashtags?.map(tag => tag.id) ?? [],
+    });
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [initialValues, venues.length, organizers.length, categories.length]);
+
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -65,10 +145,16 @@ const EventForm = () => {
           getCategories(),
           getHashtags(),
         ]);
+
+        console.log('Fetched venues:', venuesData);
+        console.log('Fetched organizers:', organizersData);
+        console.log('Fetched categories:', categoriesData);
+        
         setVenues(venuesData);
         setOrganizers(organizersData);
         setCategories(categoriesData);
         setHashtags(hashtagsData);
+        console.log('Hashtags after setHashtags:', hashtagsData);
       } catch (error) {
         console.error('Failed to fetch event data:', error);
       }
@@ -76,50 +162,89 @@ const EventForm = () => {
     fetchData();
   }, []);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema) as any,
-    defaultValues: {
-      eventName: '',
-      description: '',
-      startDate: '',
-      endDate: '',
-      startTime: '',
-      endTime: '',
-      maxAttendees: 0,
-      ticketPrice: 0,
-      eventStatus: 'active',
-      venueId: '',
-      organizerId: '',
-      categoryId: '',
-      hashtagIds: [],
-    },
-  });
+
+
+
+  // const onSubmit = async (values: FormValues) => {
+  //   try {
+  //     await createEvent({
+  //       ...values,
+  //       maxAttendees: Number(values.maxAttendees) || 0,
+  //       ticketPrice: Number(values.ticketPrice) || 0,
+  //       imagesUrl: imageKey ? [imageKey] : [],
+  //     });
+  //     alert('Event created successfully!');
+  //     form.reset();
+  //     setImageKey(""); // Reset image key state
+  //     setSelectedImage(null);
+  //   } catch (error) {
+  //     console.error('Failed to create event:', error);
+  //     alert('Failed to create event. Please try again.');
+  //   }
+  // };
 
   const onSubmit = async (values: FormValues) => {
-    try {
-      await createEvent({
-        ...values,
-        maxAttendees: Number(values.maxAttendees) || 0,
-        ticketPrice: Number(values.ticketPrice) || 0,
-        imagesUrl: imageKey ? [imageKey] : [],
-      });
-      alert('Event created successfully!');
-      form.reset();
-      setImageKey(""); // Reset image key state
-      setSelectedImage(null);
-    } catch (error) {
-      console.error('Failed to create event:', error);
-      alert('Failed to create event. Please try again.');
+  try {
+
+    let imagesUrlToSend = initialValues?.imagesUrl ?? [];
+
+    // If a new image was selected/uploaded, update imagesUrlToSend, else keep the old one
+    if (imageKey) {
+      imagesUrlToSend = [imageKey];
     }
-  };
+
+      const payload = {
+      ...values,
+      imagesUrl: imagesUrlToSend,
+      maxAttendees: Number(values.maxAttendees) || 0,
+      ticketPrice: Number(values.ticketPrice) || 0,
+    };
+
+    if (initialValues?.id) {
+      // await updateEvent(initialValues.id, {
+      //   // ...values,
+      //   // venue: values.venueId,
+      //   // organizer: values.organizerId,
+      //   // category: values.categoryId,
+      //   // imagesUrl: imagesUrlToSend,
+      //   // maxAttendees: Number(values.maxAttendees) || 0,
+      //   // ticketPrice: Number(values.ticketPrice) || 0,
+        
+      // });
+      await updateEvent(initialValues.id, payload);
+      alert('Event updated successfully!');
+    } else {
+      // await createEvent({
+      //   ...values,
+      //    venue: values.venueId,
+      //   organizer: values.organizerId,
+      //   category: values.categoryId,
+      //   maxAttendees: Number(values.maxAttendees) || 0,
+      //   ticketPrice: Number(values.ticketPrice) || 0,
+      //   imagesUrl: imageKey ? [imageKey] : [],
+      // });
+      await createEvent(payload);
+      alert('Event created successfully!');
+    }
+    form.reset();
+    setImageKey("");
+    setSelectedImage(null);
+    onSuccess?.();
+  } catch (error) {
+    console.error('Failed to save event:', error);
+    alert('Failed to save event.');
+  }
+};
+
 
   //check whether the hashtag is already in the list
   const handleHashtagClick = (hashtagId: string) => {
+    console.log("Clicked hashtag id:", hashtagId);
     const currentHashtagIds = form.getValues('hashtagIds');
     const newHashtagIds = currentHashtagIds.includes(hashtagId)
       ? currentHashtagIds.filter(id => id !== hashtagId)
       : [...currentHashtagIds, hashtagId];
-
+     console.log("Now selected ids:", form.getValues('hashtagIds'));
     form.setValue('hashtagIds', newHashtagIds, { shouldValidate: true });
     form.trigger('hashtagIds');
   };
@@ -127,6 +252,7 @@ const EventForm = () => {
   const filteredHashtags = hashtags.filter((h) =>
     h.hashtagName?.toLowerCase().includes(hashtagSearch.toLowerCase())
   );
+  console.log("Filtered hashtags for search:", filteredHashtags);
 
   // Handle image upload
 const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -148,7 +274,7 @@ const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     alert("Image upload failed");
   }
 };
-
+console.log("Hashtags prop in form:", hashtags);
 
   return (
     <Form {...(form as any)}>
@@ -290,7 +416,7 @@ const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Venue</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a venue" />
@@ -314,7 +440,7 @@ const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Organizer</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select an organizer" />
@@ -338,7 +464,7 @@ const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
@@ -355,7 +481,7 @@ const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
               <FormMessage />
             </FormItem>
           )}
-        />
+        /> 
         <FormField
           control={form.control as any}
           name="hashtagIds"
@@ -370,6 +496,7 @@ const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
                     )}
                     {form.getValues('hashtagIds').map((id) => {
                       const tag = hashtags.find((h) => h.id === id);
+                      console.log("Mapping selected id to hashtag:", id, tag);
                       if (!tag) return null;
                       return (
                         <Badge key={id} variant="secondary" className="flex items-center gap-2">
@@ -463,6 +590,7 @@ const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
             </FormItem>
           )}
         /> */}
+        {/* <img src={getSignedGetUrl(initialValues.imagesUrl?.)} /> */}
         <input type="file" accept="image/*" onChange={handleImageChange} />
 
         <Button type="submit">Create Event</Button>

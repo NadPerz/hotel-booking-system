@@ -94,7 +94,7 @@ const EventList = () => {
                 <TableCell>{e.organizer?.organizerName || '-'}</TableCell>
                 <TableCell>{e.category?.categoryName || '-'}</TableCell>
                 <TableCell>
-                  <Link href={`/admin/event/allevents/edit/${e.id}`} passHref>
+                  <Link href={`/admin/event/edit/${e.id}`} passHref>
                     <Button variant="outline" size="sm" className="mr-2">Edit</Button>
                   </Link>
                   <Button variant="destructive" size="sm" onClick={() => handleDelete(e.id)}>Delete</Button>
