@@ -25,6 +25,8 @@ import { likePost, unlikePost } from "../lib/like.api";
 import { addComment, deleteComment, getComments } from "../lib/comment.api";
 import { deletePost } from "../lib/post.api";
 import { getSignedGetUrl } from "src/lib/media.api";
+import { Skeleton } from "@frontend/components/ui/skeleton";
+import CommentsLoadingSkeleton from "./CommentsLoadingSkeleton";
 
 // Post type:  may want to import from a types file or shape to backend PostWithLikeStatus
 export type Comment = {
@@ -176,7 +178,6 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
     }
   };
 
-  // ⭐ REMOVED: currentMedia helper (no longer needed)
   const isVideo = (url: string) => /\.(mp4|webm|ogg)$/i.test(url.split("?")[0]);
 
   return (
@@ -210,8 +211,18 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
         {signedMediaUrls.length > 0 && (
           <div className="mb-3">
             {mediaLoading && (
-              <div className="flex items-center justify-center h-48 bg-gray-100 rounded-lg">
-                Loading media...
+              <div className="space-y-2">
+                {/* Media placeholder skeleton - rectangular to match image/video */}
+                <Skeleton
+                  className="w-full rounded-lg"
+                  style={{ height: `${MAX_MEDIA_HEIGHT}px` }}
+                />
+                {/* Optional: Add skeleton for carousel controls if multiple items */}
+                <div className="flex justify-center space-x-2">
+                  <Skeleton className="h-2 w-2 rounded-full" />
+                  <Skeleton className="h-2 w-2 rounded-full" />
+                  <Skeleton className="h-2 w-2 rounded-full" />
+                </div>
               </div>
             )}
             {mediaError && (
@@ -296,7 +307,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
         {showComments && (
           <div className="pt-3 border-t">
             {loadingComments ? (
-              <div>Loading comments...</div>
+              <CommentsLoadingSkeleton />
             ) : (
               comments.map((comment) => (
                 <div key={comment.id} className="flex items-start gap-2">
