@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { getAllPosts } from "../lib/post.api";
-import PostCard, { Post } from "./PostCardOld";
+import PostCard from "./PostCard";
 import { Skeleton } from "@frontend/components/ui/skeleton";
 import PostListSkeleton from "./PostListSkeleton";
+import { Post } from "../types/social.types";
 
 const STATIC_USER_ID = "68bb23a6701962edcadb67e0";
 
