@@ -1,126 +1,184 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { MapPin, Star, Users, Edit, Trash2 } from "lucide-react";
-import { Hotel } from "../../types/hotel.types";
-import { AMENITIES } from "../../utils/constants";
-import { formatPrice } from "../../utils/formatters";
+import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { 
+  MoreVertical, 
+  MapPin, 
+  Eye, 
+  Edit, 
+  Trash2,
+  Users,
+  Calendar,
+  Bed
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Hotel } from '../../types/hotel.types';
+import { Room } from '../../types/room.types';
+import { useRooms } from '../../hooks/useRooms';
+import HotelImageSimple from '../shared/HotelImageSimple';
 
 interface HotelCardProps {
   hotel: Hotel;
-  isOwner?: boolean;
-  onEdit?: (hotel: Hotel) => void;
-  onDelete?: (hotelId: string) => void;
+  onViewDetails: (hotel: Hotel) => void;
+  onEdit: (hotel: Hotel) => void;
+  onDelete: (hotel: Hotel) => void;
+  onManageRooms: (hotel: Hotel) => void;
 }
 
-export default function HotelCard({
-  hotel,
-  isOwner,
-  onEdit,
-  onDelete,
+export default function HotelCard({ 
+  hotel, 
+  onViewDetails, 
+  onEdit, 
+  onDelete, 
+  onManageRooms 
 }: HotelCardProps) {
-  const activeAmenities = AMENITIES.filter(
-    (amenity) => hotel[amenity.key as keyof Hotel] === true
-  ).slice(0, 4);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Get room count for this hotel - Fixed type
+  const { rooms = [] }: { rooms: Room[] } = useRooms(hotel.id);
+
+  const amenities = [];
+  if (hotel.gym) amenities.push({ icon: '🏋️', name: 'Gym' });
+  if (hotel.spa) amenities.push({ icon: '🧘', name: 'Spa' });
+  if (hotel.restaurant) amenities.push({ icon: '🍽️', name: 'Restaurant' });
+  if (hotel.freeParking) amenities.push({ icon: '🚗', name: 'Free Parking' });
+  if (hotel.freeWifi) amenities.push({ icon: '📶', name: 'Free WiFi' });
+  if (hotel.swimmingPool) amenities.push({ icon: '🏊', name: 'Swimming Pool' });
+
+  const handleDelete = async () => {
+    if (window.confirm(`Are you sure you want to delete "${hotel.title}"?`)) {
+      setIsDeleting(true);
+      try {
+        await onDelete(hotel);
+      } catch (error) {
+        console.error('Failed to delete hotel:', error);
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group">
-      <div className="relative h-48 overflow-hidden">
-        <Image
-          src={hotel.image || "/images/hotel-placeholder.jpg"}
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+      {/* Hotel Image */}
+      <div className="relative h-48">
+        <HotelImageSimple
+          imagePath={hotel.image}
           alt={hotel.title}
-          fill
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full rounded-t-lg"
         />
-        <div className="absolute top-4 right-4">
-          <Badge className="bg-dark-brown text-white">Featured</Badge>
-        </div>
-        {isOwner && (
-          <div className="absolute bottom-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => onEdit?.(hotel)}
-              className="bg-white/90 hover:bg-white"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => onDelete?.(hotel.id)}
-              className="bg-red-500/90 hover:bg-red-500"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+        
+        {/* Room Count Badge */}
+        {rooms.length > 0 && (
+          <div className="absolute top-2 left-2">
+            <div className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs flex items-center">
+              <Bed className="h-3 w-3 mr-1" />
+              {rooms.length} Room{rooms.length !== 1 ? 's' : ''}
+            </div>
           </div>
         )}
+        
+        {/* Options Menu */}
+        <div className="absolute top-2 right-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-white/90 backdrop-blur-sm"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onViewDetails(hotel)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onManageRooms(hotel)}>
+                <Users className="mr-2 h-4 w-4" />
+                Manage Rooms ({rooms.length})
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(hotel)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Hotel
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={handleDelete}
+                className="text-red-600"
+                disabled={isDeleting}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                {isDeleting ? 'Deleting...' : 'Delete Hotel'}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-3">
-          <h3 className="text-xl font-bold text-dark-brown line-clamp-1">
-            {hotel.title}
-          </h3>
-          <div className="flex items-center">
-            <Star className="h-4 w-4 text-yellow-500 fill-current" />
-            <span className="text-sm text-gray-600 ml-1">4.8</span>
-          </div>
-        </div>
-
-        <div className="flex items-center text-gray-600 mb-3">
+      <CardContent className="p-4">
+        {/* Hotel Title */}
+        <h3 className="font-semibold text-lg mb-2 line-clamp-1">{hotel.title}</h3>
+        
+        {/* Location */}
+        <div className="flex items-center text-gray-600 mb-2">
           <MapPin className="h-4 w-4 mr-1" />
           <span className="text-sm">
             {hotel.city}, {hotel.state}, {hotel.country}
           </span>
         </div>
 
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+        {/* Description */}
+        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
           {hotel.description}
         </p>
 
         {/* Amenities */}
-        <div className="flex items-center space-x-1 mb-4">
-          {activeAmenities.map((amenity) => (
+        <div className="flex flex-wrap gap-1 mb-4">
+          {amenities.slice(0, 4).map((amenity, index) => (
             <span
-              key={amenity.key}
-              className="text-sm px-2 py-1 bg-light-purple text-dark-brown rounded-full"
-              title={amenity.label}
+              key={index}
+              className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100"
             >
-              {amenity.icon}
+              <span className="mr-1">{amenity.icon}</span>
+              {amenity.name}
             </span>
           ))}
-          {activeAmenities.length <
-            AMENITIES.filter(
-              (amenity) => hotel[amenity.key as keyof Hotel] === true
-            ).length && (
-            <span className="text-xs text-gray-500">
-              +
-              {AMENITIES.filter(
-                (amenity) => hotel[amenity.key as keyof Hotel] === true
-              ).length - activeAmenities.length}{" "}
-              more
+          {amenities.length > 4 && (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100">
+              +{amenities.length - 4} more
             </span>
           )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-2xl font-bold text-dark-brown">
-              {formatPrice(299)}
-            </span>
-            <span className="text-gray-600 text-sm">/night</span>
+        {/* Stats - NOW DYNAMIC */}
+        <div className="flex justify-between items-center pt-3 border-t">
+          <div className="flex space-x-4 text-sm text-gray-600">
+            <div className="text-center">
+              <div className="font-semibold text-gray-900">{rooms.length}</div>
+              <div>Rooms</div>
+            </div>
+            <div className="text-center">
+              <div className="font-semibold text-gray-900">0</div>
+              <div>Bookings</div>
+            </div>
           </div>
-
-          <Link href={`/hotels/${hotel.id}`}>
-            <Button className="bg-dark-brown text-white hover:bg-opacity-90">
-              View Details
-            </Button>
-          </Link>
+          
+          <Button
+            onClick={() => onViewDetails(hotel)}
+            size="sm"
+            className="ml-auto"
+          >
+            <Eye className="mr-1 h-4 w-4" />
+            View Details
+          </Button>
         </div>
       </CardContent>
     </Card>

@@ -1,275 +1,368 @@
 "use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState, useEffect } from 'react';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Upload, Loader2 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import { hotelSchema } from '../../lib/validations';
-import { CreateHotelRequest, Hotel } from '../../types/hotel.types';
-import { AMENITIES } from '../../lib/constants';
-import { z } from 'zod';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { X, Loader2, Hotel } from 'lucide-react';
+import MinioImageUpload from '../shared/MinioImageUpload';
+import { useHotels } from '../../hooks/useHotels';
+import { Hotel as HotelType } from '../../types/hotel.types';
+
+// Define the hotel schema with optional locationDescription
+const hotelSchema = z.object({
+  title: z.string().min(1, 'Hotel name is required'),
+  description: z.string().min(10, 'Description must be at least 10 characters'),
+  country: z.string().min(1, 'Country is required'),
+  state: z.string().min(1, 'State is required'),
+  city: z.string().min(1, 'City is required'),
+  locationDescription: z.string().optional(), // Optional field
+  gym: z.boolean(),
+  spa: z.boolean(),
+  bar: z.boolean(),
+  laundry: z.boolean(),
+  restaurant: z.boolean(),
+  shopping: z.boolean(),
+  freeParking: z.boolean(),
+  bikeRental: z.boolean(),
+  freeWifi: z.boolean(),
+  movieNights: z.boolean(),
+  swimmingPool: z.boolean(),
+  coffeeShop: z.boolean(),
+});
 
 type HotelFormData = z.infer<typeof hotelSchema>;
 
 interface HotelFormProps {
+  hotel?: HotelType | null;
   onSuccess?: () => void;
-  initialData?: Partial<Hotel>;
-  isEdit?: boolean;
-  hotelId?: string;
-  // Fixed the type definition here
-  onSubmit?: (data: CreateHotelRequest & { imageFile?: File }) => Promise<void>;
+  onCancel?: () => void;
 }
 
-export default function HotelForm({ 
-  onSuccess, 
-  initialData, 
-  isEdit = false, 
-  hotelId,
-  onSubmit 
-}: HotelFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function HotelForm({ hotel, onSuccess, onCancel }: HotelFormProps) {
+  const { createHotel, updateHotel, isCreating, isUpdating } = useHotels();
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    initialData?.image || null
-  );
+  const [imagePreview, setImagePreview] = useState<string>('');
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<HotelFormData>({
+  const isEditMode = !!hotel;
+  const isSubmitting = isCreating || isUpdating;
+
+  const form = useForm<HotelFormData>({
     resolver: zodResolver(hotelSchema),
     defaultValues: {
-      title: initialData?.title || '',
-      description: initialData?.description || '',
-      country: initialData?.country || '',
-      state: initialData?.state || '',
-      city: initialData?.city || '',
-      locationDescription: initialData?.locationDescription || '',
-      gym: initialData?.gym || false,
-      spa: initialData?.spa || false,
-      bar: initialData?.bar || false,
-      laundry: initialData?.laundry || false,
-      restaurant: initialData?.restaurant || false,
-      shopping: initialData?.shopping || false,
-      freeParking: initialData?.freeParking || false,
-      bikeRental: initialData?.bikeRental || false,
-      freeWifi: initialData?.freeWifi || false,
-      movieNights: initialData?.movieNights || false,
-      swimmingPool: initialData?.swimmingPool || false,
-      coffeeShop: initialData?.coffeeShop || false,
+      title: hotel?.title || '',
+      description: hotel?.description || '',
+      country: hotel?.country || '',
+      state: hotel?.state || '',
+      city: hotel?.city || '',
+      locationDescription: hotel?.locationDescription || '', // Will be empty string if undefined
+      gym: hotel?.gym || false,
+      spa: hotel?.spa || false,
+      bar: hotel?.bar || false,
+      laundry: hotel?.laundry || false,
+      restaurant: hotel?.restaurant || false,
+      shopping: hotel?.shopping || false,
+      freeParking: hotel?.freeParking || false,
+      bikeRental: hotel?.bikeRental || false,
+      freeWifi: hotel?.freeWifi || true,
+      movieNights: hotel?.movieNights || false,
+      swimmingPool: hotel?.swimmingPool || false,
+      coffeeShop: hotel?.coffeeShop || false,
     },
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleImageSelect = (file: File | null) => {
+    setSelectedImage(file);
     if (file) {
-      setSelectedImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+    } else {
+      setImagePreview('');
     }
   };
 
-  const onFormSubmit = async (data: HotelFormData) => {
-    if (!onSubmit) return;
-    
-    setIsSubmitting(true);
-    
+  const onSubmit: SubmitHandler<HotelFormData> = async (data) => {
     try {
-      const submitData: CreateHotelRequest & { imageFile?: File } = {
+      console.log(`🏨 ${isEditMode ? 'Updating' : 'Creating'} hotel:`, data);
+      
+      // Clean the data - convert empty locationDescription to undefined
+      const cleanData = {
         ...data,
+        locationDescription: data.locationDescription?.trim() || undefined,
         imageFile: selectedImage || undefined,
       };
-
-      await onSubmit(submitData);
       
-      toast.success(isEdit ? 'Hotel updated successfully!' : 'Hotel created successfully!');
+      if (isEditMode && hotel) {
+        // UPDATE existing hotel
+        console.log('🔄 Updating hotel ID:', hotel.id);
+        await updateHotel({
+          id: hotel.id,
+          data: cleanData,
+        });
+        console.log('✅ Hotel updated successfully');
+      } else {
+        // CREATE new hotel
+        console.log('🆕 Creating new hotel');
+        await createHotel(cleanData);
+        console.log('✅ Hotel created successfully');
+      }
+
       onSuccess?.();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save hotel. Please try again.');
-      console.error('Hotel save error:', error);
-    } finally {
-      setIsSubmitting(false);
+      console.error(`❌ Failed to ${isEditMode ? 'update' : 'create'} hotel:`, error);
     }
   };
 
+  const amenities = [
+    { key: 'gym', label: 'Gym' },
+    { key: 'spa', label: 'Spa' },
+    { key: 'bar', label: 'Bar' },
+    { key: 'laundry', label: 'Laundry Service' },
+    { key: 'restaurant', label: 'Restaurant' },
+    { key: 'shopping', label: 'Shopping' },
+    { key: 'freeParking', label: 'Free Parking' },
+    { key: 'bikeRental', label: 'Bike Rental' },
+    { key: 'freeWifi', label: 'Free WiFi' },
+    { key: 'movieNights', label: 'Movie Nights' },
+    { key: 'swimmingPool', label: 'Swimming Pool' },
+    { key: 'coffeeShop', label: 'Coffee Shop' },
+  ] as const;
+
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-      {/* Basic Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-gray-800">Basic Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="title">Hotel Title</Label>
-            <Input
-              id="title"
-              {...register('title')}
-              placeholder="Enter hotel name"
-              className="mt-1"
-            />
-            {errors.title && (
-              <p className="text-sm text-red-500 mt-1">{errors.title.message}</p>
-            )}
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Hotel className="h-5 w-5" />
+            <CardTitle>{isEditMode ? 'Edit Hotel' : 'Create New Hotel'}</CardTitle>
           </div>
-
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              {...register('description')}
-              placeholder="Describe your hotel"
-              rows={4}
-              className="mt-1"
-            />
-            {errors.description && (
-              <p className="text-sm text-red-500 mt-1">{errors.description.message}</p>
-            )}
-          </div>
-
-          {/* Image Upload */}
-          <div>
-            <Label>Hotel Image</Label>
-            <div className="mt-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-                id="image-upload"
-              />
-              <label
-                htmlFor="image-upload"
-                className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors"
-              >
-                {imagePreview ? (
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="h-full w-full object-cover rounded-lg"
-                  />
-                ) : (
-                  <div className="text-center">
-                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-500">Click to upload image</p>
-                  </div>
+          {onCancel && (
+            <Button variant="ghost" size="sm" onClick={onCancel}>
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        <p className="text-sm text-gray-600">
+          {isEditMode 
+            ? `Update "${hotel?.title}" details`
+            : 'Fill in the details to add a new hotel property'
+          }
+        </p>
+        <p className="text-xs text-blue-600">
+          📦 Images will be stored in hotel-bucket/images/hotels_NadPerz_timestamp_filename
+        </p>
+      </CardHeader>
+      
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Basic Information</h3>
+              
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hotel Name *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="e.g. Grand Palace Hotel" 
+                        {...field} 
+                        disabled={isSubmitting}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </label>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Location */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-gray-800">Location</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="country">Country</Label>
-              <Input
-                id="country"
-                {...register('country')}
-                placeholder="Country"
-                className="mt-1"
               />
-              {errors.country && (
-                <p className="text-sm text-red-500 mt-1">{errors.country.message}</p>
-              )}
-            </div>
 
-            <div>
-              <Label htmlFor="state">State</Label>
-              <Input
-                id="state"
-                {...register('state')}
-                placeholder="State"
-                className="mt-1"
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description *</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Describe your hotel, its features, and what makes it special..." 
+                        className="min-h-[100px]"
+                        {...field} 
+                        disabled={isSubmitting}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.state && (
-                <p className="text-sm text-red-500 mt-1">{errors.state.message}</p>
-              )}
-            </div>
 
-            <div>
-              <Label htmlFor="city">City</Label>
-              <Input
-                id="city"
-                {...register('city')}
-                placeholder="City"
-                className="mt-1"
-              />
-              {errors.city && (
-                <p className="text-sm text-red-500 mt-1">{errors.city.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="locationDescription">Location Description</Label>
-            <Textarea
-              id="locationDescription"
-              {...register('locationDescription')}
-              placeholder="Describe the location"
-              rows={2}
-              className="mt-1"
-            />
-            {errors.locationDescription && (
-              <p className="text-sm text-red-500 mt-1">{errors.locationDescription.message}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Amenities */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-gray-800">Amenities</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {AMENITIES.map(({ key, label }) => (
-              <div key={key} className="flex items-center space-x-2">
-                <Checkbox
-                  id={key}
-                  checked={watch(key)}
-                  onCheckedChange={(checked) => setValue(key, !!checked)}
+              {/* Image Upload - will go to hotel-bucket */}
+              <div>
+                <MinioImageUpload
+                  label="Hotel Image"
+                  onImageSelect={handleImageSelect}
+                  preview={imagePreview}
+                  bucket="hotel-bucket"
+                  folder="images"
+                  isUploading={isSubmitting}
                 />
-                <Label htmlFor={key} className="text-sm font-normal">
-                  {label}
-                </Label>
+                <p className="text-xs text-gray-500 mt-1">
+                  💾 File will be stored as: hotel-bucket/images/hotels_NadPerz_{Date.now()}_filename.jpg
+                </p>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
 
-      {/* Submit Button */}
-      <div className="flex justify-end">
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="bg-gray-800 text-white hover:bg-gray-700"
-        >
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isEdit ? 'Update Hotel' : 'Create Hotel'}
-        </Button>
-      </div>
-    </form>
+            {/* Location Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Location</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Country *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="e.g. Sri Lanka" 
+                          {...field} 
+                          disabled={isSubmitting}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State/Province *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="e.g. Western" 
+                          {...field} 
+                          disabled={isSubmitting}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="e.g. Colombo" 
+                          {...field} 
+                          disabled={isSubmitting}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="locationDescription"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location Description (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Additional details about the location, nearby attractions, etc..." 
+                        {...field} 
+                        disabled={isSubmitting}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Hotel Amenities */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Hotel Amenities & Services</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {amenities.map((amenity) => (
+                  <FormField
+                    key={amenity.key}
+                    control={form.control}
+                    name={amenity.key}
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value as boolean}
+                            onCheckedChange={(checked) => {
+                              field.onChange(checked === true);
+                            }}
+                            disabled={isSubmitting}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="text-sm font-normal">
+                            {amenity.label}
+                          </FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex justify-end space-x-4 pt-6 border-t">
+              {onCancel && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+              )}
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="min-w-[150px]"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {isEditMode ? 'Updating Hotel...' : 'Creating Hotel...'}
+                  </>
+                ) : (
+                  `${isEditMode ? 'Update Hotel' : 'Create Hotel'}`
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }
