@@ -27,6 +27,10 @@ import { CommentRepositoryImpl } from './infrastructure/repositories/comment.rep
 //
 import { HasFriendshipSchema } from './infrastructure/schemas/friendships.schema';
 
+//Media
+import { PostMediaController } from './presentation/controllers/post-media.controller';
+import { StorageModule } from 'src/shared/kernel/storage/storage.module';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -35,8 +39,14 @@ import { HasFriendshipSchema } from './infrastructure/schemas/friendships.schema
       { name: 'Like', schema: LikeSchema },
       { name: 'HasFriendship', schema: HasFriendshipSchema },
     ]),
+    StorageModule,
   ],
-  controllers: [PostController, LikeController, CommentController],
+  controllers: [
+    PostController,
+    LikeController,
+    CommentController,
+    PostMediaController,
+  ],
   providers: [
     PostService,
     LikeService,

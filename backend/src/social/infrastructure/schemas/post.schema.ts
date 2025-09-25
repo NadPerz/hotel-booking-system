@@ -9,7 +9,7 @@ export type PostDocument = Post &
   collection: 'posts',
 })
 export class Post {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   user: Types.ObjectId;
 
   @Prop({ type: String })
@@ -17,6 +17,9 @@ export class Post {
 
   @Prop({ type: String })
   image?: string;
+
+  @Prop({ type: [String], default: [] })
+  mediaFiles?: string[];
 
   @Prop({ type: Number, default: 0 })
   likeCount: number;
@@ -28,9 +31,9 @@ export class Post {
   // likes?: Types.ObjectId[];
 
   // Virtual fields for relations
-  author?: Types.ObjectId;
-  // comments?: Types.ObjectId[];
-  notifications?: Types.ObjectId[];
+  // author?: Types.ObjectId;
+  // // comments?: Types.ObjectId[];
+  // notifications?: Types.ObjectId[];
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);

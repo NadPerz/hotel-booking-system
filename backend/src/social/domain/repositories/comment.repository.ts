@@ -8,6 +8,8 @@ import { ClientSession } from 'mongoose';
  * Provides methods for CRUD operations and transaction management.
  */
 export abstract class CommentRepository {
+  abstract findCommentsByPostId(postId: string): Promise<Comment[]>;
+
   /**
    * Creates a new comment record in the database.
    */
@@ -36,4 +38,12 @@ export abstract class CommentRepository {
     comment: Pick<Comment, 'id' | 'user' | 'post'>,
     operation: (session: ClientSession) => Promise<T>,
   ): Promise<T>;
+
+  /**
+   * Deletes all comments associated with a given post.
+   */
+  abstract deleteManyByPost(
+    postId: string,
+    session?: ClientSession,
+  ): Promise<void>;
 }

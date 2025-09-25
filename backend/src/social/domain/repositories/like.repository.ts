@@ -37,6 +37,11 @@ export abstract class LikeRepository {
   ): Promise<Like | null>;
 
   /**
+   * Deletes all likes associated with a given post.
+   */
+  abstract deleteManyByPost(postId: string, session?: any): Promise<void>;
+
+  /**
    * Executes a like operation within a database transaction.
    * @template T - The return type of the operation
    * @param like - The like entity involved in the transaction

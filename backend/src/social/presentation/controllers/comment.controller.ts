@@ -1,70 +1,64 @@
 //comment.controller.ts
 
-import { Body, Controller, Delete, Logger, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Logger,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { CreateCommentDto } from '@shared/types/social/create-comment.dto';
 
 import { CommentService } from 'src/social/application/services/comment.service';
 
-@Controller('comments')
+@Controller('social/posts/:postId/comments')
 export class CommentController {
   private readonly logger = new Logger(CommentController.name);
 
   constructor(private readonly commentService: CommentService) {}
 
+  @Get()
+  async getCommentsForPost(@Param('postId') postId: string) {
+    this.logger.log(
+      `[CommentController.getCommentsForPost] GET /posts/:postId/comments request`,
+      { postId },
+    );
+    return await this.commentService.getCommentsForPost(postId);
+  }
+
   @Post()
-  async addComment(@Body() dto: CreateCommentDto) {
-    this.logger.log(`POST /comments - Add comment request received`, {
+  async addComment(
+    @Param('postId') postId: string,
+    @Body() body: { user?: string; content?: string },
+  ) {
+    const dto: CreateCommentDto = {
+      user: body?.user as string,
+      post: postId,
+      content: body?.content as string,
+    };
+
+    this.logger.log(`POST /posts/:postId/comments request`, {
       userId: dto.user,
       postId: dto.post,
     });
-
-    try {
-      const result = await this.commentService.addComment(dto);
-      this.logger.log(`POST /comments - Add comment successful`, {
-        userId: dto.user,
-        postId: dto.post,
-        commentId: result.id,
-      });
-      return result;
-    } catch (error) {
-      this.logger.error(`POST /comments - Add comment failed`, {
-        userId: dto.user,
-        postId: dto.post,
-        error: error.message,
-        stack: error.stack,
-      });
-      throw error;
-    }
+    return await this.commentService.addComment(dto);
   }
 
-  @Delete(':user/:post/:comment')
+  @Delete(':commentId')
   async deleteComment(
-    @Param('user') userId: string,
-    @Param('post') postId: string,
-    @Param('comment') commentId: string,
+    @Param('postId') postId: string,
+    @Param('commentId') commentId: string,
+    @Body() body: { user?: string },
   ) {
-    this.logger.log(`DELETE /comments - Delete comment request received`, {
+    const userId = body?.user as string;
+    this.logger.log(`DELETE /posts/:postId/comments/:commentId request`, {
       userId,
       postId,
       commentId,
     });
-    try {
-      await this.commentService.deleteComment(commentId, userId, postId);
-      this.logger.log(`DELETE /comments - Delete comment successful`, {
-        userId,
-        postId,
-        commentId,
-      });
-      return { success: true, message: 'Comment deleted successfully' };
-    } catch (error) {
-      this.logger.error(`DELETE /comments - Delete comment failed`, {
-        userId,
-        postId,
-        commentId,
-        error: error.message,
-        stack: error.stack,
-      });
-      throw error;
-    }
+    await this.commentService.deleteComment(commentId, userId, postId);
+    return { success: true, message: 'Comment deleted successfully' };
   }
 }

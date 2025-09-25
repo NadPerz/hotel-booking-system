@@ -11,7 +11,7 @@ export class EventOrganizer {
   @Prop({ required: true })
   organizerName: string;
 
-  @Prop({ required: true })
+  @Prop()
   contactEmail: string;
 
   @Prop({ required: true })
