@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getAllPosts } from "../lib/post.api";
-import PostCard, { Post } from "./PostCard";
+import PostCard, { Post } from "./PostCardOld";
 import { Skeleton } from "@frontend/components/ui/skeleton";
 import PostListSkeleton from "./PostListSkeleton";
 
