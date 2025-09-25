@@ -9,6 +9,9 @@ import {
   MessageCircleIcon,
   SendIcon,
   TrashIcon,
+  PencilIcon,
+  SaveIcon,
+  XIcon,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
@@ -23,8 +26,12 @@ import {
 
 import { likePost, unlikePost } from "../lib/like.api";
 import { addComment, deleteComment, getComments } from "../lib/comment.api";
-import { deletePost } from "../lib/post.api";
-import { getSignedGetUrl } from "src/lib/media.api";
+import { deletePost, updatePost } from "../lib/post.api";
+import {
+  getSignedGetUrl,
+  getSignedUploadUrl,
+  uploadFileToSignedUrl,
+} from "src/lib/media.api";
 import { Skeleton } from "@frontend/components/ui/skeleton";
 import CommentsLoadingSkeleton from "./CommentsLoadingSkeleton";
 
@@ -34,6 +41,7 @@ export type Comment = {
   user: string;
   content: string;
   createdAt: string;
+  updatedAt: string;
 };
 
 export type Post = {
@@ -45,6 +53,7 @@ export type Post = {
   userLiked?: boolean;
   //comments?: Comment[]; // If available; can update as API expands
   createdAt?: string;
+  updatedAt?: string;
   image?: string; // Kept for backward compatibility
   mediaFiles?: string[];
 };
@@ -75,6 +84,16 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
   const [mediaContainerHeight, setMediaContainerHeight] = useState<
     number | null
   >(null);
+
+  //Editing related states
+  const [isEditing, setIsEditing] = useState(false); // Controls edit mode
+  const [editContent, setEditContent] = useState(post.content || ""); // Editable content
+  const [editMediaFiles, setEditMediaFiles] = useState<File[]>([]); // New files to add
+  const [editMediaToRemove, setEditMediaToRemove] = useState<string[]>([]); // Existing files to remove
+  const [isUpdating, setIsUpdating] = useState(false); // Loading state for updates
+  const [editMediaPreviewUrls, setEditMediaPreviewUrls] = useState<string[]>(
+    []
+  );
 
   const user = STATIC_USER_ID;
 
@@ -178,6 +197,157 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
     }
   };
 
+  // NEW FUNCTION: Toggle edit mode and reset edit state when cancelling
+  /**
+   * Toggles between edit and view mode.
+   * When cancelling edit mode, resets all edit-related state to original values.
+   */
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // Cancel editing - reset all edit state to original values
+      setEditContent(post.content || "");
+      setEditMediaFiles([]);
+      setEditMediaToRemove([]);
+    }
+    setIsEditing(!isEditing);
+  };
+
+  // NEW FUNCTION: Save post updates with comprehensive media management
+  /**
+   * Saves the post updates including content changes and media file management.
+   * Handles uploading new media files and updating the post with all changes.
+   * Uses transactions on the backend to ensure data consistency.
+   */
+  const handleSaveEdit = async () => {
+    setIsUpdating(true);
+    try {
+      let mediaFilesToAdd: string[] = [];
+
+      // Upload new media files if any were selected
+      if (editMediaFiles.length > 0) {
+        const bucket = "social-media";
+
+        const uploadPromises = editMediaFiles.map(async (file) => {
+          // Generate unique file path with timestamp and original name
+          const timestamp = Date.now();
+          const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_"); // Sanitize filename
+          const filePath = `posts/${user}/${timestamp}_${safeName}`;
+          const fileKey = `${bucket}/${filePath}`;
+
+          // Get signed upload URL and upload the file directly to MinIO
+          const signedUrl = await getSignedUploadUrl(filePath, bucket);
+          await uploadFileToSignedUrl(file, signedUrl);
+
+          return fileKey;
+        });
+
+        mediaFilesToAdd = await Promise.all(uploadPromises);
+      }
+
+      // Prepare update payload with only the fields that need updating
+      const updatePayload: {
+        content?: string;
+        mediaFilesToAdd?: string[];
+        mediaFilesToRemove?: string[];
+      } = {};
+
+      // Include content update (even if empty - allows clearing content)
+      if (editContent !== post.content) {
+        updatePayload.content = editContent;
+      }
+
+      // Include media additions if any
+      if (mediaFilesToAdd.length > 0) {
+        updatePayload.mediaFilesToAdd = mediaFilesToAdd;
+      }
+
+      // Include media removals if any
+      if (editMediaToRemove.length > 0) {
+        updatePayload.mediaFilesToRemove = editMediaToRemove;
+      }
+
+      // Send update request to backend
+      const response = await updatePost(post.id, updatePayload);
+      const updatedPost = response;
+
+      // Update local post object with new values
+      post.content = updatedPost.content;
+      post.mediaFiles = updatedPost.mediaFiles;
+      post.updatedAt = updatedPost.updatedAt;
+
+      // Reset edit state
+      setEditContent(updatedPost.content || "");
+      setEditMediaFiles([]);
+      setEditMediaToRemove([]);
+      setIsEditing(false);
+
+      // Refresh media URLs to show updated media
+      // Simple approach: reload the page to refresh all signed URLs
+      // In a more sophisticated app, you'd selectively update the URLs
+      window.location.reload();
+    } catch (error: any) {
+      console.error("Error updating post:", error);
+      alert("Error updating post: " + error.message);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  /**
+   * Marks an existing media file for removal from the post.
+   * The file will be deleted when the update is saved.
+   * @param mediaKey - The storage key of the media file to remove
+   */
+  const handleRemoveExistingMedia = (mediaKey: string) => {
+    setEditMediaToRemove((prev) => {
+      if (!prev.includes(mediaKey)) {
+        return [...prev, mediaKey];
+      }
+      return prev;
+    });
+  };
+
+  /**
+   * Removes a media file from the removal list (undo removal).
+   * @param mediaKey - The storage key of the media file to keep
+   */
+  const handleKeepExistingMedia = (mediaKey: string) => {
+    setEditMediaToRemove((prev) => prev.filter((key) => key !== mediaKey));
+  };
+
+  /**
+   * Handles file input changes for adding new media files.
+   * Validates file types and adds them to the edit media list.
+   * @param e - The file input change event
+   */
+  const handleAddEditMedia = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+
+    // Basic validation: check file types
+    const validFiles = files.filter((file) => {
+      return file.type.startsWith("image/") || file.type.startsWith("video/");
+    });
+
+    if (validFiles.length !== files.length) {
+      alert("Some files were skipped. Only image and video files are allowed.");
+    }
+
+    if (validFiles.length > 0) {
+      setEditMediaFiles((prev) => [...prev, ...validFiles]);
+    }
+
+    // Reset file input
+    e.target.value = "";
+  };
+
+  /**
+   * Removes a newly selected media file from the edit list (before upload).
+   * @param index - The index of the file to remove
+   */
+  const handleRemoveNewMedia = (index: number) => {
+    setEditMediaFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const isVideo = (url: string) => /\.(mp4|webm|ogg)$/i.test(url.split("?")[0]);
 
   return (
@@ -195,20 +365,221 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
             </div>
           </div>
           {post.user === user && (
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={handleDeletePost}
-              disabled={isDeleting}
-            >
-              <TrashIcon className="size-4" />
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleEditToggle}
+                disabled={isUpdating}
+                className="h-8 w-8 p-0"
+              >
+                {isEditing ? (
+                  <XIcon className="h-4 w-4" />
+                ) : (
+                  <PencilIcon className="h-4 w-4" />
+                )}
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDeletePost}
+                disabled={isDeleting}
+                className="h-8 w-8 p-0"
+              >
+                <TrashIcon className="h-4 w-4" />
+              </Button>
+            </div>
           )}
         </div>
-        <div className="mb-3">{post.content}</div>
+        {/* <div className="mb-3">{post.content}</div> */}
+
+        {/*  Content section - conditional rendering for edit mode */}
+        {isEditing ? (
+          //  Edit mode UI
+          <div className="space-y-4 mb-4">
+            {/* Content editor */}
+            <Textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              placeholder="What's on your mind?"
+              disabled={isUpdating}
+              className="min-h-[80px] resize-none"
+            />
+
+            {/* Current media management */}
+            {signedMediaUrls.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-gray-700">
+                  Current Media:
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {signedMediaUrls.map((url, index) => {
+                    const mediaKey =
+                      post.mediaFiles?.[index] || post.image || "";
+                    const isMarkedForRemoval =
+                      editMediaToRemove.includes(mediaKey);
+
+                    return (
+                      <div
+                        key={index}
+                        className={`relative group ${
+                          isMarkedForRemoval ? "opacity-50" : ""
+                        }`}
+                      >
+                        {isVideo(url) ? (
+                          <video
+                            src={url}
+                            className="w-20 h-20 object-cover rounded border"
+                            muted
+                          />
+                        ) : (
+                          <img
+                            src={url}
+                            className="w-20 h-20 object-cover rounded border"
+                            alt="Post media"
+                          />
+                        )}
+
+                        {/* Remove/Keep button overlay */}
+                        <Button
+                          size="sm"
+                          variant={
+                            isMarkedForRemoval ? "default" : "destructive"
+                          }
+                          className="absolute -top-1 -right-1 h-5 w-5 p-0 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() =>
+                            isMarkedForRemoval
+                              ? handleKeepExistingMedia(mediaKey)
+                              : handleRemoveExistingMedia(mediaKey)
+                          }
+                          disabled={isUpdating}
+                          title={
+                            isMarkedForRemoval
+                              ? "Keep this media"
+                              : "Remove this media"
+                          }
+                        >
+                          {isMarkedForRemoval ? "+" : "×"}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* New media preview */}
+            {editMediaFiles.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-gray-700">
+                  New Media to Add:
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {editMediaFiles.map((file, index) => (
+                    <div key={index} className="relative group">
+                      {file.type.startsWith("image/") ? (
+                        <img
+                          src={editMediaPreviewUrls[index]}
+                          className="w-20 h-20 object-cover rounded border"
+                          alt="New media preview"
+                        />
+                      ) : file.type.startsWith("video/") ? (
+                        <video
+                          src={editMediaPreviewUrls[index]}
+                          className="w-20 h-20 object-cover rounded border"
+                          muted
+                        />
+                      ) : (
+                        <div className="w-20 h-20 bg-gray-100 rounded border flex items-center justify-center">
+                          <div className="text-xs text-center p-1 text-gray-500">
+                            {file.name.substring(0, 10)}...
+                          </div>
+                        </div>
+                      )}
+
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute -top-1 -right-1 h-5 w-5 p-0 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleRemoveNewMedia(index)}
+                        disabled={isUpdating}
+                        title="Remove this new media"
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Add media input */}
+            <div>
+              <input
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                onChange={handleAddEditMedia}
+                disabled={isUpdating}
+                className="hidden"
+                id={`edit-media-${post.id}`}
+              />
+              <label htmlFor={`edit-media-${post.id}`}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={isUpdating}
+                  asChild
+                  className="cursor-pointer"
+                >
+                  <span>
+                    {editMediaFiles.length > 0
+                      ? `Add More Media (${editMediaFiles.length} selected)`
+                      : "Add Media"}
+                  </span>
+                </Button>
+              </label>
+            </div>
+
+            {/* Save/Cancel buttons */}
+            <div className="flex gap-2 justify-end pt-2 border-t">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleEditToggle}
+                disabled={isUpdating}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSaveEdit}
+                disabled={isUpdating}
+                className="min-w-[100px]"
+              >
+                {isUpdating ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                    Saving...
+                  </div>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          // Existing view mode content display
+          post.content && (
+            <div className="mb-4">
+              <p className="whitespace-pre-wrap">{post.content}</p>
+            </div>
+          )
+        )}
 
         {/* Media Carousel using shadcn/ui */}
-        {signedMediaUrls.length > 0 && (
+        {!isEditing && signedMediaUrls.length > 0 && (
           <div className="mb-3">
             {mediaLoading && (
               <div className="space-y-2">
