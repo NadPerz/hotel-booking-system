@@ -1,20 +1,13 @@
-// src/features/social/components/PostActions.tsx
-import React from "react";
+"use client";
+
 import { Button } from "@frontend/components/ui/button";
 import { HeartIcon, MessageCircleIcon } from "lucide-react";
+import { PostActionsProps } from "../../types/social.types";
 
-interface PostActionsProps {
-  hasLiked: boolean;
-  optimisticLikes: number;
-  commentCount: number;
-  onLike: () => void;
-  onToggleComments: () => void;
-}
-
-export const PostActions: React.FC<PostActionsProps> = ({
-  hasLiked,
-  optimisticLikes,
+const PostActions: React.FC<PostActionsProps> = ({
+  likeCount,
   commentCount,
+  hasLiked,
   onLike,
   onToggleComments,
 }) => {
@@ -27,7 +20,7 @@ export const PostActions: React.FC<PostActionsProps> = ({
         onClick={onLike}
       >
         <HeartIcon className="size-4" />
-        <span className="ml-2">{optimisticLikes}</span>
+        <span className="ml-2">{likeCount}</span>
       </Button>
       <Button variant="ghost" size="sm" onClick={onToggleComments}>
         <MessageCircleIcon className="size-4" />
@@ -36,3 +29,5 @@ export const PostActions: React.FC<PostActionsProps> = ({
     </div>
   );
 };
+
+export default PostActions;

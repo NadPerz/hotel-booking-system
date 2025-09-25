@@ -3,21 +3,21 @@
 import { Card, CardContent } from "@frontend/components/ui/card";
 
 // Import types
-import { PostCardProps } from "../types/social.types";
+import { PostCardProps } from "../../types/social.types";
 
 // Import components
 import PostHeader from "./PostHeader";
 import PostContent from "./PostContent";
-import MediaCarousel from "./MediaCarousel";
+import MediaCarousel from "../MediaCarousel";
 import PostActions from "./PostActions";
 import PostEditor from "./PostEditor";
-import CommentsList from "./CommentList";
-import CommentForm from "./CommentForm";
+import CommentsList from "../comments/CommentList";
+import CommentForm from "../comments/CommentForm";
 
 // Import hooks
-import { usePostInteractions } from "../hooks/usePostInteractions";
-import { usePostEdit } from "../hooks/usePostEdit";
-import { useMediaManager } from "../hooks/useMediaManager";
+import { usePostInteractions } from "../../hooks/usePostInteractions";
+import { usePostEdit } from "../../hooks/usePostEdit";
+import { useMediaManager } from "../../hooks/useMediaManager";
 
 const PostCard: React.FC<PostCardProps> = ({ post, onDelete }) => {
   // Custom hooks for different concerns

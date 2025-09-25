@@ -1,7 +1,7 @@
 "use client";
 
 import CommentItem from "./CommentItem";
-import { CommentsListProps } from "../types/social.types";
+import { CommentsListProps } from "../../types/social.types";
 import { Skeleton } from "@frontend/components/ui/skeleton";
 
 const CommentsList: React.FC<CommentsListProps> = ({

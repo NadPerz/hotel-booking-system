@@ -1,37 +1,18 @@
-// src/features/social/components/PostContent.tsx
-import React from "react";
-import { Textarea } from "@frontend/components/ui/textarea";
+"use client"; //Comet
 
-interface PostContentProps {
-  content?: string;
-  isEditing: boolean;
-  editContent: string;
-  onContentChange: (content: string) => void;
-  isUpdating: boolean;
-}
+import { PostContentProps } from "../../types/social.types";
 
-export const PostContent: React.FC<PostContentProps> = ({
+const PostContent: React.FC<PostContentProps> = ({
   content,
-  isEditing,
-  editContent,
-  onContentChange,
-  isUpdating,
+  className = "",
 }) => {
-  if (isEditing) {
-    return (
-      <Textarea
-        value={editContent}
-        onChange={(e) => onContentChange(e.target.value)}
-        placeholder="What's on your mind?"
-        disabled={isUpdating}
-        className="min-h-[80px] resize-none mb-4"
-      />
-    );
-  }
+  if (!content) return null;
 
-  return content ? (
-    <div className="mb-4">
+  return (
+    <div className={`mb-4 ${className}`}>
       <p className="whitespace-pre-wrap">{content}</p>
     </div>
-  ) : null;
+  );
 };
+
+export default PostContent;

@@ -4,7 +4,7 @@ import { Avatar, AvatarImage } from "@frontend/components/ui/avatar";
 import { Button } from "@frontend/components/ui/button";
 import { PencilIcon, XIcon, TrashIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { PostHeaderProps } from "../types/social.types";
+import { PostHeaderProps } from "../../types/social.types";
 
 const PostHeader: React.FC<PostHeaderProps> = ({
   post,

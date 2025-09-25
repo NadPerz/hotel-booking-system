@@ -4,7 +4,7 @@ import { Avatar, AvatarImage } from "@frontend/components/ui/avatar";
 import { Button } from "@frontend/components/ui/button";
 import { TrashIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { CommentItemProps } from "../types/social.types";
+import { CommentItemProps } from "../../types/social.types";
 
 const CommentItem: React.FC<CommentItemProps> = ({
   comment,

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@frontend/components/ui/button";
 import { Textarea } from "@frontend/components/ui/textarea";
 import { SendIcon } from "lucide-react";
-import { CommentFormProps } from "../types/social.types";
+import { CommentFormProps } from "../../types/social.types";
 
 const CommentForm: React.FC<CommentFormProps> = ({
   onSubmit,

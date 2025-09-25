@@ -1,9 +1,9 @@
 "use client";
 
 import { Textarea } from "@frontend/components/ui/textarea";
-import MediaEditor from "./MediaEditor";
-import EditActions from "./EditActions";
-import { PostEditorProps } from "../types/social.types";
+import MediaEditor from "../MediaEditor";
+import EditActions from "../EditActions";
+import { PostEditorProps } from "../../types/social.types";
 
 const PostEditor: React.FC<PostEditorProps> = ({
   post,
