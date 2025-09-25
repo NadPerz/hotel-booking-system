@@ -1,55 +1,90 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { roomsApi } from '../services/api/rooms.api';
+import { Room, CreateRoomRequest } from '../types/room.types';
 import { toast } from 'react-hot-toast';
 
 export const useRooms = (hotelId?: string) => {
   const queryClient = useQueryClient();
 
-  // Get rooms by hotel
+  // Get rooms by hotel - Fixed React Query syntax (removed deprecated onSuccess/onError)
   const {
     data: rooms = [],
     isLoading,
     error
-  } = useQuery({
+  } = useQuery<Room[]>({
     queryKey: ['rooms', hotelId],
-    queryFn: () => roomsApi.getRoomsByHotel(hotelId!),
+    queryFn: async () => {
+      console.log('🏠 React Query: Fetching rooms for hotel:', hotelId);
+      if (!hotelId) {
+        console.warn('⚠️ No hotelId provided to useRooms');
+        return [];
+      }
+      const result = await roomsApi.getRoomsByHotel(hotelId);
+      console.log('✅ React Query: Rooms loaded for hotel', hotelId, ':', result.length);
+      if (result.length > 0) {
+        console.log('🏠 Room list:', result.map((r: Room) => ({ id: r.id, title: r.title, hotelId: r.hotelId })));
+      }
+      return result;
+    },
     enabled: !!hotelId,
   });
 
   // Create room mutation
   const createRoomMutation = useMutation({
-    mutationFn: roomsApi.createRoom,
-    onSuccess: () => {
+    mutationFn: (data: CreateRoomRequest & { imageFile?: File }) => {
+      console.log('🔄 Creating room via mutation for hotel:', data.hotelId);
+      return roomsApi.createRoom(data);
+    },
+    onSuccess: (createdRoom: Room) => {
+      console.log('✅ Room created successfully:', createdRoom);
+      // Invalidate rooms queries for this hotel
+      queryClient.invalidateQueries({ queryKey: ['rooms', createdRoom.hotelId] });
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      // Also invalidate hotel queries to update room count
+      queryClient.invalidateQueries({ queryKey: ['hotels'] });
+      queryClient.invalidateQueries({ queryKey: ['my-hotels'] });
       toast.success('Room created successfully!');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to create room');
+      console.error('❌ Room creation failed:', error);
+      toast.error(error?.response?.data?.message || 'Failed to create room');
     },
   });
 
   // Update room mutation
   const updateRoomMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => roomsApi.updateRoom(id, data),
-    onSuccess: () => {
+    mutationFn: ({ id, data }: { id: string; data: Partial<CreateRoomRequest> }) => 
+      roomsApi.updateRoom(id, data),
+    onSuccess: (updatedRoom: Room) => {
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['room', updatedRoom.id] });
       toast.success('Room updated successfully!');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to update room');
+      toast.error(error?.response?.data?.message || 'Failed to update room');
     },
   });
 
   // Delete room mutation
   const deleteRoomMutation = useMutation({
-    mutationFn: roomsApi.deleteRoom,
+    mutationFn: (id: string) => roomsApi.deleteRoom(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['hotels'] });
+      queryClient.invalidateQueries({ queryKey: ['my-hotels'] });
       toast.success('Room deleted successfully!');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to delete room');
+      toast.error(error?.response?.data?.message || 'Failed to delete room');
     },
+  });
+
+  console.log('🏠 useRooms Hook State:', {
+    hotelId,
+    roomCount: rooms.length,
+    isLoading,
+    hasError: !!error,
+    rooms: rooms.map((r: Room) => ({ id: r.id, title: r.title }))
   });
 
   return {
@@ -65,20 +100,10 @@ export const useRooms = (hotelId?: string) => {
   };
 };
 
-// Hook for single room
-export const useRoom = (roomId: string) => {
-  return useQuery({
-    queryKey: ['room', roomId],
-    queryFn: () => roomsApi.getRoom(roomId),
-    enabled: !!roomId,
-  });
-};
-
-// Hook for room availability
-export const useRoomAvailability = (roomId: string, startDate: string, endDate: string) => {
-  return useQuery({
-    queryKey: ['room-availability', roomId, startDate, endDate],
-    queryFn: () => roomsApi.checkAvailability(roomId, startDate, endDate),
-    enabled: !!(roomId && startDate && endDate),
+export const useRoom = (id: string) => {
+  return useQuery<Room>({
+    queryKey: ['room', id],
+    queryFn: () => roomsApi.getRoom(id),
+    enabled: !!id,
   });
 };

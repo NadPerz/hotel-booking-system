@@ -1,98 +1,98 @@
 import { useQuery } from '@tanstack/react-query';
-import { analyticsApi } from '../services/api/analytics.api';
-
-export interface AnalyticsData {
-  totalRevenue: number;
-  totalBookings: number;
-  occupancyRate: number;
-  bookingGrowth: number;
-  occupancyGrowth: number;
-  internalBookings: number;
-  externalBookings: number;
-}
-
-export interface RevenueData {
-  total: number;
-  growth: number;
-  monthlyData: Array<{
-    month: string;
-    revenue: number;
-    bookings: number;
-  }>;
-}
+import { analyticsApi, RevenueData, BookingStats, HotelStats } from '../services/api/analytics.api';
 
 export const useAnalytics = () => {
-  // Dashboard analytics with proper typing
+  // Revenue data - Mock data with realistic delay
   const {
-    data: analytics,
-    isLoading: isLoadingAnalytics,
-    error: analyticsError
-  } = useQuery<AnalyticsData>({
-    queryKey: ['analytics'],
-    queryFn: async (): Promise<AnalyticsData> => {
-      try {
-        return await analyticsApi.getDashboardAnalytics();
-      } catch (error) {
-        console.warn('Analytics API not available, using mock data');
-        // Return mock data with proper typing
-        return {
-          totalRevenue: 125000,
-          totalBookings: 342,
-          occupancyRate: 78,
-          bookingGrowth: 12,
-          occupancyGrowth: 8,
-          internalBookings: 80,
-          externalBookings: 20,
-        };
-      }
-    },
-  });
-
-  // Revenue data with proper typing
-  const {
-    data: revenue,
+    data: revenueData,
     isLoading: isLoadingRevenue,
     error: revenueError
-  } = useQuery<RevenueData>({
-    queryKey: ['revenue'],
-    queryFn: async (): Promise<RevenueData> => {
-      try {
-        return await analyticsApi.getRevenueData('month');
-      } catch (error) {
-        console.warn('Revenue API not available, using mock data');
-        // Return mock data with proper typing
-        return {
-          total: 125000,
-          growth: 15.2,
-          monthlyData: [
-            { month: 'Jan', revenue: 12000, bookings: 45 },
-            { month: 'Feb', revenue: 15000, bookings: 52 },
-            { month: 'Mar', revenue: 18000, bookings: 61 },
-            { month: 'Apr', revenue: 22000, bookings: 73 },
-            { month: 'May', revenue: 25000, bookings: 84 },
-            { month: 'Jun', revenue: 28000, bookings: 92 },
-          ],
-        };
-      }
-    },
+  } = useQuery({
+    queryKey: ['analytics', 'revenue'],
+    queryFn: () => analyticsApi.getRevenueData(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Booking stats - Mock data
+  const {
+    data: bookingStats,
+    isLoading: isLoadingBookings,
+    error: bookingError
+  } = useQuery({
+    queryKey: ['analytics', 'bookings'],
+    queryFn: () => analyticsApi.getBookingStats(),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Hotel stats - Uses REAL data from your hotels API
+  const {
+    data: hotelStats,
+    isLoading: isLoadingHotels,
+    error: hotelError
+  } = useQuery({
+    queryKey: ['analytics', 'hotels'],
+    queryFn: () => analyticsApi.getRealHotelStats(), // This uses real hotel count!
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Monthly revenue chart - Mock data
+  const {
+    data: monthlyRevenue = [],
+    isLoading: isLoadingMonthlyRevenue
+  } = useQuery({
+    queryKey: ['analytics', 'monthly-revenue'],
+    queryFn: () => analyticsApi.getMonthlyRevenue(),
+    staleTime: 1000 * 60 * 10,
+  });
+
+  // Occupancy trends - Mock data
+  const {
+    data: occupancyTrends = [],
+    isLoading: isLoadingOccupancy
+  } = useQuery({
+    queryKey: ['analytics', 'occupancy'],
+    queryFn: () => analyticsApi.getOccupancyTrends(),
+    staleTime: 1000 * 60 * 10,
   });
 
   return {
-    analytics: analytics || {
-      totalRevenue: 0,
-      totalBookings: 0,
-      occupancyRate: 0,
-      bookingGrowth: 0,
-      occupancyGrowth: 0,
-      internalBookings: 0,
-      externalBookings: 0,
-    },
-    revenue: revenue || {
-      total: 0,
-      growth: 0,
-      monthlyData: [],
-    },
-    isLoading: isLoadingAnalytics || isLoadingRevenue,
-    error: analyticsError || revenueError,
+    // Data
+    revenueData,
+    bookingStats,
+    hotelStats, // This will show your ACTUAL hotel count!
+    monthlyRevenue,
+    occupancyTrends,
+    
+    // Loading states
+    isLoadingRevenue,
+    isLoadingBookings,
+    isLoadingHotels,
+    isLoadingMonthlyRevenue,
+    isLoadingOccupancy,
+    
+    // Errors
+    revenueError,
+    bookingError,
+    hotelError,
+    
+    // Overall loading state
+    isLoading: isLoadingRevenue || isLoadingBookings || isLoadingHotels,
   };
+};
+
+// Individual hooks for specific data
+export const useRevenueData = () => {
+  return useQuery({
+    queryKey: ['analytics', 'revenue'],
+    queryFn: () => analyticsApi.getRevenueData(),
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useRealHotelStats = () => {
+  return useQuery({
+    queryKey: ['analytics', 'real-hotels'],
+    queryFn: () => analyticsApi.getRealHotelStats(),
+    staleTime: 1000 * 60 * 2, // Refresh more frequently for real data
+  });
 };
