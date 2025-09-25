@@ -4,103 +4,100 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
   Plus, 
-  Hotel, 
-  Bed, 
-  FileText, 
-  AlertTriangle,
-  BarChart3
+  Building2, 
+  BarChart3, 
+  AlertTriangle, 
+  Users, 
+  Calendar 
 } from 'lucide-react';
 
 interface QuickActionsProps {
+  conflictsCount: number;
   onCreateHotel?: () => void;
   onCreateRoom?: () => void;
   onViewReports?: () => void;
   onViewConflicts?: () => void;
   onViewAnalytics?: () => void;
-  conflictsCount?: number;
 }
 
 export default function QuickActions({ 
+  conflictsCount,
   onCreateHotel,
   onCreateRoom,
   onViewReports,
   onViewConflicts,
-  onViewAnalytics,
-  conflictsCount = 0
+  onViewAnalytics
 }: QuickActionsProps) {
   const actions = [
     {
-      title: 'Create New Hotel',
-      description: 'Add a new hotel to your portfolio',
-      icon: Hotel,
-      color: 'bg-blue-50 text-blue-600',
+      title: 'Add New Hotel',
+      description: 'Create a new hotel property',
+      icon: Building2,
       onClick: onCreateHotel,
+      color: 'bg-blue-500 hover:bg-blue-600',
     },
     {
-      title: 'Add Room',
-      description: 'Create rooms for your hotels',
-      icon: Bed,
-      color: 'bg-green-50 text-green-600',
+      title: 'Manage Rooms',
+      description: 'Add or edit hotel rooms',
+      icon: Users,
       onClick: onCreateRoom,
-    },
-    {
-      title: 'Generate Reports',
-      description: 'Download booking and revenue reports',
-      icon: FileText,
-      color: 'bg-purple-50 text-purple-600',
-      onClick: onViewReports,
-    },
-    {
-      title: 'Resolve Conflicts',
-      description: `${conflictsCount} booking conflicts need attention`,
-      icon: AlertTriangle,
-      color: conflictsCount > 0 ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-600',
-      onClick: onViewConflicts,
-      badge: conflictsCount > 0 ? conflictsCount : undefined,
+      color: 'bg-green-500 hover:bg-green-600',
     },
     {
       title: 'View Analytics',
-      description: 'Detailed performance metrics',
+      description: 'Check performance metrics',
       icon: BarChart3,
-      color: 'bg-orange-50 text-orange-600',
       onClick: onViewAnalytics,
+      color: 'bg-purple-500 hover:bg-purple-600',
+    },
+    {
+      title: 'Resolve Conflicts',
+      description: `${conflictsCount} conflicts need attention`,
+      icon: AlertTriangle,
+      onClick: onViewConflicts,
+      color: conflictsCount > 0 
+        ? 'bg-red-500 hover:bg-red-600' 
+        : 'bg-gray-400 hover:bg-gray-500',
+      urgent: conflictsCount > 0,
     },
   ];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-dark-brown">Quick Actions</CardTitle>
+        <CardTitle className="text-lg">Quick Actions</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {actions.map((action) => (
             <Button
               key={action.title}
               variant="outline"
-              className="h-auto p-4 justify-start"
+              className="h-auto p-4 flex flex-col items-center space-y-2 hover:shadow-md transition-all border-2"
               onClick={action.onClick}
             >
-              <div className="flex items-start space-x-3">
-                <div className={`p-2 rounded-md ${action.color}`}>
-                  <action.icon className="h-5 w-5" />
-                </div>
-                <div className="text-left">
-                  <p className="font-medium text-dark-brown flex items-center">
-                    {action.title}
-                    {action.badge && (
-                      <span className="ml-2 bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full">
-                        {action.badge}
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {action.description}
-                  </p>
-                </div>
+              <div className={`p-3 rounded-full ${action.color} text-white`}>
+                <action.icon className="h-6 w-6" />
               </div>
+              <div className="text-center">
+                <p className="font-medium text-sm">{action.title}</p>
+                <p className="text-xs text-gray-600 mt-1">{action.description}</p>
+              </div>
+              {action.urgent && (
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              )}
             </Button>
           ))}
+        </div>
+        
+        {/* Additional quick stats */}
+        <div className="mt-6 pt-6 border-t">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-600">Need help getting started?</span>
+            <Button variant="ghost" size="sm">
+              View Tutorial
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
