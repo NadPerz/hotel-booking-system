@@ -48,6 +48,26 @@ const MapComponent: React.FC<MapComponentProps> = ({
     };
   }, []);
 
+  // Add resize observer to handle container size changes
+  useEffect(() => {
+    if (!mapContainer.current || !map.current) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (map.current) {
+        // Small delay to ensure the DOM has updated
+
+        map.current?.resize();
+
+      }
+    });
+
+    resizeObserver.observe(mapContainer.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
   useEffect(() => {
     if (!map.current || !itinerary) return;
 
@@ -132,7 +152,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
   }, [selectedPlace]);
 
   return (
-    <div className="h-full relative" style={{ minHeight: '400px' }}>
+    <div className="h-full  relative" style={{ minHeight: '400px' }}>
       <div
         ref={mapContainer}
         className="absolute inset-0"

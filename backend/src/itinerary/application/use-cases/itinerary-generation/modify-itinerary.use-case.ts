@@ -4,7 +4,7 @@ import { PromptTemplate } from '@langchain/core/prompts';
 import { Itinerary } from 'src/itinerary/domain/entities/itinerary.entity';
 import { HotelsRepository } from 'src/itinerary/infrastructure/repositories/mocks/hotels.repository.mock';
 import { AttractionsRepository } from 'src/itinerary/infrastructure/repositories/mocks/attraction.repository.mock';
-import { GoogleMapsService } from 'src/itinerary/infrastructure/external-api/google-maps-service';
+import { GoogleMapsService } from 'src/itinerary/infrastructure/integrations/google-maps-service';
 import { ConversationContext } from 'src/itinerary/domain/value-objects/conversation';
 import { parseModelJson } from '../../support/parse-model-json';
 

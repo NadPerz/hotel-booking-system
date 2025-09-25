@@ -14,7 +14,9 @@ import { UserSchema } from './infrastructure/schemas/user.schema';
 import { BusinessAccountSchema } from './infrastructure/schemas/business-account.schema';
 import { BranchSchema } from './infrastructure/schemas/branch.schema';
 import { PermissionSchema } from './infrastructure/schemas/permission.schema';
-
+import { ClerkWebhookIntegration } from './infrastructure/integrations/clerk-webhook.integration';
+import { WebhookController } from './presentation/controllers/webhook.controller';
+import { WebhookService } from './application/services/webhook.service';
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -26,6 +28,7 @@ import { PermissionSchema } from './infrastructure/schemas/permission.schema';
   ],
   providers: [
     UserService,
+    WebhookService,
 
     {
       provide: UserRepository,
@@ -43,11 +46,15 @@ import { PermissionSchema } from './infrastructure/schemas/permission.schema';
       provide: PermissionRepository,
       useClass: PermissionRepositoryImpl,
     },
+    {
+      provide: 'AuthWebhookHandler',
+      useClass: ClerkWebhookIntegration,
+    },
   ],
-  controllers: [UserController],
+  controllers: [UserController, WebhookController],
   exports: [
     UserService,
-
+    WebhookService,
     UserRepository,
     BusinessAccountRepository,
     BranchRepository,
