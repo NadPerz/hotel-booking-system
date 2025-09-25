@@ -31,6 +31,7 @@ export class MinioService implements StorageService {
       }
     } catch (error) {
       this.logger.error('Failed to initialize bucket', error);
+      throw error;
     }
   }
 
@@ -42,6 +43,7 @@ export class MinioService implements StorageService {
     const bucket = bucketName || this.defaultBucket;
     try {
       // Auto-create bucket if it doesn't exist
+      // const pathName = `social-media/posts/${fileName}`;
       const exists = await this.bucketExists(bucket);
       if (!exists) {
         await this.createBucket(bucket);
@@ -158,7 +160,8 @@ export class MinioService implements StorageService {
         `Failed to check bucket existence: ${bucketName}`,
         error,
       );
-      return false;
+      throw error;
+      // return false;
     }
   }
 }

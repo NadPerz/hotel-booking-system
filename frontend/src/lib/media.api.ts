@@ -1,3 +1,55 @@
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
+
+// Request a signed upload URL from backend
+export const getSignedUploadUrl = async (
+  fileName: string,
+  bucket?: string
+): Promise<string> => {
+  const body: { fileName: string; bucket?: string } = { fileName };
+  if (bucket) body.bucket = bucket;
+
+  const response = await fetch(`${API_BASE_URL}/media/signed-upload-url`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) throw new Error("Failed to get signed URL");
+  return (await response.json()).url;
+};
+
+// Request a signed GET URL for any file
+export const getSignedGetUrl = async (
+  filePath: string,
+  expiry?: number
+): Promise<string> => {
+  if (!filePath) throw new Error("filePath is required");
+  const params = new URLSearchParams({ filePath });
+  if (expiry) params.append("expiry", expiry.toString());
+  const response = await fetch(
+    `${API_BASE_URL}/media/signed-get-url?${params.toString()}`
+  );
+  if (!response.ok) throw new Error("Failed to get signed URL");
+  return (await response.json()).url;
+};
+
+// Upload file directly to MinIO signed URL
+export const uploadFileToSignedUrl = async (
+  file: File,
+  signedUrl: string
+): Promise<string> => {
+  const uploadResponse = await fetch(signedUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": file.type,
+    },
+    body: file,
+  });
+  if (!uploadResponse.ok) throw new Error("File upload failed");
+  // Return path without query params for DB reference
+  return signedUrl.split("?")[0];
+};
+
 // import { API_BASE_URL } from "./post.api";
 
 // // Request a signed upload URL from backend
@@ -82,54 +134,3 @@
 //   // Return path without query params for DB reference
 //   return signedUrl.split("?")[0];
 // };
-
-const API_BASE_URL = "http://localhost:3000/api";
-
-// Request a signed upload URL from backend
-export const getSignedUploadUrl = async (
-  fileName: string,
-  bucket?: string
-): Promise<string> => {
-  const body: { fileName: string; bucket?: string } = { fileName };
-  if (bucket) body.bucket = bucket;
-
-  const response = await fetch(`${API_BASE_URL}/media/signed-upload-url`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) throw new Error("Failed to get signed URL");
-  return (await response.json()).url;
-};
-
-// Request a signed GET URL for any file
-export const getSignedGetUrl = async (
-  filePath: string,
-  expiry?: number
-): Promise<string> => {
-  if (!filePath) throw new Error("filePath is required");
-  const params = new URLSearchParams({ filePath });
-  if (expiry) params.append("expiry", expiry.toString());
-  const response = await fetch(
-    `${API_BASE_URL}/media/signed-get-url?${params.toString()}`
-  );
-  if (!response.ok) throw new Error("Failed to get signed URL");
-  return (await response.json()).url;
-};
-
-// Upload file directly to MinIO signed URL
-export const uploadFileToSignedUrl = async (
-  file: File,
-  signedUrl: string
-): Promise<string> => {
-  const uploadResponse = await fetch(signedUrl, {
-    method: "PUT",
-    headers: {
-      "Content-Type": file.type,
-    },
-    body: file,
-  });
-  if (!uploadResponse.ok) throw new Error("File upload failed");
-  // Return path without query params for DB reference
-  return signedUrl.split("?")[0];
-};

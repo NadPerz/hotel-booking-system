@@ -45,7 +45,8 @@ export class PostRepositoryImpl extends PostRepository {
       const doc = new this.postModel({
         user: post.user,
         content: post.content,
-        image: post.image,
+        image: post.image, //kept for backwards compatibiility
+        mediaFiles: post.mediaFiles,
       });
 
       //pre-save logging (debug only)
@@ -81,12 +82,45 @@ export class PostRepositoryImpl extends PostRepository {
         .sort({ createdAt: -1 }) // Most recent first
         .exec();
 
-      // success log removed to reduce noise
-
       // Convert each MongoDB document to domain entity
       return docs.map((doc) => this.toDomainEntity(doc));
     } catch (error) {
       this.logger.error('Failed to fetch posts from database', error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Finds a single post by its ID.
+   *
+   * @param postId - The ID of the post to find
+   * @param session - Optional MongoDB session for transaction support
+   * @returns Promise resolving to the post entity or null if not found
+   */
+  async findById(
+    postId: string,
+    session?: ClientSession,
+  ): Promise<Post | null> {
+    this.logger.debug(
+      `[PostRepositoryImpl.findById] Finding post by ID: ${postId}`,
+    );
+
+    try {
+      const queryOptions = session ? { session } : {};
+      const doc = await this.postModel
+        .findById(postId, null, queryOptions)
+        .exec();
+
+      if (!doc) {
+        this.logger.debug(
+          `[PostRepositoryImpl.findById] Post not found: ${postId}`,
+        );
+        return null;
+      }
+
+      return this.toDomainEntity(doc);
+    } catch (error) {
+      this.logger.error(`Failed to find post by ID: ${postId}`, error.stack);
       throw error;
     }
   }
@@ -377,6 +411,7 @@ export class PostRepositoryImpl extends PostRepository {
       doc.createdAt,
       doc.updatedAt,
       doc.image,
+      doc.mediaFiles ?? [],
     );
   }
 
@@ -402,6 +437,7 @@ export class PostRepositoryImpl extends PostRepository {
       post.createdAt,
       post.updatedAt,
       post.image,
+      post.mediaFiles,
     );
   }
 
@@ -423,6 +459,7 @@ export class PostRepositoryImpl extends PostRepository {
       doc.createdAt,
       doc.updatedAt,
       doc.image,
+      doc.mediaFiles ?? [],
     );
   }
 }

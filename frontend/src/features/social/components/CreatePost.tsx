@@ -7,7 +7,13 @@ import { Avatar, AvatarImage } from "@frontend/components/ui/avatar";
 // import { useUser } from "@clerk/nextjs";
 // import { SetStateAction, useState } from "react";
 
-import { ImageIcon, Loader2Icon, SendIcon } from "lucide-react";
+import {
+  ImageIcon,
+  Loader2Icon,
+  PlayIcon,
+  SendIcon,
+  XIcon,
+} from "lucide-react";
 import { useState } from "react";
 import { createPost, STATIC_USER_ID } from "../lib";
 import { getSignedUploadUrl, uploadFileToSignedUrl } from "src/lib/media.api";
@@ -15,42 +21,70 @@ import { getSignedUploadUrl, uploadFileToSignedUrl } from "src/lib/media.api";
 const CreatePost = () => {
   const user = `${STATIC_USER_ID}`;
   const [content, setContent] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  // const [imageUrl, setImageUrl] = useState("");
   const [isPosting, setIsPosting] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [showImageUpload, setShowImageUpload] = useState(false);
+  // const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  // const [showImageUpload, setShowImageUpload] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [showMediaUpload, setShowMediaUpload] = useState(false);
 
   const handleSubmit = async () => {
     setIsPosting(true);
     let uploadedImageUrl = "";
+    let uploadedMediaUrls: string[] = [];
     let fileKeyStored = "";
 
     try {
-      //If image selected, get signed URL and upload
-      if (selectedImage) {
+      //If files selected, get signed URL for each and upload
+      if (selectedFiles.length > 0) {
         const bucket = "social-media";
-        const fileName = `${user}_${Date.now()}_${selectedImage.name}`;
-        fileKeyStored = `${bucket}/${fileName}`;
-        const signedUrl = await getSignedUploadUrl(fileName, bucket);
-        uploadedImageUrl = await uploadFileToSignedUrl(
-          selectedImage,
-          signedUrl
-        );
-        setImageUrl(uploadedImageUrl);
+
+        // Upload all files concurrently
+        const uploadPromises = selectedFiles.map(async (file) => {
+          const filePath = `posts/${user}/${Date.now()}_${file.name}`;
+          const fileKeyStored = `${bucket}/${filePath}`;
+          const signedUrl = await getSignedUploadUrl(filePath, bucket);
+          await uploadFileToSignedUrl(file, signedUrl);
+          return fileKeyStored;
+        });
+
+        uploadedMediaUrls = await Promise.all(uploadPromises);
+        console.log("Uploaded file keys:", uploadedMediaUrls);
       }
 
+      await createPost(content, uploadedMediaUrls);
       //Create the post with image reference
-      await createPost(content, fileKeyStored);
+      // await createPost(content, fileKeyStored);
 
       setContent("");
-      setSelectedImage(null);
-      setImageUrl("");
-      setShowImageUpload(false);
+      setSelectedFiles([]);
+      setShowMediaUpload(false);
+      // setSelectedImage(null);
+      // setImageUrl("");
+      // setShowImageUpload(false);
     } catch (error: any) {
       alert("Error posting: " + error.message);
     } finally {
       setIsPosting(false);
     }
+  };
+
+  // **Handle file selection with multiple files**
+  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedFiles((prev) => [...prev, ...files]);
+  };
+
+  // **Remove specific file**
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // **Get file type for display**
+  const getFileType = (file: File): "image" | "video" | "other" => {
+    if (file.type.startsWith("image/")) return "image";
+    if (file.type.startsWith("video/")) return "video";
+    return "other";
   };
 
   return (
@@ -70,20 +104,7 @@ const CreatePost = () => {
             />
           </div>
 
-          {/* TODO: Handle Image uploads */}
           {/* {(showImageUpload || imageUrl) && (
-            <div className="border rounded-lg p-4">
-              <ImageUpload
-                endpoint="postImage"
-                value={imageUrl}
-                onChange={(url) => {
-                  setImageUrl(url);
-                  if (!url) setShowImageUpload(false);
-                }}
-              />
-            </div>
-          )} */}
-          {(showImageUpload || imageUrl) && (
             <div className="border rounded-lg p-4">
               <input
                 type="file"
@@ -94,13 +115,73 @@ const CreatePost = () => {
                 }}
                 disabled={isPosting}
               />
-              {/* Optional preview: */}
+              
               {selectedImage && (
                 <img
                   src={URL.createObjectURL(selectedImage)}
                   alt="preview"
                   className="max-w-xs rounded mt-2"
                 />
+              )}
+            </div>
+          )} */}
+
+          {/* **UPDATED: Multiple media files upload section** */}
+          {(showMediaUpload || selectedFiles.length > 0) && (
+            <div className="border rounded-lg p-4">
+              <input
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                onChange={handleFileSelection}
+                disabled={isPosting}
+                className="mb-4"
+              />
+
+              {/* ** Preview selected files** */}
+              {selectedFiles.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className="relative group">
+                      <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                        {getFileType(file) === "image" ? (
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`Preview ${index}`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : getFileType(file) === "video" ? (
+                          <div className="relative w-full h-full">
+                            <video
+                              src={URL.createObjectURL(file)}
+                              className="w-full h-full object-cover"
+                              muted
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <PlayIcon className="w-8 h-8 text-white bg-black bg-opacity-50 rounded-full p-1" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-500 text-center p-2">
+                            {file.name}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* **ADDED: Remove file button** */}
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removeFile(index)}
+                        disabled={isPosting}
+                      >
+                        <XIcon className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           )}
@@ -112,7 +193,7 @@ const CreatePost = () => {
                 variant="ghost"
                 size="sm"
                 className="text-muted-foreground hover:text-primary"
-                onClick={() => setShowImageUpload(!showImageUpload)}
+                onClick={() => setShowMediaUpload(!showMediaUpload)}
                 disabled={isPosting}
               >
                 <ImageIcon className="size-4 mr-2" />
@@ -122,7 +203,9 @@ const CreatePost = () => {
             <Button
               className="flex items-center"
               onClick={handleSubmit}
-              disabled={(!content.trim() && !imageUrl) || isPosting}
+              disabled={
+                (!content.trim() && selectedFiles.length === 0) || isPosting
+              }
             >
               {isPosting ? (
                 <>

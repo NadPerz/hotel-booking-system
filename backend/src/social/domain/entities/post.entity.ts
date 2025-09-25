@@ -1,3 +1,5 @@
+//post.entity.ts
+
 export class Post {
   constructor(
     public id: string,
@@ -7,7 +9,8 @@ export class Post {
     public commentCount: number = 0,
     public createdAt?: string,
     public updatedAt?: string,
-    public image?: string,
+    public image?: string, // Keep for backward compatibility
+    public mediaFiles?: string[], // New field for multiple files
   ) {}
 }
 
@@ -21,6 +24,7 @@ export class PostWithLikeStatus {
     public userLiked: boolean = false, // Domain property
     public createdAt?: string,
     public updatedAt?: string,
-    public image?: string,
+    public image?: string, // Keep for backward compatibility
+    public mediaFiles?: string[], // New field for multiple files
   ) {}
 }
