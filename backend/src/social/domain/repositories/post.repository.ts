@@ -92,6 +92,25 @@ export abstract class PostRepository {
 
   /**
    * Deletes a post by its ID.
+   * @param postId - The ID of the post to delete
+   * @param session - Optional MongoDB session for transaction support
+   * @returns Promise resolving to the deleted post entity
+   * @throws Error if the post is not found or deletion fails
    */
   abstract delete(postId: string, session?: ClientSession): Promise<void>;
+
+  /**
+   * Updates an existing post with partial data.
+   * Supports updating content, media files, and other post properties.
+   * @param postId - The ID of the post to update
+   * @param updateData - Partial post data containing fields to update
+   * @param session - Optional MongoDB session for transaction support
+   * @returns Promise resolving to the updated post entity
+   * @throws Error if the post is not found or update fails
+   */
+  abstract update(
+    postId: string,
+    updateData: Partial<Post>,
+    session?: ClientSession,
+  ): Promise<Post>;
 }

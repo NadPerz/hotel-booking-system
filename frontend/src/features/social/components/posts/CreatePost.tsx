@@ -15,7 +15,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { useState } from "react";
-import { createPost, STATIC_USER_ID } from "../lib";
+import { createPost, STATIC_USER_ID } from "../../lib";
 import { getSignedUploadUrl, uploadFileToSignedUrl } from "src/lib/media.api";
 
 const CreatePost = () => {
