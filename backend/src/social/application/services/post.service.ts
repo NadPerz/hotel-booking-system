@@ -211,60 +211,83 @@ export class PostService {
   }
 
   /**
-   * Deletes media files from storage.
-   * This is done after the database transaction to avoid rollback issues.
+   * Helper method to delete media files from storage.
+   * Called after successful database transactions to clean up orphaned files.
+   * @param mediaFiles - Array of media file paths/keys to delete
    */
   private async deleteMediaFiles(mediaUrls: string[]): Promise<void> {
     this.logger.log(
       `[PostService.deleteMediaFiles] Deleting ${mediaUrls.length} media files`,
     );
 
-    for (const mediaUrl of mediaUrls) {
+    // Use Promise.allSettled to handle all deletions in parallel
+    const deletePromises = mediaUrls.map(async (mediaUrl) => {
       try {
         if (mediaUrl && mediaUrl.trim()) {
           await this.storageService.deleteFile(mediaUrl);
           this.logger.debug(
-            `[PostService.deleteMediaFiles] Deleted media file: ${mediaUrl}`,
+            `[PostService.deleteMediaFiles] Successfully deleted: ${mediaUrl}`,
           );
         }
       } catch (error) {
-        // Log error but don't fail the entire operation
-        // Media cleanup is less critical than data consistency
-        this.logger.error(
+        // Log error but don't throw - we don't want media deletion to fail the main operation
+        this.logger.warn(
           `[PostService.deleteMediaFiles] Failed to delete media file: ${mediaUrl}`,
-          error.stack,
-        );
-      }
-    }
-  }
-
-  /**
-   * Enhanced method for handling multiple media files per post
-   */
-  private async deleteMultipleMediaFiles(mediaKeys: string[]): Promise<void> {
-    this.logger.log(
-      `[PostService.deleteMultipleMediaFiles] Deleting ${mediaKeys.length} media files`,
-    );
-
-    const deletePromises = mediaKeys.map(async (mediaKey) => {
-      try {
-        if (mediaKey && mediaKey.trim()) {
-          await this.storageService.deleteFile(mediaKey);
-          this.logger.debug(
-            `[PostService.deleteMultipleMediaFiles] Deleted media file: ${mediaKey}`,
-          );
-        }
-      } catch (error) {
-        this.logger.error(
-          `[PostService.deleteMultipleMediaFiles] Failed to delete media file: ${mediaKey}`,
-          error.stack,
+          error.message,
         );
       }
     });
 
-    // Execute all deletions in parallel but don't fail if some fail
     await Promise.allSettled(deletePromises);
+    this.logger.debug(
+      `[PostService.deleteMediaFiles] Completed cleanup of ${mediaUrls.length} media files`,
+    );
+    // for (const mediaUrl of mediaUrls) {
+    //   try {
+    //     if (mediaUrl && mediaUrl.trim()) {
+    //       await this.storageService.deleteFile(mediaUrl);
+    //       this.logger.debug(
+    //         `[PostService.deleteMediaFiles] Deleted media file: ${mediaUrl}`,
+    //       );
+    //     }
+    //   } catch (error) {
+    //     // Log error but don't fail the entire operation
+    //     // Media cleanup is less critical than data consistency
+    //     this.logger.warn(
+    //       `[PostService.deleteMediaFiles] Failed to delete media file: ${mediaUrl}`,
+    //       error.stack,
+    //     );
+    //   }
+    // }
   }
+
+  // /**
+  //  * Enhanced method for handling multiple media files per post
+  //  */
+  // private async deleteMultipleMediaFiles(mediaKeys: string[]): Promise<void> {
+  //   this.logger.log(
+  //     `[PostService.deleteMultipleMediaFiles] Deleting ${mediaKeys.length} media files`,
+  //   );
+
+  //   const deletePromises = mediaKeys.map(async (mediaKey) => {
+  //     try {
+  //       if (mediaKey && mediaKey.trim()) {
+  //         await this.storageService.deleteFile(mediaKey);
+  //         this.logger.debug(
+  //           `[PostService.deleteMultipleMediaFiles] Deleted media file: ${mediaKey}`,
+  //         );
+  //       }
+  //     } catch (error) {
+  //       this.logger.error(
+  //         `[PostService.deleteMultipleMediaFiles] Failed to delete media file: ${mediaKey}`,
+  //         error.stack,
+  //       );
+  //     }
+  //   });
+
+  //   // Execute all deletions in parallel but don't fail if some fail
+  //   await Promise.allSettled(deletePromises);
+  // }
 
   /**
    * Updates an existing post with ownership verification and media management.
@@ -327,11 +350,11 @@ export class PostService {
         ) {
           // Store files to be deleted for cleanup after successful transaction
           mediaToDelete = [...updateData.mediaFilesToRemove];
-          // Filter out the files marked for removal - FIXED the TypeScript error
+          // Filter out the files marked for removal
           updatedMediaFiles = updatedMediaFiles.filter(
             (file) => !updateData.mediaFilesToRemove!.includes(file),
-            // Added ! (non-null assertion) because we already checked above
-            // Alternatively, you could use: updateData.mediaFilesToRemove?.includes(file) !== true
+            //  (non-null assertion) because we already checked above
+            // Alternatively, could use: updateData.mediaFilesToRemove?.includes(file) !== true
           );
           this.logger.debug(
             `[PostService.update] Removing ${mediaToDelete.length} media files from post ${postId}`,
