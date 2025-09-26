@@ -1,6 +1,6 @@
-import CreatePost from "@frontend/features/social/components/CreatePost";
+import CreatePost from "@frontend/features/social/components/posts/CreatePost";
 import Navbar from "@frontend/features/social/components/Navbar";
-import PostList from "@frontend/features/social/components/PostList";
+import PostList from "@frontend/features/social/components/posts/PostList";
 import Sidebar from "@frontend/features/social/components/Sidebar";
 import React from "react";
 
@@ -15,7 +15,7 @@ const page = (props: Props) => {
     //   disableTransitionOnChange
     // >
     <div className="min-h-screen">
-      <Navbar />
+      {/* <Navbar /> */}
       <main className="py-8">
         {/*Container to center the content */}
         <div className="max-w-7xl mx-auto px-4">
