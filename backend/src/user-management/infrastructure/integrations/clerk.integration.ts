@@ -19,7 +19,7 @@ export class ClerkIntegration {
         throw new Error(`Missing required environment variable: ${varName}`);
       }
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     this.clerkClient = createClerkClient({
       secretKey: configService.get<string>('CLERK_SECRET_KEY')!,
     });
@@ -39,7 +39,6 @@ export class ClerkIntegration {
       `Updating public metadata for user ${userId}: ${JSON.stringify(metadata)}`,
     );
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const response: User = await this.clerkClient.users.updateUserMetadata(
         userId,
         {

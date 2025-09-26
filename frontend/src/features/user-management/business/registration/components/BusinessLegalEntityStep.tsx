@@ -8,7 +8,7 @@ import { setData } from '../BusinessRegistrationSlice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
-import { BusinessLegalEntitySchema } from '../BusinessRegistrationSchema';
+import { BusinessLegalEntitySchema } from '@frontend/features/user-management/business/registration/BusinessOnboardingSchema';
 import { z } from 'zod';
 
 type BusinessLegalEntityFormData = z.infer<typeof BusinessLegalEntitySchema>

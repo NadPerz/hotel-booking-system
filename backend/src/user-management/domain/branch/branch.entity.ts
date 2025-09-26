@@ -9,7 +9,7 @@ export interface StaffMember {
 
 export class Branch {
   constructor(
-    public readonly id: string,
+    public readonly id: string | undefined,
     public readonly businessAccountId: string,
     public readonly name: string,
     public readonly location: BLocation,

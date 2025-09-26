@@ -98,12 +98,7 @@ const Page = () => {
                     {/* Header */}
                     <div className="text-center  mb-8 ">
                         <h2 className="text-3xl font-bold text-gray-900 mb-2">Get started</h2>
-                        <p className="text-gray-600">
-                            Already have an account?{' '}
-                            <Link href="/sign-in" className="text-blue-600 hover:text-blue-500 font-medium underline">
-                                Sign in
-                            </Link>
-                        </p>
+
                     </div>
 
                     {/* Clerk SignUp Component */}
@@ -112,6 +107,7 @@ const Page = () => {
                             unsafeMetadata={{
                                 userType: UserType.BUSINESS_USER
                             }}
+                            
                             appearance={{
                                 elements: {
                                     rootBox: "w-full",

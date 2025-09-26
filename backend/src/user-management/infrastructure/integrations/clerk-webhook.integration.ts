@@ -18,7 +18,6 @@ export class ClerkWebhookIntegration implements AuthWebhookHandler {
   }
   async verifyWebhook(req: Request): Promise<AuthWebhookEvent> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const event = await verifyWebhook(req);
       // Return the event in the AuthWebhookEvent format
 

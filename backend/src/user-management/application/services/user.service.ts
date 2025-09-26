@@ -45,7 +45,6 @@ export class UserService {
 
     const dbUser = await this.userRepository.save(user);
     await this.clerkIntegration.updateUserPublicMetadata(dbUser.clerkUserId, {
-      onboardingComplete: true,
       _id: dbUser.id,
     });
     return dbUser;

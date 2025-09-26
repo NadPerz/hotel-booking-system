@@ -29,15 +29,12 @@ const BranchSchema = z.object({
 export const BusinessOnboardingSchema = z.object({
   brandName: z.string().min(1, "Brand name is required"),
   type: z.nativeEnum(BusinessType),
-  primaryContactNumber: z.string().min(10, "Please enter a valid phone number"),
   branch: BranchSchema,
-
+  primaryContactNumber: z.string().min(10, "Please enter a valid phone number"),
   //business legal step
   legalEntityName: z.string().min(1, "Legal entity name is required"),
   legalEntityAddress: z.string().min(1, "Legal entity address is required"),
   legalEntitySigner: z.string().min(1, "Legal entity signer is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  username: z.string().min(3, "Username must be at least 3 characters"),
 });
 
 export type BusinessOnboardingSchema = z.infer<typeof BusinessOnboardingSchema>;
@@ -54,6 +51,3 @@ export const BusinessLegalEntitySchema = BusinessOnboardingSchema.pick({
   legalEntityAddress: true,
   legalEntitySigner: true,
 });
-
-export const PasswordSchema = BusinessOnboardingSchema.pick({ password: true });
-export const UsernameSchema = BusinessOnboardingSchema.pick({ username: true });

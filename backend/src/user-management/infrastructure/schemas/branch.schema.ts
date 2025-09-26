@@ -14,7 +14,7 @@ export class Branch {
   name: string;
 
   @Prop({ required: true })
-  b_location: BLocation;
+  bLocation: BLocation;
 
   @Prop()
   branchManagerId?: string;

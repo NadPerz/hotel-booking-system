@@ -14,7 +14,10 @@ export class BranchRepositoryImpl extends BranchRepository {
   }
 
   async save(branch: Branch): Promise<Branch> {
-    const branchDoc = new this.branchModel(branch);
+    const branchDoc = new this.branchModel({
+      ...branch,
+      bLocation: branch.location,
+    });
     const saved = await branchDoc.save();
     return this.toDomain(saved);
   }
@@ -24,7 +27,7 @@ export class BranchRepositoryImpl extends BranchRepository {
       branchDoc._id.toString(),
       branchDoc.businessAccountId,
       branchDoc.name,
-      branchDoc.b_location,
+      branchDoc.bLocation,
       branchDoc.branchManagerId,
       branchDoc.staff,
       branchDoc.createdAt,
