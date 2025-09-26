@@ -63,7 +63,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getEventById } from '@/features/event/lib/event-api';
-import EventForm from '@/features/event/create/EventForm';
+import EventForm from '@/features/event/create2/EventForm';
 
 const EditEventPage = () => {
   const router = useRouter();
