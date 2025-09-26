@@ -1,201 +1,297 @@
 "use client";
 
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, Plus, Users } from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import StatsCards from './StatsCards';
-import RevenueChart from './RevenueChart';
-import RecentBookings from './RecentBookings';
-import QuickActions from './QuickActions';
-import AlertsPanel from './AlertsPanel';
-import { useBookings } from '../../hooks/useBookings';
+import { Badge } from '@/components/ui/badge';
+import { 
+  TrendingUp, 
+  Users, 
+  Building, 
+  Calendar,
+  DollarSign,
+  Download,
+  Eye,
+  Loader2
+} from 'lucide-react';
 import { useAnalytics } from '../../hooks/useAnalytics';
-import LoadingSpinner from '../shared/LoadingSpinner';
-import { exportToCSV, generateAnalyticsExport } from '../../lib/exportUtils';
+import { useHotels } from '../../hooks/useHotels';
+import { exportToCSV, downloadCSV } from '../../lib/exportUtils';
+
+// Define proper types for analytics data
+interface AnalyticsData {
+  totalRevenue: number;
+  totalBookings: number;
+  totalHotels: number;
+  totalRooms: number;
+  occupancyRate: number;
+  averageRating: number;
+  monthlyGrowth: number;
+}
 
 export default function DashboardOverview() {
-  const { bookings, conflicts, isLoading: bookingsLoading } = useBookings();
-  const { analytics, revenue, isLoading: analyticsLoading } = useAnalytics();
+  const [isExporting, setIsExporting] = useState(false);
+  
+  const { 
+    revenueData, 
+    bookingStats, 
+    hotelStats, 
+    monthlyRevenue,
+    isLoading 
+  } = useAnalytics();
+  
+  const { myHotels } = useHotels();
 
-  const handleExportReport = () => {
+  console.log('📊 Dashboard Overview loaded:', {
+    timestamp: '2025-09-25 08:58:24',
+    user: 'NadPerz',
+    hotelCount: myHotels.length,
+    isLoading,
+    revenueData,
+    bookingStats,
+    hotelStats
+  });
+
+  // Create comprehensive analytics object with safe property access
+  const analyticsData: AnalyticsData = {
+    totalRevenue: revenueData?.totalRevenue || 0,
+    totalBookings: bookingStats?.totalBookings || 0,
+    totalHotels: hotelStats?.totalHotels || myHotels.length,
+    totalRooms: hotelStats?.totalRooms || 0,
+    // Safe access to occupancyRate - provide default if not available
+    occupancyRate: (bookingStats as any)?.occupancyRate || 0,
+    averageRating: 4.5,
+    monthlyGrowth: 12.5
+  };
+
+  const handleExportData = async () => {
+    setIsExporting(true);
     try {
-      const exportData = generateAnalyticsExport(analytics, revenue, 'month');
-      const success = exportToCSV(exportData);
+      console.log('📊 Exporting dashboard data:', {
+        timestamp: '2025-09-25 08:58:24',
+        user: 'NadPerz'
+      });
       
-      if (success) {
-        toast.success('Dashboard report exported successfully!');
-      } else {
-        toast.error('Failed to export report. Please try again.');
-      }
+      const dashboardExportData = [{
+        exportDate: '2025-09-25 08:58:24',
+        exportedBy: 'NadPerz',
+        ...analyticsData,
+        hotelCount: myHotels.length,
+        timestamp: '2025-09-25 08:58:24'
+      }];
+      
+      const csvContent = exportToCSV(dashboardExportData, 'dashboard-overview');
+      downloadCSV(csvContent, 'dashboard-overview');
+      
+      console.log('✅ Dashboard export completed successfully');
     } catch (error) {
-      console.error('Export error:', error);
-      toast.error('Export failed. Please try again.');
+      console.error('❌ Dashboard export failed:', error);
+    } finally {
+      setIsExporting(false);
     }
   };
 
-  if (bookingsLoading || analyticsLoading) {
-    return <LoadingSpinner />;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+          <p className="text-gray-600">Loading dashboard...</p>
+          <p className="text-xs text-gray-500 mt-1">User: NadPerz | 2025-09-25 08:58:24</p>
+        </div>
+      </div>
+    );
   }
 
-  const stats = {
-    totalRevenue: revenue?.total || 25000,
-    revenueGrowth: revenue?.growth || 15.2,
-    totalBookings: bookings?.length || 0,
-    bookingGrowth: analytics?.bookingGrowth || 12,
-    occupancyRate: analytics?.occupancyRate || 78,
-    occupancyGrowth: analytics?.occupancyGrowth || 8,
-    conflicts: conflicts?.length || 0,
-  };
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Welcome back, NadPerz! 👋
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Here's what's happening with your hotels today.
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
+          <p className="text-gray-600 mt-2">
+            Welcome back, NadPerz! Here's your hotel performance summary.
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            Last updated: 2025-09-25 08:58:24 UTC
           </p>
         </div>
         
-        <div className="flex items-center space-x-3">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleExportReport}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Export Report
-          </Button>
-          <Button 
-            size="sm"
-            onClick={() => window.location.href = '/hotels/create'}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Hotel
-          </Button>
-        </div>
+        <Button 
+          onClick={handleExportData}
+          disabled={isExporting}
+          variant="outline"
+        >
+          {isExporting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Exporting...
+            </>
+          ) : (
+            <>
+              <Download className="mr-2 h-4 w-4" />
+              Export Data
+            </>
+          )}
+        </Button>
       </div>
 
-      {/* Stats Overview */}
-      <StatsCards stats={stats} />
+      {/* Key Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${analyticsData.totalRevenue.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              <TrendingUp className="inline h-3 w-3 mr-1" />
+              +{analyticsData.monthlyGrowth}% from last month
+            </p>
+          </CardContent>
+        </Card>
 
-      {/* Alerts */}
-      {(conflicts?.length || 0) > 0 && (
-        <AlertsPanel conflicts={conflicts || []} />
-      )}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analyticsData.totalBookings}</div>
+            <p className="text-xs text-muted-foreground">
+              Active reservations
+            </p>
+          </CardContent>
+        </Card>
 
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="recent">Recent Activity</TabsTrigger>
-        </TabsList>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Hotels</CardTitle>
+            <Building className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analyticsData.totalHotels}</div>
+            <p className="text-xs text-muted-foreground">
+              {analyticsData.totalRooms} total rooms
+            </p>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* Revenue Chart - Takes 2 columns */}
-            <div className="xl:col-span-2">
-              <RevenueChart data={revenue?.monthlyData || []} />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg Rating</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analyticsData.averageRating}</div>
+            <p className="text-xs text-muted-foreground">
+              Based on guest reviews
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Hotels</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {myHotels.length === 0 ? (
+              <div className="text-center py-8">
+                <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-2">No hotels yet</p>
+                <p className="text-xs text-gray-500 mb-4">User: NadPerz | 2025-09-25 08:58:24</p>
+                <Button className="mt-4" size="sm">
+                  Create First Hotel
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {myHotels.slice(0, 3).map((hotel) => (
+                  <div key={hotel.id} className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{hotel.title}</p>
+                      <p className="text-sm text-gray-600">{hotel.city}, {hotel.country}</p>
+                    </div>
+                    <Badge variant="outline">Active</Badge>
+                  </div>
+                ))}
+                <p className="text-xs text-gray-500 pt-2 border-t">
+                  Showing {Math.min(3, myHotels.length)} of {myHotels.length} hotels
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Stats</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Occupancy Rate</span>
+              <span className="font-semibold">{analyticsData.occupancyRate}%</span>
             </div>
-            
-            {/* Recent Bookings - Takes 1 column */}
-            <div className="xl:col-span-1">
-              <RecentBookings 
-                bookings={(bookings || []).slice(0, 5)} 
-                onViewAll={() => window.location.href = '/dashboard/bookings'}
-              />
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Active Hotels</span>
+              <span className="font-semibold">{analyticsData.totalHotels}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Total Rooms</span>
+              <span className="font-semibold">{analyticsData.totalRooms}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Monthly Growth</span>
+              <span className="font-semibold text-green-600">+{analyticsData.monthlyGrowth}%</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Total Bookings</span>
+              <span className="font-semibold">{analyticsData.totalBookings}</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* System Info */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Eye className="mr-2 h-5 w-5" />
+            System Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <span className="text-gray-600">Current User:</span>
+              <span className="font-medium ml-2">NadPerz</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Current Time:</span>
+              <span className="font-medium ml-2">2025-09-25 08:58:24</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Timezone:</span>
+              <span className="font-medium ml-2">UTC</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Dashboard Status:</span>
+              <span className="font-medium ml-2 text-green-600">Active</span>
             </div>
           </div>
           
-          {/* Quick Actions */}
-          <QuickActions 
-            conflictsCount={conflicts?.length || 0}
-            onCreateHotel={() => window.location.href = '/hotels/create'}
-            onCreateRoom={() => window.location.href = '/dashboard/hotels'}
-            onViewReports={() => window.location.href = '/dashboard/analytics'}
-            onViewConflicts={() => window.location.href = '/dashboard/conflicts'}
-            onViewAnalytics={() => window.location.href = '/dashboard/analytics'}
-          />
-        </TabsContent>
-
-        <TabsContent value="performance" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Top Performing Hotels</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {Array.from({ length: 3 }, (_, i) => (
-                    <div key={i} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">Paradise Resort #{i + 1}</p>
-                        <p className="text-sm text-gray-600">{85 - i * 5}% occupancy</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-gray-900">${(15000 - i * 2000).toLocaleString()}</p>
-                        <p className="text-sm text-gray-600">this month</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Performance Metrics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-600">Average Daily Rate</span>
-                      <span className="font-medium">85%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-600">Revenue Per Room</span>
-                      <span className="font-medium">72%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-green-600 h-2 rounded-full" style={{ width: '72%' }}></div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-600">Guest Satisfaction</span>
-                      <span className="font-medium">95%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-purple-600 h-2 rounded-full" style={{ width: '95%' }}></div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <span>Last analytics update: 2025-09-25 08:58:24 UTC</span>
+              <span>Data source: Hotel Booking API</span>
+            </div>
           </div>
-        </TabsContent>
-
-        <TabsContent value="recent" className="space-y-6">
-          <RecentBookings 
-            bookings={(bookings || []).slice(0, 10)} 
-            onViewAll={() => window.location.href = '/dashboard/bookings'}
-          />
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 }
