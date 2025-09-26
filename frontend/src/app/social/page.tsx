@@ -15,7 +15,7 @@ const page = (props: Props) => {
     //   disableTransitionOnChange
     // >
     <div className="min-h-screen">
-      <Navbar />
+      {/* <Navbar /> */}
       <main className="py-8">
         {/*Container to center the content */}
         <div className="max-w-7xl mx-auto px-4">
