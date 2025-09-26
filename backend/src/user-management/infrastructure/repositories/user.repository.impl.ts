@@ -18,11 +18,23 @@ export class UserRepositoryImpl extends UserRepository {
     const saved = await userDoc.save();
     return this.toDomain(saved);
   }
+  async delete(id: string): Promise<void> {
+    // Check if id is a valid MongoDB ObjectId (24 hex chars)
+    const isMongoId = /^[a-fA-F0-9]{24}$/.test(id);
+    if (isMongoId) {
+      await this.userModel.findByIdAndDelete(id).exec();
+    } else {
+      // Assume id is a clerkUserId
+      await this.userModel.findOneAndDelete({ clerkUserId: id }).exec();
+    }
+  }
   private toDomain(userDoc: UserDocument): User {
     return new User(
       userDoc._id.toString(),
       userDoc.clerkUserId,
       userDoc.email,
+      userDoc.firstName,
+      userDoc.lastName,
       userDoc.userType,
       userDoc.businessAccountId,
       userDoc.branchId,

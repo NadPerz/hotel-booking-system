@@ -9,6 +9,7 @@ export class BusinessAccount {
     public readonly id: string,
     public readonly name: string,
     public readonly ownerId: string,
+    public readonly type: string,
     public readonly status: BusinessStatus = BusinessStatus.ACTIVE,
     public readonly createdAt: Date = new Date(),
     public readonly updatedAt: Date = new Date(),

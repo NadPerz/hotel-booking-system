@@ -20,6 +20,11 @@ export class WebhookService {
         await this.userService.createUser(dto);
         break;
       }
+      case 'user.deleted': {
+        const event = evt as { data: { id: string } };
+        await this.userService.deleteUser(event.data.id);
+        break;
+      }
     }
   }
 }

@@ -53,6 +53,8 @@ export class ClerkWebhookIntegration implements AuthWebhookHandler {
     const createUserDto: CreateUserDto = {
       clerkUserId: event.id,
       email: primaryEmail,
+      firstName: event.first_name || '',
+      lastName: event.last_name || '',
       userType: UserType.TRAVELER, // Default to traveler, can be updated later
       travelProfile: {
         profilePicture: event.profile_image_url || event.image_url,

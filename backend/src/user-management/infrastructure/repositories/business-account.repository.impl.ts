@@ -24,6 +24,7 @@ export class BusinessAccountRepositoryImpl extends BusinessAccountRepository {
       accountDoc._id.toString(),
       accountDoc.name,
       accountDoc.ownerId,
+      accountDoc.type,
       accountDoc.status,
       accountDoc.createdAt,
       accountDoc.updatedAt,

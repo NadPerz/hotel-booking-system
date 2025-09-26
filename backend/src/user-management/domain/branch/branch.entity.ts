@@ -1,4 +1,5 @@
 import { UserRole } from '../user/value-objects/user-role.vo';
+import { BLocation } from './value-objects/b-location.vo';
 
 export interface StaffMember {
   userId: string;
@@ -11,7 +12,7 @@ export class Branch {
     public readonly id: string,
     public readonly businessAccountId: string,
     public readonly name: string,
-    public readonly location: string,
+    public readonly location: BLocation,
     public readonly branchManagerId?: string,
     public readonly staff: StaffMember[] = [],
     public readonly createdAt: Date = new Date(),

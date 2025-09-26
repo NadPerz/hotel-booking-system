@@ -13,6 +13,9 @@ export class BusinessAccount {
   @Prop({ required: true })
   ownerId: string;
 
+  @Prop({ required: true })
+  type: string;
+
   @Prop({ default: BusinessStatus.ACTIVE, enum: Object.values(BusinessStatus) })
   status: BusinessStatus;
 

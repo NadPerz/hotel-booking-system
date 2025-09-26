@@ -4,12 +4,16 @@ import { CreateUserDto } from '../dtos/user/create-user.dto';
 import { TravelProfile } from 'src/user-management/domain/user/value-objects/traveller-profile.vo';
 import { SocialSettings } from 'src/user-management/domain/user/value-objects/social-settings.vo';
 import { UserRepository } from 'src/user-management/domain/repositories/user.repository';
+import { ClerkIntegration } from 'src/user-management/infrastructure/integrations/clerk.integration';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly clerkIntegration: ClerkIntegration,
+  ) {}
 
-  createUser(dto: CreateUserDto): Promise<User> {
+  async createUser(dto: CreateUserDto): Promise<User> {
     const travelProfile = dto.travelProfile
       ? ({
           preferences: dto.travelProfile.preferences ?? [], // always an array
@@ -29,6 +33,8 @@ export class UserService {
       undefined, // MongoDB will generate _id
       dto.clerkUserId,
       dto.email,
+      dto.firstName,
+      dto.lastName,
       dto.userType,
       dto.businessAccountId,
       dto.branchId,
@@ -37,6 +43,14 @@ export class UserService {
       socialSettings,
     );
 
-    return this.userRepository.save(user);
+    const dbUser = await this.userRepository.save(user);
+    await this.clerkIntegration.updateUserPublicMetadata(dbUser.clerkUserId, {
+      onboardingComplete: true,
+      _id: dbUser.id,
+    });
+    return dbUser;
+  }
+  async deleteUser(id: string): Promise<void> {
+    await this.userRepository.delete(id);
   }
 }
