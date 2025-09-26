@@ -24,10 +24,10 @@ export class EventHashtagMappingRepositoryImpl
     // );
    const objectToSave = {
     event: typeof eventHashtagMapping.event === 'object'
-    ? (eventHashtagMapping.event as any)._id
+    ? (eventHashtagMapping.event as any)._id || (eventHashtagMapping.event as any).id
     : eventHashtagMapping.event,
     hashtag: typeof eventHashtagMapping.hashtag === 'object'
-    ? (eventHashtagMapping.hashtag as any)._id
+    ? (eventHashtagMapping.hashtag as any)._id || (eventHashtagMapping.hashtag as any).id
     : eventHashtagMapping.hashtag,
 };
   console.log('EventHashtagMapping to save:', objectToSave);

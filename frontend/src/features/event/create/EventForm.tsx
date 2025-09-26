@@ -27,8 +27,8 @@ import {
 } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { cn } from "@/lib/utils";
-import { getVenues, getOrganizers, getCategories, getHashtags, createEvent, updateEvent } from '../lib/event-api';
-import { getSignedGetUrl, getSignedUploadUrl, uploadFileToSignedUrl } from "src/lib/media.api";
+import { getVenues, getOrganizers, getCategories, getHashtags, createEvent, updateEvent, getEventHashtagMappings, setEventHashtagMappings  } from '../lib/event-api';
+import { getSignedGetUrl, getSignedUploadUrl, uploadFileToSignedUrl} from "src/lib/media.api";
 
 const formSchema = z.object({
   eventName: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -71,117 +71,95 @@ const EventForm: React.FC<EventFormProps> = ({ initialValues, onSuccess }) => {
 const form = useForm<FormValues>({
   resolver: zodResolver(formSchema) as any,
   defaultValues: {
-    eventName: initialValues?.eventName ?? '',
-    description: initialValues?.description ?? '',
-    startDate: initialValues?.startDate ?? '',
-    endDate: initialValues?.endDate ?? '',
-    startTime: initialValues?.startTime ?? '',
-    endTime: initialValues?.endTime ?? '',
-    maxAttendees: initialValues?.maxAttendees ?? 0,
-    ticketPrice: initialValues?.ticketPrice ?? 0,
-    eventStatus: initialValues?.eventStatus ?? 'active',
-    venueId: initialValues?.venue?.id ?? '',
-    organizerId: initialValues?.organizer?.id ?? '',
-    categoryId: initialValues?.category?.id ?? '',
-    // hashtagIds: initialValues?.hashtags?.map(tag => tag.id) ?? [],
-    // hashtagIds: initialValues?.hashtagIds ?? [],
-    hashtagIds: initialValues?.hashtagIds 
-      ?? initialValues?.hashtags?.map(tag => tag.id).filter(Boolean) 
-      ?? [],
+    eventName: '',
+    description: '',
+    startDate: '',
+    endDate: '',
+    startTime: '',
+    endTime: '',
+    maxAttendees: 0,
+    ticketPrice: 0,
+    eventStatus: 'active',
+    venueId: '',
+    organizerId: '',
+    categoryId: '',
+    hashtagIds: [],
   },
 });
-  console.log("Hashtags in state (initial component render):", hashtags);
-  console.log("Selected hashtagIds in form:", form.getValues('hashtagIds'));
 
-// if (
-//   venues.length === 0 ||
-//   organizers.length === 0 ||
-//   categories.length === 0
-// ) {
-//   return <div>Loading event info...</div>;
-// }
-console.log('Comparing initialValues.venueId:', initialValues?.venueId);
-venues.forEach(v => console.log('Venue id:', v.id));
+//   console.log("Hashtags in state (initial component render):", hashtags);
+//   console.log("Selected hashtagIds in form:", form.getValues('hashtagIds'));
+// console.log('Comparing initialValues.venueId:', initialValues?.venueId);
+// venues.forEach(v => console.log('Venue id:', v.id));
 
 useEffect(() => {
-  console.log("Initial values from DB/API:", initialValues);
-  console.log('venueId from initialValues', initialValues?.venueId, typeof initialValues?.venueId);
-venues.forEach(v => console.log(v.id, typeof v.id));
-
-  if (
-    initialValues &&
-    venues.length > 0 &&
-    organizers.length > 0 &&
-    categories.length > 0
-  ) {
-    form.reset({
-      eventName: initialValues.eventName ?? '',
-      description: initialValues.description ?? '',
-      startDate: initialValues.startDate ?? '',
-      endDate: initialValues.endDate ?? '',
-      startTime: initialValues.startTime ?? '',
-      endTime: initialValues.endTime ?? '',
-      maxAttendees: initialValues.maxAttendees ?? 0,
-      ticketPrice: initialValues.ticketPrice ?? 0,
-      eventStatus: initialValues.eventStatus ?? 'active',
-      venueId: initialValues.venue?.id ?? '',
-      organizerId: initialValues.organizer?.id ?? '',
-      categoryId: initialValues.category?.id ?? '',
-      // hashtagIds: initialValues.hashtagIds ?? [],
-      hashtagIds: initialValues.hashtags?.map(tag => tag.id) ?? [],
-    });
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [initialValues, venues.length, organizers.length, categories.length]);
-
-
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [venuesData, organizersData, categoriesData, hashtagsData] = await Promise.all([
-          getVenues(),
-          getOrganizers(),
-          getCategories(),
-          getHashtags(),
-        ]);
-
-        console.log('Fetched venues:', venuesData);
-        console.log('Fetched organizers:', organizersData);
-        console.log('Fetched categories:', categoriesData);
-        
-        setVenues(venuesData);
-        setOrganizers(organizersData);
-        setCategories(categoriesData);
-        setHashtags(hashtagsData);
-        console.log('Hashtags after setHashtags:', hashtagsData);
-      } catch (error) {
-        console.error('Failed to fetch event data:', error);
+  const fetchData = async () => {
+    try {
+      const promises = [
+        getVenues(),
+        getOrganizers(),
+        getCategories(),
+        getHashtags(),
+      ];
+      
+      // Add hashtag mappings if editing an event
+      if (initialValues?.id) {
+        promises.push(getEventHashtagMappings(initialValues.id));
       }
-    };
-    fetchData();
-  }, []);
+      
+      const results = await Promise.all(promises);
+      const [venuesData, organizersData, categoriesData, hashtagsData, hashtagMappings] = results;
+      
+      console.log("Raw hashtag mappings from API:", JSON.stringify(hashtagMappings, null, 2));
+
+      setVenues(venuesData);
+      setOrganizers(organizersData);
+      setCategories(categoriesData);
+      setHashtags(hashtagsData);
+      console.log("All available hashtags:", JSON.stringify(hashtagsData, null, 2));
 
 
+      // Reset form with all data including hashtags
+      if (initialValues) {
+        let hashtagIds = [];
+        
+        // Try to get hashtags from mappings first (for edit mode)
+        if (hashtagMappings && hashtagMappings.length > 0) {
+          hashtagIds = hashtagMappings.map(m => m.hashtag?._id || m.hashtag?.id || m.hashtagId || m.hashtag).filter(Boolean);
+          console.log("Loaded hashtag IDs from mappings:", hashtagIds);
+        } 
+        // Fallback to hashtags from initialValues (if available)
+        else if (initialValues.hashtags) {
+          hashtagIds = initialValues.hashtags.map(tag => tag.id).filter(Boolean);
+          console.log("Loaded hashtag IDs from initialValues:", hashtagIds);
+        }
+
+        form.reset({
+          eventName: initialValues.eventName ?? '',
+          description: initialValues.description ?? '',
+          startDate: initialValues.startDate ?? '',
+          endDate: initialValues.endDate ?? '',
+          startTime: initialValues.startTime ?? '',
+          endTime: initialValues.endTime ?? '',
+          maxAttendees: initialValues.maxAttendees ?? 0,
+          ticketPrice: initialValues.ticketPrice ?? 0,
+          eventStatus: initialValues.eventStatus ?? 'active',
+          venueId: initialValues.venue?.id ?? '',
+          organizerId: initialValues.organizer?.id ?? '',
+          categoryId: initialValues.category?.id ?? '',
+          hashtagIds: hashtagIds,
+        });
+        
+        console.log("Form reset with hashtagIds:", hashtagIds);
+      }
+    } catch (error) {
+      console.error('Failed to fetch event data:', error);
+    }
+  };
+  fetchData();
+}, [initialValues?.id]); // Only depend on event ID
 
 
-  // const onSubmit = async (values: FormValues) => {
-  //   try {
-  //     await createEvent({
-  //       ...values,
-  //       maxAttendees: Number(values.maxAttendees) || 0,
-  //       ticketPrice: Number(values.ticketPrice) || 0,
-  //       imagesUrl: imageKey ? [imageKey] : [],
-  //     });
-  //     alert('Event created successfully!');
-  //     form.reset();
-  //     setImageKey(""); // Reset image key state
-  //     setSelectedImage(null);
-  //   } catch (error) {
-  //     console.error('Failed to create event:', error);
-  //     alert('Failed to create event. Please try again.');
-  //   }
-  // };
 
   const onSubmit = async (values: FormValues) => {
   try {
@@ -193,45 +171,42 @@ venues.forEach(v => console.log(v.id, typeof v.id));
       imagesUrlToSend = [imageKey];
     }
 
-      const payload = {
-      ...values,
-      imagesUrl: imagesUrlToSend,
+    const eventPayload = {
+      eventName: values.eventName,
+      description: values.description,
+      startDate: values.startDate,
+      endDate: values.endDate,
+      startTime: values.startTime,
+      endTime: values.endTime,
       maxAttendees: Number(values.maxAttendees) || 0,
       ticketPrice: Number(values.ticketPrice) || 0,
+      eventStatus: values.eventStatus,
+      venueId: values.venueId,
+      organizerId: values.organizerId,
+      categoryId: values.categoryId,
+      imagesUrl: imagesUrlToSend,
+      hashtagIds: values.hashtagIds, // Include hashtags in the main payload
     };
+     let eventId;
+     
+
 
     if (initialValues?.id) {
-      // await updateEvent(initialValues.id, {
-      //   // ...values,
-      //   // venue: values.venueId,
-      //   // organizer: values.organizerId,
-      //   // category: values.categoryId,
-      //   // imagesUrl: imagesUrlToSend,
-      //   // maxAttendees: Number(values.maxAttendees) || 0,
-      //   // ticketPrice: Number(values.ticketPrice) || 0,
-        
-      // });
-      await updateEvent(initialValues.id, payload);
-      alert('Event updated successfully!');
+      await updateEvent(initialValues.id, eventPayload);
+      eventId = initialValues.id;
     } else {
-      // await createEvent({
-      //   ...values,
-      //    venue: values.venueId,
-      //   organizer: values.organizerId,
-      //   category: values.categoryId,
-      //   maxAttendees: Number(values.maxAttendees) || 0,
-      //   ticketPrice: Number(values.ticketPrice) || 0,
-      //   imagesUrl: imageKey ? [imageKey] : [],
-      // });
-      await createEvent(payload);
-      alert('Event created successfully!');
+      const created = await createEvent(eventPayload);
+      eventId = created.id; // or whatever your API returns
     }
-    form.reset();
-    setImageKey("");
-    setSelectedImage(null);
+
+    alert('Event saved successfully!');
+      if (!initialValues?.id) { // Only reset for new events
+      form.reset();
+      setImageKey("");
+      setSelectedImage(null);
+    }
     onSuccess?.();
   } catch (error) {
-    console.error('Failed to save event:', error);
     alert('Failed to save event.');
   }
 };
@@ -485,16 +460,16 @@ console.log("Hashtags prop in form:", hashtags);
         <FormField
           control={form.control as any}
           name="hashtagIds"
-          render={() => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Hashtags</FormLabel>
               <FormControl>
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-wrap gap-2">
-                    {form.getValues('hashtagIds').length === 0 && (
+                    {field.value.length === 0 && (
                       <span className="text-sm text-muted-foreground">No hashtags selected</span>
                     )}
-                    {form.getValues('hashtagIds').map((id) => {
+                    {field.value.map((id) => {
                       const tag = hashtags.find((h) => h.id === id);
                       console.log("Mapping selected id to hashtag:", id, tag);
                       if (!tag) return null;
@@ -533,7 +508,7 @@ console.log("Hashtags prop in form:", hashtags);
                               <div className="text-sm text-muted-foreground">No results</div>
                             )}
                             {filteredHashtags.map((hashtag) => {
-                              const checked = form.getValues('hashtagIds').includes(hashtag.id);
+                              const checked = field.value.includes(hashtag.id);
                               return (
                                 <label
                                   key={hashtag.id}
@@ -566,34 +541,13 @@ console.log("Hashtags prop in form:", hashtags);
             </FormItem>
           )}
         />
-        {/* <FormField
-          control={form.control as any}
-          name="hashtagIds"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Hashtags</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select hashtags" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {hashtags.map((hashtag) => (
-                    <SelectItem key={hashtag.id} value={hashtag.id}>
-                      {hashtag.hashtagName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        /> */}
+
         {/* <img src={getSignedGetUrl(initialValues.imagesUrl?.)} /> */}
         <input type="file" accept="image/*" onChange={handleImageChange} />
 
-        <Button type="submit">Create Event</Button>
+        <Button type="submit">
+        {initialValues?.id ? 'Update Event' : 'Create Event'}
+        </Button>
       </form>
     </Form>
   );

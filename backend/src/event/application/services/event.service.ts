@@ -77,12 +77,7 @@ export class EventService {
       for (const hashtagId of createDto.hashtagIds) {
         const hashtag = await this.eventHashtagRepository.findById(hashtagId);
         if (hashtag) {
-          const mapping = {
-          event: savedEvent._id ?? savedEvent.id,
-          hashtag: hashtag._id ?? hashtag.id
-        };
-
-          // const mapping = new EventHashtagMapping(savedEvent, hashtag);
+          const mapping = new EventHashtagMapping(savedEvent, hashtag);
           await this.eventHashtagMappingRepository.create(mapping);
         }
       }
@@ -311,11 +306,7 @@ export class EventService {
       for (const hashtagId of updateDto.hashtagIds) {
         const hashtag = await this.eventHashtagRepository.findById(hashtagId);
         if (hashtag) {
-          const mapping = {
-          event: updatedEvent._id ?? updatedEvent.id,
-          hashtag: hashtag._id ?? hashtag.id
-        };
-          // const mapping = new EventHashtagMapping(updatedEvent, hashtag);
+          const mapping = new EventHashtagMapping(updatedEvent, hashtag);
           await this.eventHashtagMappingRepository.create(mapping);
         }
       }
@@ -450,5 +441,16 @@ export class EventService {
     }
     await this.eventRsvpRepository.delete(id);
   }
+
+
+  
+
+  //event hashtag mapping methods
+
+  // Get all hashtag mappings for a specific event
+async getEventHashtagMappings(eventId: string): Promise<EventHashtagMapping[]> {
+  return await this.eventHashtagMappingRepository.findByEventId(eventId);
+}
+
 
 }

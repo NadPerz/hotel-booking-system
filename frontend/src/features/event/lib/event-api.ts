@@ -307,3 +307,27 @@ export const updateEvent = async (id: string, data: any): Promise<any> => {
     }
     return response.json();
 };
+
+// GET hashtag mappings for a specific event
+export const getEventHashtagMappings = async (eventId: string): Promise<any[]> => {
+  const response = await fetch(`${API_BASE_URL}/hashtag-mapping?eventId=${eventId}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch hashtag mappings for event ${eventId}`);
+  }
+  return response.json();
+};
+
+// SET (replace all) hashtag mappings for an event
+export const setEventHashtagMappings = async (eventId: string, hashtagIds: string[]): Promise<any> => {
+  const response = await fetch(`${API_BASE_URL}/hashtag-mapping/batch`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ eventId, hashtagIds }),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to update hashtag mappings for event ${eventId}`);
+  }
+  return response.json();
+};
