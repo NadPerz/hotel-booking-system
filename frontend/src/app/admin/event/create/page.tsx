@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation'; // Import the router
-import EventForm from '@/features/event/create2/EventForm';
+import EventForm from '@/features/event/create/EventForm';
 
 const CreateEventPage = () => {
   const router = useRouter(); // Get the router instance
