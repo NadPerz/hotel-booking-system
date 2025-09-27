@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,56 +11,125 @@ import {
   MapPin,
   Users,
   Search,
+  Filter,
   Eye,
   X,
   Download,
   Clock,
   CheckCircle,
-  AlertCircle,
-  ArrowLeft
+  AlertCircle
 } from 'lucide-react';
-import { useUserBookings } from '@/features/hotel-booking/hooks/useBookings';
-import LoadingSpinner from '@/features/hotel-booking/components/shared/LoadingSpinner';
-import { format, parseISO, isAfter, addDays } from 'date-fns';
+import { format, parseISO, isAfter, isBefore, addDays } from 'date-fns';
 
-export default function MyBookingsPage() {
+// Mock booking data
+const mockBookings = [
+  {
+    id: 'booking_1_abc123',
+    paymentId: 'pay_1_xyz789',
+    hotelId: 'hotel_1758728256298_xe3lzcniw',
+    hotelName: 'ssssssssssssssssss',
+    hotelCity: 'demo city',
+    hotelCountry: 'Sri Lanka',
+    roomId: 'room_1758736640894_2okk0iq4',
+    roomName: 'delussssssssss',
+    checkIn: '2025-09-26',
+    checkOut: '2025-09-27',
+    guests: 2,
+    totalPrice: 100,
+    status: 'confirmed',
+    guestName: 'NadPerz',
+    guestEmail: 'nadperz@example.com',
+    createdAt: '2025-09-25T10:49:00Z',
+    canCancel: true
+  },
+  {
+    id: 'booking_2_def456',
+    paymentId: 'pay_2_uvw012',
+    hotelId: 'hotel_1758699345963_h2jzcrk3t',
+    hotelName: 'Grand Plaza Hotel',
+    hotelCity: 'New York',
+    hotelCountry: 'USA',
+    roomId: 'room_2_suite',
+    roomName: 'Executive Suite',
+    checkIn: '2025-10-15',
+    checkOut: '2025-10-18',
+    guests: 3,
+    totalPrice: 450,
+    status: 'confirmed',
+    guestName: 'NadPerz',
+    guestEmail: 'nadperz@example.com',
+    createdAt: '2025-09-20T15:30:00Z',
+    canCancel: true
+  },
+  {
+    id: 'booking_3_ghi789',
+    paymentId: 'pay_3_rst345',
+    hotelId: 'hotel_3_beach',
+    hotelName: 'Ocean View Resort',
+    hotelCity: 'Miami',
+    hotelCountry: 'USA',
+    roomId: 'room_3_ocean',
+    roomName: 'Ocean View Room',
+    checkIn: '2025-08-10',
+    checkOut: '2025-08-12',
+    guests: 2,
+    totalPrice: 200,
+    status: 'completed',
+    guestName: 'NadPerz',
+    guestEmail: 'nadperz@example.com',
+    createdAt: '2025-08-05T09:15:00Z',
+    canCancel: false
+  }
+];
+
+export default function ReservationsPage() {
   const router = useRouter();
-  const { userBookings, isLoading, cancelBooking, isCancelling } = useUserBookings('NadPerz');
+  const [bookings, setBookings] = useState(mockBookings);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [filteredBookings, setFilteredBookings] = useState(mockBookings);
 
-  console.log('📅 My Bookings Page loaded:', {
-    bookingCount: userBookings.length,
-    timestamp: '2025-09-25 11:18:45',
+  console.log('📅 Reservations Page loaded:', {
+    bookingCount: bookings.length,
+    timestamp: '2025-09-25 10:49:00',
     user: 'NadPerz'
   });
 
-  const filteredBookings = userBookings.filter(booking => {
-    const matchesSearch = searchTerm === '' || 
-      booking.hotelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.roomName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.hotelCity.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    let filtered = bookings;
 
-    const matchesStatus = statusFilter === 'all' || booking.status === statusFilter;
+    if (searchTerm) {
+      filtered = filtered.filter(booking =>
+        booking.hotelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.roomName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.hotelCity.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
-    return matchesSearch && matchesStatus;
-  });
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(booking => booking.status === statusFilter);
+    }
 
-  const handleCancelBooking = async (bookingId: string) => {
+    setFilteredBookings(filtered);
+  }, [bookings, searchTerm, statusFilter]);
+
+  const handleCancelBooking = (bookingId: string) => {
     if (window.confirm('Are you sure you want to cancel this booking? This action cannot be undone.')) {
       console.log('❌ Cancelling booking:', {
         bookingId,
-        timestamp: '2025-09-25 11:18:45',
+        timestamp: '2025-09-25 10:49:00',
         user: 'NadPerz'
       });
 
-      try {
-        await cancelBooking(bookingId);
-        alert('Booking cancelled successfully!');
-      } catch (error) {
-        console.error('Failed to cancel booking:', error);
-        alert('Failed to cancel booking. Please try again.');
-      }
+      setBookings(prev =>
+        prev.map(booking =>
+          booking.id === bookingId
+            ? { ...booking, status: 'cancelled', canCancel: false }
+            : booking
+        )
+      );
+
+      alert('Booking cancelled successfully!');
     }
   };
 
@@ -96,37 +165,15 @@ export default function MyBookingsPage() {
     return booking.canCancel && isAfter(twentyFourHoursBefore, new Date()) && booking.status === 'confirmed';
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center">
-            <LoadingSpinner />
-            <p className="mt-4 text-gray-600">Loading your bookings...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => router.push('/hotels')}
-            className="mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Hotels
-          </Button>
-          
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Bookings</h1>
-          <p className="text-gray-600">Manage your hotel reservations and view booking history</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Reservations</h1>
+          <p className="text-gray-600">Manage your hotel bookings and view reservation history</p>
           <p className="text-sm text-gray-500 mt-1">
-            Viewed by NadPerz • 2025-09-25 11:18:45 UTC
+            Viewed by NadPerz • 2025-09-25 10:49:00 UTC
           </p>
         </div>
 
@@ -162,7 +209,7 @@ export default function MyBookingsPage() {
           <Card>
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-blue-600">
-                {userBookings.filter(b => b.status === 'confirmed').length}
+                {bookings.filter(b => b.status === 'confirmed').length}
               </div>
               <div className="text-sm text-gray-600">Confirmed</div>
             </CardContent>
@@ -170,7 +217,7 @@ export default function MyBookingsPage() {
           <Card>
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-green-600">
-                {userBookings.filter(b => b.status === 'completed').length}
+                {bookings.filter(b => b.status === 'completed').length}
               </div>
               <div className="text-sm text-gray-600">Completed</div>
             </CardContent>
@@ -178,7 +225,7 @@ export default function MyBookingsPage() {
           <Card>
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-red-600">
-                {userBookings.filter(b => b.status === 'cancelled').length}
+                {bookings.filter(b => b.status === 'cancelled').length}
               </div>
               <div className="text-sm text-gray-600">Cancelled</div>
             </CardContent>
@@ -186,7 +233,7 @@ export default function MyBookingsPage() {
           <Card>
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-purple-600">
-                ${userBookings.filter(b => b.status === 'confirmed' || b.status === 'completed')
+                ${bookings.filter(b => b.status === 'confirmed' || b.status === 'completed')
                   .reduce((sum, b) => sum + b.totalPrice, 0)}
               </div>
               <div className="text-sm text-gray-600">Total Spent</div>
@@ -200,7 +247,7 @@ export default function MyBookingsPage() {
             <CardContent className="p-12 text-center">
               <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {searchTerm ? 'No Matching Bookings' : 'No Bookings Yet'}
+                {searchTerm ? 'No Matching Bookings' : 'No Reservations Yet'}
               </h3>
               <p className="text-gray-600 mb-6">
                 {searchTerm 
@@ -299,7 +346,6 @@ export default function MyBookingsPage() {
                           size="sm"
                           onClick={() => handleCancelBooking(booking.id)}
                           className="text-red-600 hover:text-red-700 hover:border-red-300"
-                          disabled={isCancelling}
                         >
                           <X className="h-4 w-4 mr-1" />
                           Cancel
