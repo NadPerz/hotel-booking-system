@@ -2,7 +2,7 @@
 import { SignUp } from '@clerk/nextjs'
 import React from 'react'
 import Link from 'next/link'
-import { UserType } from 'types/user-management'
+import { UserType } from '@shared/types/user-management/BusinessOnboardingSchema'
 import { useUser, useClerk } from '@clerk/nextjs'
 
 const Page = () => {
@@ -107,7 +107,7 @@ const Page = () => {
                             unsafeMetadata={{
                                 userType: UserType.BUSINESS_USER
                             }}
-                            
+
                             appearance={{
                                 elements: {
                                     rootBox: "w-full",

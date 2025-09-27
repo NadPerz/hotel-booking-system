@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 5173",
+    "copy-shared": "node scripts/copy-shared.js",
+    "watch-shared": "node scripts/watch-shared.js",
+    "dev": "concurrently \"npm run copy-shared\" \"npm run watch-shared\" \"next dev --turbopack --port 5173\"",
+    "prebuild": "npm run copy-shared",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint"
@@ -33,6 +36,8 @@
     "axios": "^1.12.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "co": "^4.6.0",
+    "concurrently": "^9.2.1",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
     "html2canvas": "^1.4.1",

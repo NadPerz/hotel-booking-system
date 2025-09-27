@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { BusinessOnboardingSchema } from "./BusinessOnboardingSchema";
+import { BusinessOnboardingSchema } from "../../../../../../shared/types/user-management/BusinessOnboardingSchema";
 
 
 type BusinessOnboardingState = Partial<BusinessOnboardingSchema> & {

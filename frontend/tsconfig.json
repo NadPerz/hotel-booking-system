@@ -26,6 +26,6 @@
       }
     ]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "../shared/types/user-management/BusinessOnboardingSchema.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "../shared/types/user-management/BusinessOnboardingSchema.ts", "../shared/types/globals.d.ts"],
   "exclude": ["node_modules"]
 }

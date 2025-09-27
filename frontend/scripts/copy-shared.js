@@ -1,8 +1,10 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const fs = require('fs');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const path = require('path');
 
-const sourceDir = path.join(__dirname, '../shared');
-const targetDir = path.join(__dirname, 'shared');
+const sourceDir = path.join(__dirname, '../../shared');
+const targetDir = path.join(__dirname, '../shared');
 
 // Function to recursively copy directory
 function copyDirectory(src, dest) {
@@ -15,6 +17,14 @@ function copyDirectory(src, dest) {
   const items = fs.readdirSync(src);
 
   for (const item of items) {
+    // Skip specified files and directories
+    if (item === 'node_modules' || 
+        item === '.gitignore' || 
+        item === 'package-lock.json' || 
+        item === 'package.json') {
+      continue;
+    }
+
     const srcPath = path.join(src, item);
     const destPath = path.join(dest, item);
 

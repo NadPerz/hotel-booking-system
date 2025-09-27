@@ -1,5 +1,4 @@
-import { UserType } from "./user-management";
-
+import { UserType } from "@shared/types/user-management/BusinessOnboardingSchema";
 export {};
 
 declare global {

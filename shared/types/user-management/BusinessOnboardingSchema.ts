@@ -1,5 +1,16 @@
 import { z } from "zod";
 
+export enum UserRole {
+  BUSINESS_OWNER = "BUSINESS_OWNER",
+  BRANCH_MANAGER = "BRANCH_MANAGER",
+  CONTENT_MANAGER = "CONTENT_MANAGER",
+  EVENT_MANAGER = "EVENT_MANAGER",
+  RESERVATIONS_MANAGER = "RESERVATIONS_MANAGER",
+}
+export enum UserType {
+  TRAVELER = "TRAVELER",
+  BUSINESS_USER = "BUSINESS_USER",
+}
 // Business types enum - duplicated here to avoid import issues
 export enum BusinessType {
   RESTAURANT = "restaurant",
