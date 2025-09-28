@@ -1,27 +1,23 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
-import { BusinessUserService } from '../../application/services/business-user.service';
-import { BusinessOnboardingSchema } from '@shared/types/user-management/BusinessOnboardingSchema';
+import { Controller, Post, Req } from '@nestjs/common';
+import { BusinessAccountService } from '../../application/services/business-account.service';
+
+import { ZodBody } from 'src/shared/decorators/zod-body.decorator';
+import {
+  BusinessOnboardingSchema,
+  BusinessOnboardingData,
+} from '@shared/types/user-management';
+import { Request } from 'express';
 
 @Controller('business')
 export class BusinessUserController {
-  constructor(private readonly businessUserService: BusinessUserService) {}
+  constructor(private readonly businessUserService: BusinessAccountService) {}
 
   @Post('/onboarding/complete')
-  completeOnboarding(@Body() body: BusinessOnboardingSchema) {
-    const validatedData = BusinessOnboardingSchema.parse(body);
-    // You may want to validate the body here if not handled globally
-    return this.businessUserService.completeOnboarding(validatedData);
-  }
-
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    // Placeholder for getting a single business user by id
-    return {};
-  }
-
-  @Post()
-  async create(@Body() createBusinessUserDto: any) {
-    // Placeholder for creating a business user
-    return {};
+  completeOnboarding(
+    @ZodBody(BusinessOnboardingSchema) body: BusinessOnboardingData,
+    @Req() req: Request,
+  ) {
+    const userId = req.user?.user_id;
+    return this.businessUserService.completeOnboarding(userId!, body);
   }
 }

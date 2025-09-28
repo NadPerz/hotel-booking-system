@@ -1,54 +1,34 @@
+import { BusinessType } from "@shared/types/user-management";
 import { z } from "zod";
 
-export enum UserRole {
-  BUSINESS_OWNER = "BUSINESS_OWNER",
-  BRANCH_MANAGER = "BRANCH_MANAGER",
-  CONTENT_MANAGER = "CONTENT_MANAGER",
-  EVENT_MANAGER = "EVENT_MANAGER",
-  RESERVATIONS_MANAGER = "RESERVATIONS_MANAGER",
-}
-export enum UserType {
-  TRAVELER = "TRAVELER",
-  BUSINESS_USER = "BUSINESS_USER",
-}
-// Business types enum - duplicated here to avoid import issues
-export enum BusinessType {
-  RESTAURANT = "restaurant",
-  EVENT = "event",
-  HOTEL = "hotel",
-}
-
-// Branch location schema
-const CoordinatesSchema = z.object({
+export const CoordinatesSchema = z.object({
   lat: z.number(),
   lng: z.number(),
 });
 
-const BranchLocationSchema = z.object({
+export const BranchLocationSchema = z.object({
   coords: CoordinatesSchema,
   address: z.string().min(1, "Address is required"),
   city: z.string().min(1, "City is required"),
   country: z.string().min(1, "Country is required"),
 });
 
-const BranchSchema = z.object({
+export const BranchSchema = z.object({
   bName: z.string().min(1, "Branch name is required"),
   bLocation: BranchLocationSchema,
 });
 
-// Complete Zod schema for the entire form
 export const BusinessOnboardingSchema = z.object({
   brandName: z.string().min(1, "Brand name is required"),
-  type: z.nativeEnum(BusinessType),
+  type: z.enum(BusinessType),
   branch: BranchSchema,
   primaryContactNumber: z.string().min(10, "Please enter a valid phone number"),
-  //business legal step
   legalEntityName: z.string().min(1, "Legal entity name is required"),
   legalEntityAddress: z.string().min(1, "Legal entity address is required"),
   legalEntitySigner: z.string().min(1, "Legal entity signer is required"),
 });
 
-export type BusinessOnboardingSchema = z.infer<typeof BusinessOnboardingSchema>;
+// Infer all types from schemas - NO DUPLICATION!
 
 // Individual step schemas
 export const BusinessDetailsSchema = BusinessOnboardingSchema.pick({
@@ -57,8 +37,13 @@ export const BusinessDetailsSchema = BusinessOnboardingSchema.pick({
   primaryContactNumber: true,
   branch: true,
 });
+
 export const BusinessLegalEntitySchema = BusinessOnboardingSchema.pick({
   legalEntityName: true,
   legalEntityAddress: true,
   legalEntitySigner: true,
 });
+
+// Inferred types for partial schemas
+export type BusinessDetailsData = z.infer<typeof BusinessDetailsSchema>;
+export type BusinessLegalEntityData = z.infer<typeof BusinessLegalEntitySchema>;

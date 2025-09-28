@@ -17,7 +17,7 @@ import { PermissionSchema } from './infrastructure/schemas/permission.schema';
 import { ClerkWebhookIntegration } from './infrastructure/integrations/clerk-webhook.integration';
 import { WebhookController } from './presentation/controllers/webhook.controller';
 import { WebhookService } from './application/services/webhook.service';
-import { BusinessUserService } from './application/services/business-user.service';
+import { BusinessAccountService } from './application/services/business-account.service';
 import { BusinessUserController } from './presentation/controllers/business-user.controller';
 import { ClerkIntegration } from './infrastructure/integrations/clerk.integration';
 @Module({
@@ -31,7 +31,7 @@ import { ClerkIntegration } from './infrastructure/integrations/clerk.integratio
   ],
   providers: [
     UserService,
-    BusinessUserService,
+    BusinessAccountService,
     WebhookService,
     ClerkIntegration,
 
@@ -59,12 +59,13 @@ import { ClerkIntegration } from './infrastructure/integrations/clerk.integratio
   controllers: [UserController, BusinessUserController, WebhookController],
   exports: [
     UserService,
-    BusinessUserService,
+    BusinessAccountService,
     WebhookService,
     UserRepository,
     BusinessAccountRepository,
     BranchRepository,
     PermissionRepository,
+    ClerkIntegration,
   ],
 })
 export class UserManagementModule {}

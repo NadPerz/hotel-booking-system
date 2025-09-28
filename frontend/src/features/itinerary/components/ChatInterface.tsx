@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Loader2, Send, MapPin, Clock, Users, DollarSign } from 'lucide-react';
+import { useAuth } from '@clerk/nextjs';
 import { Itinerary, ConversationMessage, ConversationContext, ChatItineraryResponse } from './TravelChatbot';
 
 interface ChatInterfaceProps {
@@ -12,6 +13,7 @@ interface ChatInterfaceProps {
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ onItineraryGenerated, context }) => {
+  const { getToken } = useAuth();
   const [messages, setMessages] = useState<ConversationMessage[]>([
     {
       role: 'assistant',
@@ -47,9 +49,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onItineraryGenerated, con
     setIsLoading(true);
 
     try {
+      const token = await getToken();
       const response = await fetch('http://localhost:3000/api/itineraries/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
         body: JSON.stringify({
           message: userMessage.content,
           conversationId

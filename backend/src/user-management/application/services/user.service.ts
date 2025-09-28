@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { User } from 'src/user-management/domain/user/user.entity';
 import { CreateUserDto } from '../dtos/user/create-user.dto';
 import { TravelProfile } from 'src/user-management/domain/user/value-objects/traveller-profile.vo';
@@ -6,8 +6,10 @@ import { SocialSettings } from 'src/user-management/domain/user/value-objects/so
 import { UserRepository } from 'src/user-management/domain/repositories/user.repository';
 import { ClerkIntegration } from 'src/user-management/infrastructure/integrations/clerk.integration';
 
+// export const ownerId = '68d80a8f98be722407d63c21'; //TODO remove this after testing
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
   constructor(
     private readonly userRepository: UserRepository,
     private readonly clerkIntegration: ClerkIntegration,
@@ -30,7 +32,7 @@ export class UserService {
         } satisfies SocialSettings)
       : undefined;
     const user = new User(
-      undefined, // MongoDB will generate _id
+      undefined,
       dto.clerkUserId,
       dto.email,
       dto.firstName,
@@ -49,7 +51,10 @@ export class UserService {
     });
     return dbUser;
   }
-  async deleteUser(id: string): Promise<void> {
-    await this.userRepository.delete(id);
+  async deleteUser(id: string): Promise<User | null> {
+    this.logger.debug(`Deleting user ${id}`);
+    const deletedUser = await this.userRepository.delete(id);
+    this.logger.debug(`Deleted user ${id}`, deletedUser);
+    return deletedUser;
   }
 }

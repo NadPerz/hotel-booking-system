@@ -34,4 +34,8 @@ export class BranchRepositoryImpl extends BranchRepository {
       branchDoc.updatedAt,
     );
   }
+
+  async delete(id: string): Promise<void> {
+    await this.branchModel.deleteOne({ _id: id });
+  }
 }

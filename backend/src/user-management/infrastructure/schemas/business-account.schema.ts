@@ -11,7 +11,7 @@ export class BusinessAccount {
   brandName: string;
 
   @Prop({ required: true })
-  ownerId: string;
+  owner: string;
 
   @Prop({ required: true })
   type: string;

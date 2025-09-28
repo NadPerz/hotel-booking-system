@@ -48,13 +48,19 @@ export class ClerkWebhookIntegration implements AuthWebhookHandler {
         (email) => email.id === event.primary_email_address_id,
       )?.email_address || 'test@gmail.com';
 
+    // Extract userType from unsafe_metadata, default to TRAVELER if not provided
+    const userType =
+      event.unsafe_metadata?.userType === UserType.BUSINESS_USER
+        ? UserType.BUSINESS_USER
+        : UserType.TRAVELER;
+
     // Create the CreateUserDto from Clerk event data
     const createUserDto: CreateUserDto = {
       clerkUserId: event.id,
       email: primaryEmail,
       firstName: event.first_name || '',
       lastName: event.last_name || '',
-      userType: UserType.TRAVELER, // Default to traveler, can be updated later
+      userType: userType,
       travelProfile: {
         profilePicture: event.profile_image_url || event.image_url,
         bio: '', // Not available in Clerk data

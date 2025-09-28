@@ -1,14 +1,25 @@
-import { BusinessOnboardingSlice } from "@frontend/features/user-management/business/registration/BusinessRegistrationSlice";
-import { configureStore } from "@reduxjs/toolkit";
-// ...
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+export const reducerBasePath = "api";
 
-export const store = configureStore({
-  reducer: {
-    businessOnboarding: BusinessOnboardingSlice.reducer,
+let getClerkGetTokenFunc: () => Promise<string | null>;
+export const setClerkGetTokenFunc = (getToken: () => Promise<string | null>) => {
+  getClerkGetTokenFunc = getToken;
+  console.log("🚀 ~ setClerkGetTokenFunc ~ getClerkGetTokenFunc:", getClerkGetTokenFunc);
+};
+
+const baseQuery = fetchBaseQuery({
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api",
+  credentials: "include",
+  prepareHeaders: async (headers) => {
+    const token = await getClerkGetTokenFunc();
+    console.log("🚀 ~ token:", token);
+    headers.set("Authorization", `Bearer ${token}`);
+    return headers;
   },
 });
 
-// Infer the `RootState` and `AppDispatch` types from the store itself
-export type RootState = ReturnType<typeof store.getState>;
-// Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
-export type AppDispatch = typeof store.dispatch;
+export const rootApiSlice = createApi({
+  reducerPath: reducerBasePath,
+  baseQuery,
+  endpoints: () => ({}),
+});

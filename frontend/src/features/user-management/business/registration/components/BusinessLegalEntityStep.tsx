@@ -9,12 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { z } from 'zod';
-import { BusinessLegalEntitySchema } from '@shared/types/user-management/BusinessOnboardingSchema';
+import { BusinessLegalEntitySchema } from '@shared/types/user-management';
 
 type BusinessLegalEntityFormData = z.infer<typeof BusinessLegalEntitySchema>
 
 interface BusinessLegalEntityStepProps {
-    onSubmit: () => void;
+    onSubmit: (data: BusinessLegalEntityFormData) => void;
     onPrevious: () => void;
 }
 
@@ -32,7 +32,7 @@ export function BusinessLegalEntityStep({ onSubmit, onPrevious }: BusinessLegalE
 
     const handleSubmit = (data: BusinessLegalEntityFormData) => {
         dispatch(setData(data));
-        onSubmit();
+        onSubmit(data);
     };
 
     return (

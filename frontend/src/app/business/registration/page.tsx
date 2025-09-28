@@ -2,7 +2,7 @@
 import { SignUp } from '@clerk/nextjs'
 import React from 'react'
 import Link from 'next/link'
-import { UserType } from '@shared/types/user-management/BusinessOnboardingSchema'
+import { UserType } from '@shared/types/user-management'
 import { useUser, useClerk } from '@clerk/nextjs'
 
 const Page = () => {

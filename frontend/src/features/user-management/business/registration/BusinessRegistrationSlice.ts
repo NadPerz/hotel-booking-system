@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { BusinessOnboardingSchema } from "../../../../../../shared/types/user-management/BusinessOnboardingSchema";
+import { BusinessOnboardingSchema } from "../../../../../../shared/types/user-management/schemas/BusinessOnboardingSchema";
 
 
 type BusinessOnboardingState = Partial<BusinessOnboardingSchema> & {
@@ -13,6 +13,9 @@ const initialState: BusinessOnboardingState = {
   type: undefined,
   primaryContactNumber: undefined,
   branch: undefined,
+  legalEntityName: undefined,
+  legalEntityAddress: undefined,
+  legalEntitySigner: undefined,
 };
 
 // Redux slice with clean single reducer

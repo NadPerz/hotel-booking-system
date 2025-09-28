@@ -3,7 +3,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UsernameSchema } from '../../../../../../../shared/types/user-management/BusinessOnboardingSchema';
+import { UsernameSchema } from '../../../../../../../shared/types/user-management/schemas/BusinessOnboardingSchema';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setData, prevStep, resetForm } from '../BusinessRegistrationSlice';
 import { Button } from '@/components/ui/button';

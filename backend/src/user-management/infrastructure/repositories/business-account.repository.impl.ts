@@ -23,7 +23,7 @@ export class BusinessAccountRepositoryImpl extends BusinessAccountRepository {
     return new BusinessAccount(
       accountDoc._id.toString(),
       accountDoc.brandName,
-      accountDoc.ownerId,
+      accountDoc.owner,
       accountDoc.type,
       accountDoc.primaryContactNumber,
       accountDoc.legalEntityName,
@@ -33,5 +33,9 @@ export class BusinessAccountRepositoryImpl extends BusinessAccountRepository {
       accountDoc.createdAt,
       accountDoc.updatedAt,
     );
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.businessAccountModel.deleteOne({ _id: id });
   }
 }

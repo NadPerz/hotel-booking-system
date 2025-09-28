@@ -8,11 +8,17 @@ import { resetForm } from '@/features/user-management/business/registration/Busi
 import { BusinessDetailsStep } from '@/features/user-management/business/registration/components/BusinessDetailsStep'
 import { BusinessLegalEntityStep } from '@/features/user-management/business/registration/components/BusinessLegalEntityStep'
 import { ProgressIndicator } from '@/features/user-management/business/registration/components/ProgressIndicator'
-import { completeOnboarding } from './_actions'
+import { completeOnboarding as updateClerkMetadata } from './_actions'
+import { useCompleteOnboardingMutation } from '@frontend/features/user-management/business/businessUser.api'
+import { BusinessLegalEntitySchema } from '@shared/types/user-management'
+import { z } from 'zod'
+
+type BusinessLegalEntityData = z.infer<typeof BusinessLegalEntitySchema>
 
 const STEP_LABELS = ['Business Details', 'Legal Entity'];
 
 export default function Page() {
+    const [completeOnboarding] = useCompleteOnboardingMutation()
     const [error, setError] = React.useState('')
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const { user } = useUser()
@@ -22,28 +28,37 @@ export default function Page() {
     const { currentStep, brandName, type, primaryContactNumber, branch, legalEntityName, legalEntityAddress, legalEntitySigner } = useAppSelector(
         (state) => state.businessOnboarding
     )
-
-    const handleStepChange = () => {
-        // Steps are managed by individual components and Redux
-        // This is just for any additional side effects if needed
+    const businessOnboardingData = {
+        brandName,
+        type,
+        primaryContactNumber,
+        branch,
+        legalEntityName,
+        legalEntityAddress,
+        legalEntitySigner
     }
 
-    const handleFinalSubmit = async () => {
+
+    const handleStepChange = () => {
+    }
+
+    const handleFinalSubmit = async (legalEntityData?: BusinessLegalEntityData) => {
         setIsSubmitting(true)
         setError('')
 
         try {
-            // Create FormData with the collected information
-            const formData = new FormData()
-            formData.append('brandName', brandName || '')
-            formData.append('type', type || '')
-            formData.append('primaryContactNumber', primaryContactNumber || '')
-            formData.append('branch', JSON.stringify(branch))
-            formData.append('legalEntityName', legalEntityName || '')
-            formData.append('legalEntityAddress', legalEntityAddress || '')
-            formData.append('legalEntitySigner', legalEntitySigner || '')
-            console.log("FIlled formData-------------------------------------–––––––––––-", formData)
-            const res = await completeOnboarding(formData)
+            // Merge the legal entity data with the existing business data
+            const completeBusinessData = {
+                ...businessOnboardingData,
+                ...legalEntityData
+            }
+            
+            console.log('businessOnboardingData', JSON.stringify(completeBusinessData))
+
+            //update database with business onboarding details
+            await completeOnboarding(completeBusinessData).unwrap()
+            //updating clerk metadata with onboarding complete
+            const res = await updateClerkMetadata();
 
             if (res?.message) {
                 // Reloads the user's data from the Clerk API

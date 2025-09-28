@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { UserType } from "@shared/types/user-management/BusinessOnboardingSchema";
+import { UserType } from "@shared/types/user-management/user.types";
 
 const isOnboardingRoute = createRouteMatcher(["/business/onboarding"]);
 const isPublicRoute = createRouteMatcher(["/sign-in(.*)", "/", "/business/registration"]);
@@ -13,9 +13,13 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.next();
   }
 
-  if (!isAuthenticated && !isPublicRoute(req)) {
-    // Add custom logic to run before redirecting
+  if(!isAuthenticated && isOnboardingRoute(req)) {
+    const onboardingUrl = new URL("/business/registration", req.url);
+    return NextResponse.redirect(onboardingUrl);
+  }
 
+  if (!isAuthenticated && !isPublicRoute(req) && !isOnboardingRoute(req)) {
+    // Add custom logic to run before redirecting
     return redirectToSignIn();
   }
   if (

@@ -8,7 +8,7 @@ export class BusinessAccount {
   constructor(
     public readonly id: string | undefined,
     public readonly brandName: string,
-    public readonly ownerId: string,
+    public readonly owner: string,
     public readonly type: string,
     public readonly primaryContactNumber: string,
     public readonly legalEntityName: string,

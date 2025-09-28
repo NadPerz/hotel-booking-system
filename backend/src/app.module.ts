@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ItineraryModule } from './itinerary/itinerary.module';
@@ -11,6 +12,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserManagementModule } from './user-management/user-management.module';
 import { StorageModule } from './shared/kernel/storage/storage.module';
+import { ClerkMiddleware } from './user-management/infrastructure/integrations/clerkMiddleware.integration';
+import { ClerkAuthGuard } from './shared/guards/clerk-auth-guard';
+import { SharedModule } from './shared/shared.module';
 
 @Module({
   imports: [
@@ -31,10 +35,20 @@ import { StorageModule } from './shared/kernel/storage/storage.module';
     SocialModule,
     UserManagementModule,
     EventModule,
-
+    SharedModule,
     StorageModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ClerkAuthGuard,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(ClerkMiddleware).forRoutes('*');
+  }
+}

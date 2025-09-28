@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
-import { BusinessDetailsSchema, BusinessType } from '@shared/types/user-management/BusinessOnboardingSchema';
+import { BusinessDetailsSchema, BusinessType } from '@shared/types/user-management';
 import { APIProvider } from '@vis.gl/react-google-maps';
 import { CustomPlacesAutocomplete } from './CustomPlacesAutocomplete';
 import { z } from 'zod';
