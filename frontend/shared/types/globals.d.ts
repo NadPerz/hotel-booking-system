@@ -4,7 +4,7 @@ declare global {
   interface CustomJwtSessionClaims {
     metadata: {
       onboardingComplete?: boolean;
-      user_id: string;
+      _id: string;
       business_account_id: string | undefined;
       branch_id: string | undefined;
     };

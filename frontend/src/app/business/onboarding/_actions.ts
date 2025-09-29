@@ -12,7 +12,7 @@ export const completeOnboarding = async () => {
   const client = await clerkClient();
 
   try {
-    const res = await client.users.updateUser(userId, {
+    const res = await client.users.updateUserMetadata(userId, {
       publicMetadata: {
         onboardingComplete: true,
       },

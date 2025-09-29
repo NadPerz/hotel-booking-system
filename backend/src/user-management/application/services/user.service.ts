@@ -45,10 +45,20 @@ export class UserService {
       socialSettings,
     );
 
+    this.logger.debug(`Creating user with Clerk ID: ${user.clerkUserId}`);
     const dbUser = await this.userRepository.save(user);
+    this.logger.debug(`User saved to database with ID: ${dbUser.id}`);
+
+    this.logger.debug(
+      `Updating Clerk public metadata for user with Clerk ID: ${dbUser.clerkUserId}`,
+    );
     await this.clerkIntegration.updateUserPublicMetadata(dbUser.clerkUserId, {
       _id: dbUser.id,
     });
+    this.logger.debug(
+      `Clerk public metadata updated for user with Clerk ID: ${dbUser.clerkUserId}`,
+    );
+
     return dbUser;
   }
   async deleteUser(id: string): Promise<User | null> {

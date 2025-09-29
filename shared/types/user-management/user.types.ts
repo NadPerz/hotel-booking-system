@@ -27,7 +27,7 @@ export enum BusinessType {
 export type AuthenticatedUser = {
   clerk_id: string;
   role: UserRole;
-  user_id: string | undefined;
+  _id: string | undefined;
   business_account_id: string | undefined;
   branch_id: string | undefined;
 };

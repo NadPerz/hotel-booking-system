@@ -1,10 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { BusinessOnboardingData } from '@shared/types/user-management';
+import {
+  AuthenticatedUser,
+  BusinessOnboardingData,
+} from '@shared/types/user-management';
 import { Branch } from 'src/user-management/domain/branch/branch.entity';
 import { BusinessAccount } from 'src/user-management/domain/business-account/business-account.entity';
 import { BranchRepository } from 'src/user-management/domain/repositories/branch.repository';
 import { BusinessAccountRepository } from 'src/user-management/domain/repositories/business-account.repository';
 import { UserRepository } from 'src/user-management/domain/repositories/user.repository';
+import { ClerkIntegration } from 'src/user-management/infrastructure/integrations/clerk.integration';
 
 //includes both business account and branch services
 
@@ -15,16 +19,20 @@ export class BusinessAccountService {
     private readonly userRepository: UserRepository,
     private readonly businessAccountRepository: BusinessAccountRepository,
     private readonly branchRepository: BranchRepository,
+    private readonly clerkIntegration: ClerkIntegration,
   ) {}
 
-  async completeOnboarding(ownerId: string, body: BusinessOnboardingData) {
+  async completeOnboarding(
+    user: AuthenticatedUser,
+    body: BusinessOnboardingData,
+  ) {
     this.logger.log('🚀 Starting onboarding completion');
     this.logger.debug(
       '📋 Received onboarding data:',
       JSON.stringify(body, null, 2),
     );
 
-    this.logger.debug('👤 Using ownerId:', ownerId);
+    this.logger.debug('👤 Using ownerId:', user);
 
     // Log business account creation
     this.logger.debug('🏢 Creating business account with data:', {
@@ -39,7 +47,7 @@ export class BusinessAccountService {
     const businessAccount = new BusinessAccount(
       undefined,
       body.brandName,
-      ownerId,
+      user._id!,
       body.type,
       body.primaryContactNumber,
       body.legalEntityName,
@@ -76,17 +84,28 @@ export class BusinessAccountService {
     this.logger.debug(
       '👤 Updating user with business account and branch IDs...',
     );
-    const user = await this.userRepository.update(ownerId, {
+    const updatedUser = await this.userRepository.update(user._id!, {
       businessAccountId: savedBusinessAccount.id!,
       branchId: savedBranch.id!,
     });
     this.logger.log('✅ User updated successfully');
 
     const result = {
-      user: user,
+      user: updatedUser,
       businessAccount: savedBusinessAccount,
       branch: savedBranch,
     };
+
+    this.logger.debug('🔄 Updating Clerk user public metadata...', {
+      clerkId: user.clerk_id,
+      businessAccountId: savedBusinessAccount.id!,
+      branchId: savedBranch.id!,
+    });
+    await this.clerkIntegration.updateUserPublicMetadata(user.clerk_id, {
+      business_account_id: savedBusinessAccount.id!,
+      branch_id: savedBranch.id!,
+    });
+    this.logger.log('✅ Clerk user public metadata updated successfully');
 
     this.logger.log('🎉 Onboarding completed successfully');
     this.logger.debug('📊 Final result:', JSON.stringify(result, null, 2));

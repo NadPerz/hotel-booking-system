@@ -1,10 +1,12 @@
 import { BusinessOnboardingSlice } from "../features/user-management/business/registration/BusinessRegistrationSlice";
 import { configureStore } from "@reduxjs/toolkit";
-import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
+import { useDispatch, useSelector, TypedUseSelectorHook } from "react-redux";
+import { reducerBasePath, rootApiSlice } from "./api/rootApiSlice";
 
 export const store = configureStore({
   reducer: {
     businessOnboarding: BusinessOnboardingSlice.reducer,
+    [reducerBasePath]: rootApiSlice.reducer, // Add this line
   },
 });
 

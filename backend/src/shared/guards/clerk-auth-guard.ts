@@ -32,7 +32,7 @@ export class ClerkAuthGuard implements CanActivate {
         clerk_id: auth.userId,
         business_account_id: auth.sessionClaims?.metadata?.business_account_id,
         branch_id: auth.sessionClaims?.metadata?.branch_id,
-        user_id: auth.sessionClaims?.metadata?.user_id,
+        _id: auth.sessionClaims?.metadata?._id,
         role: UserRole.BUSINESS_OWNER,
       };
       req.user = user;
