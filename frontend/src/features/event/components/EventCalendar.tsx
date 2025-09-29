@@ -1,0 +1,102 @@
+import React, { useState, useEffect } from 'react';
+import { Calendar, luxonLocalizer, Views } from 'react-big-calendar';
+import { DateTime } from 'luxon';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { getEvents } from '../lib/event-api';
+import EventForm from '../create/EventForm';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+
+const localizer = luxonLocalizer(DateTime);
+
+type SlotInfoType = {
+  start: Date;
+  end: Date;
+  slots: Date[];
+  action: string;
+};
+
+const EventCalendar = () => {
+  const [events, setEvents] = useState<any[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<SlotInfoType | null>(null);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const eventData = await getEvents();
+        const formattedEvents = eventData.map(event => ({
+          ...event,
+          start: DateTime.fromISO(event.startDate).toJSDate(),
+          end: DateTime.fromISO(event.endDate).toJSDate(),
+          title: event.eventName,
+        }));
+        setEvents(formattedEvents);
+      } catch (error) {
+        console.error('Failed to fetch events:', error);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  const handleSelectSlot = (slotInfo) => {
+    setSelectedSlot(slotInfo);
+    setIsDialogOpen(true);
+  };
+
+  const handleEventCreated = () => {
+    setIsDialogOpen(false);
+    // Refresh events
+    const fetchEvents = async () => {
+      try {
+        const eventData = await getEvents();
+        const formattedEvents = eventData.map(event => ({
+          ...event,
+          start: DateTime.fromISO(event.startDate).toJSDate(),
+          end: DateTime.fromISO(event.endDate).toJSDate(),
+          title: event.eventName,
+        }));
+        setEvents(formattedEvents);
+      } catch (error) {
+        console.error('Failed to fetch events:', error);
+      }
+    };
+
+    fetchEvents();
+  };
+
+  return (
+    <div>
+      <Calendar
+        localizer={localizer}
+        events={events}
+        startAccessor="start"
+        endAccessor="end"
+        style={{ height: 500 }}
+        selectable
+        onSelectSlot={handleSelectSlot}
+        defaultView={Views.MONTH}
+      />
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Event</DialogTitle>
+          </DialogHeader>
+          {selectedSlot && (
+            <EventForm
+              initialValues={{
+                startDate: DateTime.fromJSDate(selectedSlot.start).toISODate(),
+                endDate: DateTime.fromJSDate(selectedSlot.end).toISODate(),
+                startTime: DateTime.fromJSDate(selectedSlot.start).toFormat('HH:mm'),
+                endTime: DateTime.fromJSDate(selectedSlot.end).toFormat('HH:mm'),
+              }}
+              onSuccess={handleEventCreated}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default EventCalendar;

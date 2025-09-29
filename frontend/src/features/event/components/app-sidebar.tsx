@@ -17,7 +17,19 @@ import {
   IconSearch,
   IconSettings,
   IconUsers,
-  IconCalendarEvent
+  IconCalendarEvent,
+  IconTicket,
+  IconMapPin,
+  IconLocation,
+  IconUserCircle,
+  IconCategory,
+  IconTag,
+  IconBookmark,
+  IconHash,
+  IconUserCheck,
+  IconCheckbox,
+  IconMail,
+  IconLayoutDashboard
 } from "@tabler/icons-react"
 
 import { NavDocuments } from "@/features/event/components/nav-documents"
@@ -43,12 +55,12 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
-      icon: IconDashboard,
+      url: "/admin/event",
+      icon: IconLayoutDashboard,
     },
     {
       title: "Calendar",
-      url: "#",
+      url: "/admin/event/calendar",
       icon: IconCalendarEvent,
     },
     {
@@ -59,27 +71,27 @@ const data = {
     {
       title: "Venues",
       url: "/admin/event/venues",
-      icon: IconChartBar,
+      icon: IconMapPin,
     },
     {
       title: "Organizers",
       url: "/admin/event/organizers",
-      icon: IconFolder,
+      icon: IconUsers,
     },
     {
       title: "Categories",
       url: "/admin/event/categories",
-      icon: IconFolder,
+      icon: IconCategory,
     },
     {
       title: "HashTags",
       url: "/admin/event/hashtags",
-      icon: IconUsers,
+      icon: IconHash,
     },
     {
       title: "RSVPs",
       url: "/admin/event/rsvps",
-      icon: IconUsers,
+      icon: IconUserCheck,
     },
     
   ],
