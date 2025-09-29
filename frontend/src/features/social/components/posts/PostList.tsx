@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAllPosts } from "../lib/post.api";
-import PostCard, { Post } from "./PostCard";
+import { getAllPosts } from "../../lib/post.api";
+import PostCard from "./PostCard";
+import { Skeleton } from "@frontend/components/ui/skeleton";
+import PostListSkeleton from "./PostListSkeleton";
+import { Post } from "../../types/social.types";
 
 const STATIC_USER_ID = "68bb23a6701962edcadb67e0";
 
@@ -22,7 +25,7 @@ const PostList: React.FC = () => {
     setPosts((prev) => prev.filter((post) => post.id !== id));
   };
 
-  if (loading) return <div>Loading posts...</div>;
+  if (loading) return <PostListSkeleton count={5} />;
 
   return (
     <div>

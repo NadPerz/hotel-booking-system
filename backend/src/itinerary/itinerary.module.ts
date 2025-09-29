@@ -14,7 +14,7 @@ import {
 } from './application/use-cases/itinerary-generation';
 import { HotelsRepository } from './infrastructure/repositories/mocks/hotels.repository.mock';
 import { AttractionsRepository } from './infrastructure/repositories/mocks/attraction.repository.mock';
-import { GoogleMapsService } from './infrastructure/external-api/google-maps-service';
+import { GoogleMapsService } from './infrastructure/integrations/google-maps-service';
 import { ItineraryChatServiceMock } from './application/services/mocks/itinerary-chat.service.mock';
 
 @Module({

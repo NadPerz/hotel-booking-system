@@ -8,10 +8,12 @@ import {
   InternalServerErrorException,
   Logger,
   Param,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
 import { CreatePostDto } from '@shared/types/social/create-post.dto';
+import { UpdatePostDto } from 'src/social/application/dtos/update-post.dto';
 import { PostService } from 'src/social/application/services/post.service';
 
 @Controller('social/posts')
@@ -62,5 +64,23 @@ export class PostController {
     });
     await this.postService.delete(postId, userId);
     return { success: true, message: 'Post deleted successfully' };
+  }
+
+  @Patch(':postId')
+  async update(
+    @Param('postId') postId: string,
+    @Body() updatePostDto: UpdatePostDto & { user: string },
+  ) {
+    const userId = updatePostDto.user;
+
+    this.logger.log(`PATCH /posts/:postId request`, {
+      userId,
+      postId,
+      hasContent: !!updatePostDto.content,
+      mediaToAdd: updatePostDto.mediaFilesToAdd?.length || 0,
+      mediaToRemove: updatePostDto.mediaFilesToRemove?.length || 0,
+    });
+
+    return await this.postService.update(postId, updatePostDto, userId);
   }
 }
