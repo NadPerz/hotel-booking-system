@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { DateTime } from 'luxon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +45,22 @@ const formSchema = z.object({
   organizerId: z.string(),
   categoryId: z.string(),
   hashtagIds: z.array(z.string()),
+})
+
+.refine((data) => {
+  const start = DateTime.fromISO(`${data.startDate}T${data.startTime}`);
+  const end = DateTime.fromISO(`${data.endDate}T${data.endTime}`);
+  return end >= start;
+}, {
+  message: 'End date/time must be after start date/time.',
+  path: ['endDate'],
+})
+.refine((data) => {
+  const start = DateTime.fromISO(`${data.startDate}T${data.startTime}`);
+  return start >= DateTime.now().startOf('minute');
+}, {
+  message: 'Cannot create an event in the past.',
+  path: ['startDate'],
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -456,7 +473,7 @@ const EventForm: React.FC<EventFormProps> = ({ initialValues, onSuccess }) => {
                       if (!tag) return null;
                       return (
                         <Badge key={id} variant="secondary" className="flex items-center gap-2">
-                          {tag.hashtagName}
+                          #{tag.hashtagName}
                           <button
                             type="button"
                             aria-label={`Remove ${tag.hashtagName}`}
@@ -498,7 +515,7 @@ const EventForm: React.FC<EventFormProps> = ({ initialValues, onSuccess }) => {
                                     checked ? "bg-muted" : "hover:bg-muted/60"
                                   )}
                                 >
-                                  <span>{hashtag.hashtagName}</span>
+                                  <span>#{hashtag.hashtagName}</span>
                                   <input
                                     type="checkbox"
                                     className="h-4 w-4"

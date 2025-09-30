@@ -25,10 +25,16 @@ const EventCalendar = () => {
     const fetchEvents = async () => {
       try {
         const eventData = await getEvents();
+        // const formattedEvents = eventData.map(event => ({
+        //   ...event,
+        //   start: DateTime.fromISO(event.startDate).toJSDate(),
+        //   end: DateTime.fromISO(event.endDate).toJSDate(),
+        //   title: event.eventName,
+        // }));
         const formattedEvents = eventData.map(event => ({
           ...event,
-          start: DateTime.fromISO(event.startDate).toJSDate(),
-          end: DateTime.fromISO(event.endDate).toJSDate(),
+          start: DateTime.fromISO(`${event.startDate}T${event.startTime || '00:00'}`).toJSDate(),
+          end: DateTime.fromISO(`${event.endDate}T${event.endTime || '23:59'}`).toJSDate(),
           title: event.eventName,
         }));
         setEvents(formattedEvents);
@@ -40,10 +46,24 @@ const EventCalendar = () => {
     fetchEvents();
   }, []);
 
+  // const handleSelectSlot = (slotInfo) => {
+  //   setSelectedSlot(slotInfo);
+  //   setIsDialogOpen(true);
+  // };
+
   const handleSelectSlot = (slotInfo) => {
-    setSelectedSlot(slotInfo);
-    setIsDialogOpen(true);
-  };
+  const now = DateTime.now();
+  const slotStart = DateTime.fromJSDate(slotInfo.start);
+
+  if (slotStart < now) {
+    // You can use a toast, snackbar, or alert here
+    alert('Cannot create events in the past!');
+    return;
+  }
+
+  setSelectedSlot(slotInfo);
+  setIsDialogOpen(true);
+};
 
   const handleEventCreated = () => {
     setIsDialogOpen(false);
