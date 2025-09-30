@@ -1,12 +1,12 @@
 
 'use client';
 
-import EventCalendar from '@/features/event/components/EventCalendar';
+import EventCalendar from '@frontend/features/event/calendar/EventCalendar';
 
 const EventCalendarPage = () => {
   return (
-    <div>
-      <h1>Event Calendar</h1>
+    <div className='p-8'>
+      <h1 className="text-2xl font-bold">Event Calendar</h1>
       <EventCalendar />
     </div>
   );

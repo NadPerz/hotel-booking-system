@@ -5,6 +5,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { getEvents } from '../lib/event-api';
 import EventForm from '../create/EventForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@frontend/components/ui/scroll-area';
 
 const localizer = luxonLocalizer(DateTime);
 
@@ -72,26 +73,28 @@ const EventCalendar = () => {
         events={events}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: 500 }}
+        style={{ height: "80vh" }}
         selectable
         onSelectSlot={handleSelectSlot}
         defaultView={Views.MONTH}
       />
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Event</DialogTitle>
           </DialogHeader>
           {selectedSlot && (
-            <EventForm
-              initialValues={{
-                startDate: DateTime.fromJSDate(selectedSlot.start).toISODate(),
-                endDate: DateTime.fromJSDate(selectedSlot.end).toISODate(),
-                startTime: DateTime.fromJSDate(selectedSlot.start).toFormat('HH:mm'),
-                endTime: DateTime.fromJSDate(selectedSlot.end).toFormat('HH:mm'),
-              }}
-              onSuccess={handleEventCreated}
-            />
+            <ScrollArea className="h-full">
+              <EventForm
+                initialValues={{
+                  startDate: DateTime.fromJSDate(selectedSlot.start).toISODate(),
+                  endDate: DateTime.fromJSDate(selectedSlot.end).toISODate(),
+                  startTime: DateTime.fromJSDate(selectedSlot.start).toFormat('HH:mm'),
+                  endTime: DateTime.fromJSDate(selectedSlot.end).toFormat('HH:mm'),
+                }}
+                onSuccess={handleEventCreated}
+              />
+            </ScrollArea>
           )}
         </DialogContent>
       </Dialog>
