@@ -7,6 +7,7 @@ export const STATIC_USER_ID = "68bb23a6701962edcadb67e0";
 // Post API
 export const createPost = async (
   content: string,
+  mediaFiles?: string[],
   imageUrl?: string
 ): Promise<any> => {
   const response = await fetch(`${API_BASE_URL_SOCIAL}/posts`, {
@@ -18,6 +19,7 @@ export const createPost = async (
       user: STATIC_USER_ID,
       content: content,
       image: imageUrl,
+      mediaFiles: mediaFiles,
     }),
   });
 
@@ -54,6 +56,46 @@ export const deletePost = async (postId: string): Promise<any> => {
 
   if (!response.ok) {
     throw new Error(`Failed to delete post with ID: ${postId}`);
+  }
+
+  return response.json();
+};
+
+/**
+ * Updates an existing post with new content and/or media files.
+ * Supports partial updates allowing users to update content, add media, or remove media independently.
+ * @param postId - The ID of the post to update
+ * @param updates - Object containing the fields to update
+ * @param updates.content - Optional new content for the post
+ * @param updates.mediaFilesToAdd - Optional array of new media file keys to add
+ * @param updates.mediaFilesToRemove - Optional array of existing media file keys to remove
+ * @returns Promise resolving to the API response with updated post data
+ * @throws Error if the update request fails
+ */
+export const updatePost = async (
+  postId: string,
+  updates: {
+    content?: string;
+    mediaFilesToAdd?: string[];
+    mediaFilesToRemove?: string[];
+  }
+): Promise<any> => {
+  const response = await fetch(`${API_BASE_URL_SOCIAL}/posts/${postId}`, {
+    method: "PATCH", // Using PATCH for partial updates
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      user: STATIC_USER_ID, // Include user ID for ownership verification
+      ...updates, // Spread the update fields
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    const errorMessage =
+      errorData?.message || `Failed to update post with ID: ${postId}`;
+    throw new Error(errorMessage);
   }
 
   return response.json();

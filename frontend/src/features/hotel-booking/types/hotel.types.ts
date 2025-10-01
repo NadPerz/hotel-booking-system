@@ -2,12 +2,11 @@ export interface Hotel {
   id: string;
   title: string;
   description: string;
-  image: string;
+  image?: string;
   country: string;
   state: string;
   city: string;
-  locationDescription: string;
-  userId: string;
+  locationDescription?: string; // Made optional
   gym: boolean;
   spa: boolean;
   bar: boolean;
@@ -20,17 +19,19 @@ export interface Hotel {
   movieNights: boolean;
   swimmingPool: boolean;
   coffeeShop: boolean;
-  createdAt: string;
-  updatedAt: string;
+  userId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateHotelRequest {
   title: string;
   description: string;
+  image?: string;
   country: string;
   state: string;
   city: string;
-  locationDescription: string;
+  locationDescription?: string; // Made optional to match form
   gym: boolean;
   spa: boolean;
   bar: boolean;
@@ -43,4 +44,19 @@ export interface CreateHotelRequest {
   movieNights: boolean;
   swimmingPool: boolean;
   coffeeShop: boolean;
+}
+
+export interface UpdateHotelRequest extends Partial<CreateHotelRequest> {
+  image?: string;
+}
+
+export interface HotelWithRooms extends Hotel {
+  rooms?: {
+    id: string;
+    title: string;
+    roomPrice: number;
+    image?: string;
+  }[];
+  totalRooms?: number;
+  availableRooms?: number;
 }

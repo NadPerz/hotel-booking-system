@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Providers from '@/lib/providers'
+import Providers from "@/lib/providers";
+import ConditionalNavbar from "@/components/layout/ConditionalNavbar";
+import {
+  ClerkProvider,
+
+
+} from '@clerk/nextjs'
 
 
 const geistSans = Geist({
@@ -25,14 +31,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-         <Providers>
-          {children}
-        </Providers>
+        {/* Centralized providers: Theme + React Query */}
+        <ClerkProvider>
+          <Providers>
+            <ConditionalNavbar />
+
+            {children}
+          </Providers>
+        </ClerkProvider>
       </body>
-    </html>
+    </html >
   );
 }
