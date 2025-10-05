@@ -34,7 +34,7 @@ export default function DashboardHeader() {
             Add Hotel
           </Button>
 
-          {/* Notifications */}
+          Notifications
           <div className="relative">
             <Button variant="ghost" size="sm">
               <Bell className="h-5 w-5" />
@@ -47,10 +47,10 @@ export default function DashboardHeader() {
             </Badge>
           </div>
 
-          {/* Profile */}
+          {/* Profile
           <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">
             <span className="text-white text-sm font-semibold">N</span>
-          </div>
+          </div> */}
         </div>
       </div>
     </header>

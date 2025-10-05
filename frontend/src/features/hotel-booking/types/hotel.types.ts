@@ -1,12 +1,19 @@
+// frontend/src/features/hotel-booking/types/hotel.types.ts
 export interface Hotel {
   id: string;
   title: string;
   description: string;
-  image?: string;
-  country: string;
-  state: string;
   city: string;
-  locationDescription?: string; // Made optional
+  state?: string;
+  country: string;
+  address?: string;
+  locationDescription?: string;
+  image?: string; // ✅ MinIO path
+  imageUrl?: string; // ✅ Signed URL for display
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  // ✅ Individual amenity properties (matching your MongoDB)
   gym: boolean;
   spa: boolean;
   bar: boolean;
@@ -19,19 +26,19 @@ export interface Hotel {
   movieNights: boolean;
   swimmingPool: boolean;
   coffeeShop: boolean;
-  userId?: string;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
+// ✅ Fixed CreateHotelRequest - match backend exactly
 export interface CreateHotelRequest {
   title: string;
   description: string;
-  image?: string;
-  country: string;
-  state: string;
   city: string;
-  locationDescription?: string; // Made optional to match form
+  state?: string;
+  country: string;
+  address?: string;
+  locationDescription?: string;
+  imageFile?: File;
+  // ✅ Individual amenity properties (NOT nested)
   gym: boolean;
   spa: boolean;
   bar: boolean;
@@ -44,19 +51,4 @@ export interface CreateHotelRequest {
   movieNights: boolean;
   swimmingPool: boolean;
   coffeeShop: boolean;
-}
-
-export interface UpdateHotelRequest extends Partial<CreateHotelRequest> {
-  image?: string;
-}
-
-export interface HotelWithRooms extends Hotel {
-  rooms?: {
-    id: string;
-    title: string;
-    roomPrice: number;
-    image?: string;
-  }[];
-  totalRooms?: number;
-  availableRooms?: number;
 }

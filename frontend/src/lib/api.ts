@@ -1,51 +1,66 @@
+// frontend/src/lib/api.ts
 import axios from 'axios';
 
-// Remove /api prefix since your backend doesn't use it
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-
-console.log('🔧 API Base URL:', API_BASE_URL);
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 15000, // Increased timeout
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000,
 });
 
-// Request interceptor
+export const addUserHeaders = (currentUser: any) => {
+  return {
+    'x-user-id': currentUser.id,
+    'X-User-Login': currentUser.login,
+    'x-branch-id': currentUser.businessProfile?.branchId || '',
+    'x-business-account-id': currentUser.businessProfile?.businessAccountId || '',
+    'x-user-first-name': currentUser.businessProfile?.firstName || '',
+    'x-user-last-name': currentUser.businessProfile?.lastName || '',
+    'x-user-type': currentUser.userType
+  };
+};
+
 api.interceptors.request.use(
   (config) => {
-    console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    console.log('🌐 API Request:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      fullUrl: `${config.baseURL}${config.url}`,
+      headers: {
+        'x-user-id': config.headers['x-user-id'],
+        'x-user-first-name': config.headers['x-user-first-name'],
+        'x-user-last-name': config.headers['x-user-last-name']
+      }
+    });
     return config;
   },
-  (error) => {
-    console.error('❌ API Request Error:', error);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor - Clean error handling
 api.interceptors.response.use(
   (response) => {
-    console.log(`✅ API Response: ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`);
+    console.log('✅ API Success:', {
+      status: response.status,
+      url: response.config.url,
+      data: response.data
+    });
     return response;
   },
   (error) => {
-    const errorInfo = {
-      url: error.config?.url || 'Unknown URL',
-      method: error.config?.method?.toUpperCase() || 'Unknown Method',
-      status: error.response?.status || 'No Status',
+    console.error('❌ API Error:', {
       message: error.message,
-      baseURL: error.config?.baseURL || 'No Base URL',
-      fullURL: `${error.config?.baseURL}${error.config?.url}`,
-    };
-
-    // Don't spam console for known missing endpoints
-    if (error.response?.status === 404 && error.config?.url?.includes('/analytics/')) {
-      console.warn(`⚠️ Analytics endpoint not implemented: ${errorInfo.fullURL}`);
-    } else {
-      console.error('❌ API Response Error:', errorInfo);
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url
+    });
+    
+    if (error.code === 'ERR_NETWORK') {
+      console.error('🔴 Backend server not reachable on http://localhost:3000');
+      console.error('💡 Make sure your backend is running');
+      console.error('💡 Check CORS configuration');
     }
     
     return Promise.reject(error);

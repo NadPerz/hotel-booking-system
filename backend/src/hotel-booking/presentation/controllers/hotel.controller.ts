@@ -1,3 +1,4 @@
+// backend/src/hotel-booking/presentation/controllers/hotel.controller.ts
 import {
   Controller,
   Get,
@@ -19,17 +20,83 @@ import { UpdateHotelDto } from '../../application/dtos/update-hotel.dto';
 export class HotelController {
   constructor(private readonly hotelService: HotelService) {}
 
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  async createHotel(
-    @Headers('x-user-id') userId: string = 'test-user-123',
-    @Body() createHotelDto: CreateHotelDto,
+@Post()
+@HttpCode(HttpStatus.CREATED)
+async createHotel(
+  @Body() createHotelDto: CreateHotelDto,
+  @Headers('x-user-id') userId?: string,
+  @Headers('x-user-first-name') firstName?: string,
+  @Headers('x-user-last-name') lastName?: string,
+  @Headers('x-branch-id') branchId?: string,
+  @Headers('x-business-account-id') businessAccountId?: string,
+) {
+  // Use actual user data from headers (no more hardcoded NadPerz)
+  const actualUserId = userId || 'nadijaaa'; // Use actual username
+  const actualFirstName = firstName || 'Nadijaaa';
+  const actualLastName = lastName || 'Pereraaa';
+  const actualBranchId = branchId || '68deb6aac82d1e5d5f8e6234';
+  const actualBusinessAccountId = businessAccountId || '68deb6aac82d1e5d5f8e6232';
+
+  console.log('🏨 Creating hotel with dynamic user:', {
+    userId: actualUserId,
+    firstName: actualFirstName,
+    lastName: actualLastName,
+    branchId: actualBranchId,
+    businessAccountId: actualBusinessAccountId
+  });
+
+  const hotelWithBusinessInfo = {
+    ...createHotelDto,
+    userId: actualUserId, // This will now be "nadijaaa" not "NadPerz"
+    branchId: actualBranchId,
+    businessAccountId: actualBusinessAccountId,
+    userType: 'BUSINESS_USER',
+    ownerName: `${actualFirstName} ${actualLastName}`,
+    createdBy: actualUserId
+  };
+
+  const hotel = await this.hotelService.createHotel(actualUserId, hotelWithBusinessInfo);
+  
+  return {
+    statusCode: HttpStatus.CREATED,
+    message: `Hotel created successfully for ${actualFirstName} ${actualLastName}`,
+    data: {
+      ...hotel,
+      businessProfile: {
+        branchId: actualBranchId,
+        businessAccountId: actualBusinessAccountId,
+        owner: actualUserId,
+        ownerName: `${actualFirstName} ${actualLastName}`,
+        userType: 'BUSINESS_USER'
+      }
+    },
+  };
+}
+
+  @Get('my-hotels')
+  async findMyHotels(
+    @Headers('x-user-id') userId?: string,
+    @Headers('x-branch-id') branchId?: string,
+    @Headers('x-business-account-id') businessAccountId?: string,
   ) {
-    const hotel = await this.hotelService.createHotel(userId, createHotelDto);
+    const actualUserId = userId || 'NadPerz';
+    const actualBranchId = branchId || '68deb6aac82d1e5d5f8e6234';
+    const actualBusinessAccountId = businessAccountId || '68deb6aac82d1e5d5f8e6232';
+
+    // Get hotels for this specific business branch
+    const hotels = await this.hotelService.findHotelsByUser(actualUserId);
+    
     return {
-      statusCode: HttpStatus.CREATED,
-      message: 'Hotel created successfully',
-      data: hotel,
+      statusCode: HttpStatus.OK,
+      message: 'Your business hotels retrieved successfully',
+      data: hotels,
+      count: hotels.length,
+      businessContext: {
+        branchId: actualBranchId,
+        businessAccountId: actualBusinessAccountId,
+        userType: 'BUSINESS_USER',
+        owner: actualUserId
+      }
     };
   }
 
@@ -49,17 +116,6 @@ export class HotelController {
     return {
       statusCode: HttpStatus.OK,
       message: 'Hotels retrieved successfully',
-      data: hotels,
-      count: hotels.length,
-    };
-  }
-
-  @Get('my-hotels')
-  async findMyHotels(@Headers('x-user-id') userId: string = 'test-user-123') {
-    const hotels = await this.hotelService.findHotelsByUser(userId);
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Your hotels retrieved successfully',
       data: hotels,
       count: hotels.length,
     };
@@ -93,10 +149,11 @@ export class HotelController {
   @Put(':id')
   async updateHotel(
     @Param('id') id: string,
-    @Headers('x-user-id') userId: string = 'test-user-123',
     @Body() updateHotelDto: UpdateHotelDto,
+    @Headers('x-user-id') userId?: string,
   ) {
-    const hotel = await this.hotelService.updateHotel(id, userId, updateHotelDto);
+    const actualUserId = userId || 'NadPerz';
+    const hotel = await this.hotelService.updateHotel(id, actualUserId, updateHotelDto);
     return {
       statusCode: HttpStatus.OK,
       message: 'Hotel updated successfully',
@@ -108,8 +165,9 @@ export class HotelController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteHotel(
     @Param('id') id: string,
-    @Headers('x-user-id') userId: string = 'test-user-123',
+    @Headers('x-user-id') userId?: string,
   ) {
-    await this.hotelService.deleteHotel(id, userId);
+    const actualUserId = userId || 'NadPerz';
+    await this.hotelService.deleteHotel(id, actualUserId);
   }
 }

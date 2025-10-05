@@ -1,3 +1,4 @@
+// backend/src/hotel-booking/presentation/controllers/booking.controller.ts
 import {
   Controller,
   Get,
@@ -10,7 +11,6 @@ import {
   HttpStatus,
   HttpCode,
   Headers,
-  BadRequestException,
 } from '@nestjs/common';
 import { BookingService } from '../../application/services/booking.service';
 import { CreateBookingDto } from '../../application/dtos/create-booking.dto';
@@ -23,10 +23,11 @@ export class BookingController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createBooking(
-    @Headers('x-user-id') userId: string = 'test-user-123',
     @Body() createBookingDto: CreateBookingDto,
+    @Headers('x-user-id') userId?: string,
   ) {
-    const booking = await this.bookingService.createBooking(userId, createBookingDto);
+    const actualUserId = userId || 'NadPerz';
+    const booking = await this.bookingService.createBooking(actualUserId, createBookingDto);
     return {
       statusCode: HttpStatus.CREATED,
       message: 'Booking created successfully',
@@ -35,8 +36,9 @@ export class BookingController {
   }
 
   @Get('my-bookings')
-  async findMyBookings(@Headers('x-user-id') userId: string = 'test-user-123') {
-    const bookings = await this.bookingService.findMyBookings(userId);
+  async findMyBookings(@Headers('x-user-id') userId?: string) {
+    const actualUserId = userId || 'NadPerz';
+    const bookings = await this.bookingService.findMyBookings(actualUserId);
     return {
       statusCode: HttpStatus.OK,
       message: 'Your bookings retrieved successfully',
@@ -46,8 +48,9 @@ export class BookingController {
   }
 
   @Get('hotel-bookings')
-  async findHotelBookings(@Headers('x-user-id') hotelOwnerId: string = 'test-user-123') {
-    const bookings = await this.bookingService.findHotelBookings(hotelOwnerId);
+  async findHotelBookings(@Headers('x-user-id') hotelOwnerId?: string) {
+    const actualUserId = hotelOwnerId || 'NadPerz';
+    const bookings = await this.bookingService.findHotelBookings(actualUserId);
     return {
       statusCode: HttpStatus.OK,
       message: 'Hotel bookings retrieved successfully',
@@ -97,10 +100,11 @@ export class BookingController {
   @Put(':id/status')
   async updateBookingStatus(
     @Param('id') id: string,
-    @Headers('x-user-id') userId: string = 'test-user-123',
     @Body() updateDto: UpdateBookingStatusDto,
+    @Headers('x-user-id') userId?: string,
   ) {
-    const booking = await this.bookingService.updateBookingStatus(id, userId, updateDto);
+    const actualUserId = userId || 'NadPerz';
+    const booking = await this.bookingService.updateBookingStatus(id, actualUserId, updateDto);
     return {
       statusCode: HttpStatus.OK,
       message: 'Booking status updated successfully',
@@ -112,8 +116,9 @@ export class BookingController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async cancelBooking(
     @Param('id') id: string,
-    @Headers('x-user-id') userId: string = 'test-user-123',
+    @Headers('x-user-id') userId?: string,
   ) {
-    await this.bookingService.cancelBooking(id, userId);
+    const actualUserId = userId || 'NadPerz';
+    await this.bookingService.cancelBooking(id, actualUserId);
   }
 }

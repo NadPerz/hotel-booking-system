@@ -1,10 +1,13 @@
+// frontend/src/features/hotel-booking/hooks/useHotels.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { hotelApi } from '../services/api/hotels.api';
+import { hotelsApi } from '../services/api/hotels.api';
+import { useCurrentUser } from './useCurrentUser';
 import { Hotel, CreateHotelRequest } from '../types/hotel.types';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export const useHotels = () => {
   const queryClient = useQueryClient();
+  const { currentUser } = useCurrentUser();
 
   // Get all hotels
   const {
@@ -14,35 +17,36 @@ export const useHotels = () => {
   } = useQuery({
     queryKey: ['hotels'],
     queryFn: () => {
-      console.log('🔄 React Query: Fetching hotels...');
-      return hotelApi.getHotels();
+      console.log('🔄 React Query: Fetching all hotels...');
+      return hotelsApi.getAll();
     },
   });
 
-  // Get my hotels
+  // Get my hotels (user-specific)
   const {
     data: myHotels = [],
     isLoading: isLoadingMyHotels,
     error: myHotelsError
   } = useQuery({
-    queryKey: ['my-hotels'],
+    queryKey: ['my-hotels', currentUser.id],
     queryFn: () => {
-      console.log('🔄 React Query: Fetching MY hotels...');
-      return hotelApi.getMyHotels();
+      console.log('🔄 React Query: Fetching MY hotels for user:', currentUser.name);
+      return hotelsApi.getMyHotels(currentUser);
     },
+    enabled: !!currentUser.id,
   });
 
   // Create hotel mutation
   const createHotelMutation = useMutation({
-    mutationFn: (data: CreateHotelRequest & { imageFile?: File }) => {
-      console.log('🔄 Creating hotel via mutation...');
-      return hotelApi.createHotel(data);
+    mutationFn: (data: CreateHotelRequest) => {
+      console.log('🔄 Creating hotel via mutation for user:', currentUser.name);
+      return hotelsApi.create(data, currentUser);
     },
-    onSuccess: (createdHotel: Hotel) => {
+    onSuccess: (createdHotel: any) => {
       console.log('✅ Hotel created successfully:', createdHotel);
       queryClient.invalidateQueries({ queryKey: ['hotels'] });
-      queryClient.invalidateQueries({ queryKey: ['my-hotels'] });
-      toast.success('Hotel created successfully!');
+      queryClient.invalidateQueries({ queryKey: ['my-hotels', currentUser.id] });
+      toast.success(`Hotel "${createdHotel.data?.title}" created successfully!`);
     },
     onError: (error: any) => {
       console.error('❌ Hotel creation failed:', error);
@@ -52,15 +56,14 @@ export const useHotels = () => {
 
   // Update hotel mutation
   const updateHotelMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<CreateHotelRequest> & { imageFile?: File } }) => {
+    mutationFn: ({ id, data }: { id: string; data: Partial<CreateHotelRequest> }) => {
       console.log('🔄 Updating hotel via mutation:', id);
-      return hotelApi.updateHotel(id, data);
+      return hotelsApi.update(id, data, currentUser);
     },
-    onSuccess: (updatedHotel: Hotel) => {
+    onSuccess: (updatedHotel: any) => {
       console.log('✅ Hotel updated successfully:', updatedHotel);
       queryClient.invalidateQueries({ queryKey: ['hotels'] });
-      queryClient.invalidateQueries({ queryKey: ['my-hotels'] });
-      queryClient.invalidateQueries({ queryKey: ['hotel', updatedHotel.id] });
+      queryClient.invalidateQueries({ queryKey: ['my-hotels', currentUser.id] });
       toast.success('Hotel updated successfully!');
     },
     onError: (error: any) => {
@@ -71,10 +74,10 @@ export const useHotels = () => {
 
   // Delete hotel mutation
   const deleteHotelMutation = useMutation({
-    mutationFn: (id: string) => hotelApi.deleteHotel(id),
+    mutationFn: (id: string) => hotelsApi.delete(id, currentUser),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hotels'] });
-      queryClient.invalidateQueries({ queryKey: ['my-hotels'] });
+      queryClient.invalidateQueries({ queryKey: ['my-hotels', currentUser.id] });
       toast.success('Hotel deleted successfully!');
     },
     onError: (error: any) => {
@@ -84,6 +87,11 @@ export const useHotels = () => {
 
   // Debug log
   console.log('🏨 useHotels Hook State:', {
+    currentUser: {
+      id: currentUser.id,
+      name: currentUser.name,
+      userType: currentUser.userType
+    },
     totalHotels: hotels.length,
     myHotels: myHotels.length,
     isLoading,
@@ -95,6 +103,7 @@ export const useHotels = () => {
     // Data
     hotels,
     myHotels,
+    currentUser, // Include current user in return
     
     // Loading states
     isLoading,
@@ -116,7 +125,7 @@ export const useHotels = () => {
 export const useHotel = (id: string) => {
   return useQuery({
     queryKey: ['hotel', id],
-    queryFn: () => hotelApi.getHotel(id),
+    queryFn: () => hotelsApi.getById(id),
     enabled: !!id,
   });
 };

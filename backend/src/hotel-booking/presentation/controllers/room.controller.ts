@@ -1,3 +1,4 @@
+// backend/src/hotel-booking/presentation/controllers/room.controller.ts
 import {
   Controller,
   Get,
@@ -10,7 +11,6 @@ import {
   HttpStatus,
   HttpCode,
   Headers,
-  BadRequestException,
 } from '@nestjs/common';
 import { RoomService } from '../../application/services/room.service';
 import { CreateRoomDto } from '../../application/dtos/create-room.dto';
@@ -24,14 +24,36 @@ export class RoomController {
   @HttpCode(HttpStatus.CREATED)
   async createRoom(
     @Body() createRoomDto: CreateRoomDto,
-    @Headers('x-user-id') userId?: string,  // Optional parameter comes last   
+    @Headers('x-user-id') userId?: string,
+    @Headers('x-branch-id') branchId?: string,
+    @Headers('x-business-account-id') businessAccountId?: string,
   ) {
-    const actualUserId = userId || 'test-user-123';  // Use default if not provided
-    const room = await this.roomService.createRoom(actualUserId, createRoomDto);
+    const actualUserId = userId || 'NadPerz';
+    const actualBranchId = branchId || '68deb6aac82d1e5d5f8e6234';
+    const actualBusinessAccountId = businessAccountId || '68deb6aac82d1e5d5f8e6232';
+
+    const roomWithBusinessInfo = {
+      ...createRoomDto,
+      branchId: actualBranchId,
+      businessAccountId: actualBusinessAccountId,
+      userId: actualUserId,
+      userType: 'BUSINESS_USER'
+    };
+
+    const room = await this.roomService.createRoom(actualUserId, roomWithBusinessInfo);
+    
     return {
       statusCode: HttpStatus.CREATED,
-      message: 'Room created successfully',
-      data: room,
+      message: 'Room created successfully for business',
+      data: {
+        ...room,
+        businessProfile: {
+          branchId: actualBranchId,
+          businessAccountId: actualBusinessAccountId,
+          owner: actualUserId,
+          userType: 'BUSINESS_USER'
+        }
+      },
     };
   }
 
@@ -78,9 +100,9 @@ export class RoomController {
   async updateRoom(
     @Param('id') id: string,
     @Body() updateRoomDto: UpdateRoomDto,
-    @Headers('x-user-id') userId?: string,  // Optional parameter comes last
+    @Headers('x-user-id') userId?: string,
   ) {
-    const actualUserId = userId || 'test-user-123';  // Use default if not provided
+    const actualUserId = userId || 'NadPerz';
     const room = await this.roomService.updateRoom(id, actualUserId, updateRoomDto);
     return {
       statusCode: HttpStatus.OK,
@@ -93,9 +115,9 @@ export class RoomController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteRoom(
     @Param('id') id: string,
-    @Headers('x-user-id') userId?: string,  // Optional parameter comes last
+    @Headers('x-user-id') userId?: string,
   ) {
-    const actualUserId = userId || 'test-user-123';  // Use default if not provided
+    const actualUserId = userId || 'NadPerz';
     await this.roomService.deleteRoom(id, actualUserId);
   }
 }

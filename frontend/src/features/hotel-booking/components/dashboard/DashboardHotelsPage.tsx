@@ -1,147 +1,123 @@
-"use client";
+// frontend/src/features/hotel-booking/components/dashboard/DashboardHotelsPage.tsx
+'use client';
 
-import { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
+import { Plus, Building2, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Plus, Search } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+
 import { useHotels } from '../../hooks/useHotels';
-import { Hotel } from '../../types/hotel.types';
-import HotelCard from '../hotels/HotelCard';
-import HotelForm from '../hotels/HotelForm';
-import LoadingSpinner from '../shared/LoadingSpinner';
-import { toast } from 'react-hot-toast';
 
 export default function DashboardHotelsPage() {
   const router = useRouter();
-  const { myHotels, isLoadingMyHotels, deleteHotel } = useHotels();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingHotel, setEditingHotel] = useState<Hotel | null>(null);
+  const { 
+    myHotels, 
+    isLoadingMyHotels, 
+    currentUser 
+  } = useHotels();
 
-  // Filter hotels based on search
-  const filteredHotels = myHotels.filter(hotel =>
-    hotel.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    hotel.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    hotel.country.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
- // Make sure this function navigates correctly
-const handleViewDetails = (hotel: Hotel) => {
-  console.log('🏨 Navigating to hotel details:', hotel.id);
-  router.push(`/hotels/${hotel.id}`); // Should go to hotel details, NOT room creation
-};
-
-  const handleEdit = (hotel: Hotel) => {
-    setEditingHotel(hotel);
-    setShowCreateForm(true);
+  const handleCreateHotel = () => {
+    console.log('🏨 Navigating to create hotel page');
+    router.push('/hotels/create');
   };
-
-  const handleDelete = async (hotel: Hotel) => {
-    try {
-      await deleteHotel(hotel.id);
-      toast.success(`Hotel "${hotel.title}" deleted successfully`);
-    } catch (error) {
-      toast.error('Failed to delete hotel');
-    }
-  };
-
- const handleManageRooms = (hotel: Hotel) => {
-  console.log('🏠 Navigating to room management:', hotel.id);
-  router.push(`/hotels/${hotel.id}/rooms`); // This should go to room list (not implemented yet)
-};
-
-  const handleCreateSuccess = () => {
-    setShowCreateForm(false);
-    setEditingHotel(null);
-    toast.success('Hotel saved successfully!');
-  };
-
-  const handleCloseForm = () => {
-    setShowCreateForm(false);
-    setEditingHotel(null);
-  };
-
-  if (isLoadingMyHotels) {
-    return <LoadingSpinner />;
-  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Hotels</h1>
-          <p className="text-gray-600">
-            Manage your {myHotels.length} hotel{myHotels.length !== 1 ? 's' : ''}
+          <h1 className="text-3xl font-bold text-gray-900">Hotel Management</h1>
+          <p className="text-gray-600 mt-1">
+            Welcome back, {currentUser.name}! Manage your {myHotels?.length || 0} hotel{(myHotels?.length || 0) !== 1 ? 's' : ''}
           </p>
         </div>
-        <Button onClick={() => setShowCreateForm(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Hotel
-        </Button>
+        
+        <div className="flex gap-3">
+          <Button 
+            onClick={handleCreateHotel}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Hotel
+          </Button>
+          <Button variant="outline">
+            <BarChart3 className="w-4 h-4 mr-2" />
+            Analytics
+          </Button>
+        </div>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-        <Input
-          placeholder="Search hotels..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+      {/* Business Profile Banner */}
+      {currentUser.businessProfile && (
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Building2 className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-blue-900">
+                  Business Account: {currentUser.businessProfile.firstName} {currentUser.businessProfile.lastName} Hotels
+                </h3>
+                <p className="text-sm text-blue-700">
+                  Branch ID: {currentUser.businessProfile.branchId.slice(0, 8)}... • 
+                  Business ID: {currentUser.businessProfile.businessAccountId.slice(0, 8)}... • 
+                  Type: {currentUser.userType}
+                </p>
+              </div>
+              <Badge className="ml-auto bg-green-100 text-green-800">Active</Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Hotels Grid */}
-      {filteredHotels.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Plus className="h-8 w-8 text-gray-400" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {searchTerm ? 'No hotels found' : 'No hotels yet'}
-          </h3>
-          <p className="text-gray-600 mb-4">
-            {searchTerm 
-              ? `No hotels match "${searchTerm}"`
-              : 'Create your first hotel to get started'
-            }
-          </p>
-          {!searchTerm && (
-            <Button onClick={() => setShowCreateForm(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Your First Hotel
-            </Button>
+      {/* Hotels List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Your Hotels</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoadingMyHotels ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : myHotels && myHotels.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {myHotels.map((hotel) => (
+                <Card key={hotel.id} className="hover:shadow-lg transition-shadow">
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-lg mb-2">{hotel.title}</h3>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{hotel.description}</p>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">📍 {hotel.city}</span>
+                      <Badge variant={hotel.isActive ? 'default' : 'secondary'}>
+                        {hotel.isActive ? 'Active' : 'Draft'}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Hotels Yet</h3>
+              <p className="text-gray-600 mb-6 max-w-sm mx-auto">
+                Start building your hotel business by adding your first property.
+              </p>
+              <Button 
+                onClick={handleCreateHotel}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Your First Hotel
+              </Button>
+            </div>
           )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredHotels.map((hotel) => (
-            <HotelCard
-              key={hotel.id}
-              hotel={hotel}
-              onViewDetails={handleViewDetails}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onManageRooms={handleManageRooms}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Create/Edit Hotel Form Modal */}
-      {showCreateForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <HotelForm
-              hotel={editingHotel}
-              onSuccess={handleCreateSuccess}
-              onCancel={handleCloseForm}
-            />
-          </div>
-        </div>
-      )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
